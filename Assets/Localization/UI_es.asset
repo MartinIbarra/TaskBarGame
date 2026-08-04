@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: UI_es
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: es
+  m_SharedData: {fileID: 11400000, guid: 3b0bddcfba5f127478929a7d3a940cf5, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 794304512
+    m_Localized: "T\xE1cticas de la Barra"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 861413376
+    m_Localized: "Iniciar expedici\xF3n"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 865607680
+    m_Localized: Cerrar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 865607681
+    m_Localized: Salir
+    m_Metadata:
+      m_Items: []
+  - m_Id: 865607682
+    m_Localized: Seguridad
+    m_Metadata:
+      m_Items: []
+  - m_Id: 865607683
+    m_Localized: "Bot\xEDn"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 865607684
+    m_Localized: "Desaf\xEDo"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

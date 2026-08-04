@@ -1,0 +1,28 @@
+{
+  "name": "TaskbarTactics.Editor",
+  "rootNamespace": "TaskbarTactics.Editor",
+  "references": [
+    "TaskbarTactics.Core",
+    "TaskbarTactics.Content",
+    "TaskbarTactics.Presentation",
+    "TaskbarTactics.Platform.Windows",
+    "UnityEngine.UI",
+    "UnityEditor.UI",
+    "Unity.TextMeshPro",
+    "Unity.TextMeshPro.Editor",
+    "Unity.InputSystem",
+    "Unity.Localization",
+    "Unity.Localization.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

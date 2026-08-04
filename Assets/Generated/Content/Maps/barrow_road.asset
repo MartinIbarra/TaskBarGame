@@ -1,0 +1,110 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16b33c8ad28f8ec44888ebb5a11a2153, type: 3}
+  m_Name: barrow_road
+  m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.MapDefinition
+  id: barrow_road
+  nodes:
+  - Id: node-01
+    Type: 0
+    Difficulty: 1
+    NextNodeIds:
+    - node-02
+    - node-03
+  - Id: node-02
+    Type: 1
+    Difficulty: 1
+    NextNodeIds:
+    - node-04
+  - Id: node-03
+    Type: 0
+    Difficulty: 2
+    NextNodeIds:
+    - node-04
+    - node-05
+  - Id: node-04
+    Type: 0
+    Difficulty: 2
+    NextNodeIds:
+    - node-06
+  - Id: node-05
+    Type: 3
+    Difficulty: 4
+    NextNodeIds:
+    - node-06
+  - Id: node-06
+    Type: 2
+    Difficulty: 2
+    NextNodeIds:
+    - node-07
+    - node-08
+  - Id: node-07
+    Type: 0
+    Difficulty: 3
+    NextNodeIds:
+    - node-09
+  - Id: node-08
+    Type: 1
+    Difficulty: 2
+    NextNodeIds:
+    - node-09
+  - Id: node-09
+    Type: 0
+    Difficulty: 4
+    NextNodeIds:
+    - node-10
+    - node-11
+  - Id: node-10
+    Type: 0
+    Difficulty: 4
+    NextNodeIds:
+    - node-12
+  - Id: node-11
+    Type: 3
+    Difficulty: 6
+    NextNodeIds:
+    - node-12
+  - Id: node-12
+    Type: 2
+    Difficulty: 4
+    NextNodeIds:
+    - node-13
+    - node-14
+  - Id: node-13
+    Type: 1
+    Difficulty: 3
+    NextNodeIds:
+    - node-15
+  - Id: node-14
+    Type: 0
+    Difficulty: 5
+    NextNodeIds:
+    - node-15
+  - Id: node-15
+    Type: 0
+    Difficulty: 6
+    NextNodeIds:
+    - node-16
+  - Id: node-16
+    Type: 0
+    Difficulty: 7
+    NextNodeIds:
+    - node-17
+  - Id: node-17
+    Type: 0
+    Difficulty: 8
+    NextNodeIds:
+    - node-18
+  - Id: node-18
+    Type: 4
+    Difficulty: 10
+    NextNodeIds: []

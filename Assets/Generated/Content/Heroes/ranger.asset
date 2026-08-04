@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 730fd2fd224422f4794cd9c75f3733bd, type: 3}
+  m_Name: ranger
+  m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.HeroDefinition
+  id: ranger
+  displayNameEs: Exploradora
+  displayNameEn: Ranger
+  color: {r: 0.45490196, g: 0.7254902, b: 0.41960785, a: 1}
+  artwork: {fileID: 21300000, guid: 8ac26d35f7c45074894578cefa5b22fa, type: 3}
+  maxHealth: 125
+  power: 24
+  defense: 3
+  range: 5
+  tagIds:
+  - mark
+  - poison
+  activeSkills:
+  - {fileID: 11400000, guid: 96c2b5e6270f7894ab75276a903ff1a3, type: 2}
+  - {fileID: 11400000, guid: 3c980db29945f0745b005d71b113c4b0, type: 2}
+  passiveSkills:
+  - {fileID: 11400000, guid: a76f1d06a8f3d074e9adad1be1715b97, type: 2}
+  - {fileID: 11400000, guid: b5539cc7dd766cd41a882a3c06a764ca, type: 2}

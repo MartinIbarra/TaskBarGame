@@ -1,0 +1,20 @@
+{
+  "name": "TaskbarTactics.Platform.Windows",
+  "rootNamespace": "TaskbarTactics.Platform.Windows",
+  "references": [
+    "TaskbarTactics.Core"
+  ],
+  "includePlatforms": [
+    "Editor",
+    "WindowsStandalone32",
+    "WindowsStandalone64"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

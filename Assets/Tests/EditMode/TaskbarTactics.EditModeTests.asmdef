@@ -1,0 +1,22 @@
+{
+  "name": "TaskbarTactics.EditModeTests",
+  "rootNamespace": "TaskbarTactics.Tests",
+  "references": [
+    "TaskbarTactics.Core",
+    "TaskbarTactics.Infrastructure",
+    "TaskbarTactics.Content",
+    "TaskbarTactics.Presentation"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

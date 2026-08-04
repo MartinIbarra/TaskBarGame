@@ -1,0 +1,22 @@
+{
+  "name": "TaskbarTactics.Presentation",
+  "rootNamespace": "TaskbarTactics.Presentation",
+  "references": [
+    "TaskbarTactics.Core",
+    "TaskbarTactics.Content",
+    "TaskbarTactics.Infrastructure",
+    "TaskbarTactics.Platform.Windows",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro",
+    "Unity.Localization"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
