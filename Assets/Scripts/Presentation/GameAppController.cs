@@ -109,9 +109,10 @@ namespace TaskbarTactics.Presentation
             State.Expedition = new ExpeditionState
             {
                 IsActive = true,
-                CurrentNodeId = "node-01",
+                CurrentNodeId = catalog.Map.Nodes.First().Id,
                 Seed = unchecked((int)DateTime.UtcNow.Ticks),
-                CompletedNodes = 0
+                CompletedNodes = 0,
+                CompletedNodeIds = new List<string>()
             };
             Save();
             RaiseStateChanged();
@@ -294,7 +295,14 @@ namespace TaskbarTactics.Presentation
         private void RewardNode(MapNodeDefinition node)
         {
             State.Expedition.CompletedNodes++;
-            int itemCount = node.Type == MapNodeType.Treasure ? 2 :
+            State.Expedition.CompletedNodeIds ??= new List<string>();
+            if (!State.Expedition.CompletedNodeIds.Contains(node.Id))
+            {
+                State.Expedition.CompletedNodeIds.Add(node.Id);
+            }
+
+            int itemCount = node.Difficulty <= 0 ? 0 :
+                node.Type == MapNodeType.Treasure ? 2 :
                 node.Type == MapNodeType.Elite || node.Type == MapNodeType.Boss ? 2 : 1;
             IReadOnlyList<InventoryItem> loot = lootGenerator.Generate(
                 catalog.CreateLootTable(),
@@ -304,7 +312,7 @@ namespace TaskbarTactics.Presentation
             State.Expedition.CollectedItemIds.AddRange(loot.Select(item => item.InstanceId));
             foreach (HeroState hero in SelectedHeroes())
             {
-                hero.Experience += 20 + node.Difficulty * 5;
+                hero.Experience += node.Difficulty <= 0 ? 0 : 20 + node.Difficulty * 5;
                 while (hero.Experience >= hero.Level * 100)
                 {
                     hero.Experience -= hero.Level * 100;
@@ -353,7 +361,7 @@ namespace TaskbarTactics.Presentation
 
             DateTime lastSave = new DateTime(State.LastSavedUtcTicks, DateTimeKind.Utc);
             OfflineProgressResult progress = offlineProgress.Calculate(lastSave, DateTime.UtcNow, 45);
-            int nodesToResolve = Mathf.Min(progress.ResolvedNodes, 18);
+            int nodesToResolve = Mathf.Min(progress.ResolvedNodes, catalog.Map.Nodes.Count);
             for (int i = 0; i < nodesToResolve && State.Expedition.IsActive; i++)
             {
                 MapNodeDefinition node = catalog.Map.FindNode(State.Expedition.CurrentNodeId);

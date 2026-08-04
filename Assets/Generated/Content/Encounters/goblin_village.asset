@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 016b169ac60e9844ca186616a7f7be81, type: 3}
+  m_Name: goblin_village
+  m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.EncounterDefinition
+  id: goblin_village
+  difficulty: 4
+  enemies:
+  - {fileID: 11400000, guid: 3362f1e3b67aed5429047bdbf9f0673e, type: 2}
+  - {fileID: 11400000, guid: 8c13904a5e989ea45bcc28bd9fe8081d, type: 2}
+  - {fileID: 11400000, guid: 3dad2ed5dc76db14d9e57a52d4de4775, type: 2}

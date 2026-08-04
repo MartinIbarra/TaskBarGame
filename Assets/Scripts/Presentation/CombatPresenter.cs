@@ -94,7 +94,12 @@ namespace TaskbarTactics.Presentation
                 view.Initialize(
                     definition != null ? definition.DisplayNameEs : definitionId,
                     enemyColor,
-                    enemy.MaxHealth);
+                    enemy.MaxHealth,
+                    definition != null ? definition.Artwork : null,
+                    definition != null && definition.IsBoss ? 1.45f : 1f,
+                    true,
+                    true,
+                    $"Enemies/{definitionId}");
             }
         }
 

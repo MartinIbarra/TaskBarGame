@@ -125,24 +125,15 @@ namespace TaskbarTactics.Content
 
         private static void AddMap(ContentBlueprint content)
         {
-            content.MapNodes.Add(Node("node-01", MapNodeType.Combat, 1, "node-02", "node-03"));
-            content.MapNodes.Add(Node("node-02", MapNodeType.Treasure, 1, "node-04"));
-            content.MapNodes.Add(Node("node-03", MapNodeType.Combat, 2, "node-04", "node-05"));
-            content.MapNodes.Add(Node("node-04", MapNodeType.Combat, 2, "node-06"));
-            content.MapNodes.Add(Node("node-05", MapNodeType.Elite, 4, "node-06"));
-            content.MapNodes.Add(Node("node-06", MapNodeType.Event, 2, "node-07", "node-08"));
-            content.MapNodes.Add(Node("node-07", MapNodeType.Combat, 3, "node-09"));
-            content.MapNodes.Add(Node("node-08", MapNodeType.Treasure, 2, "node-09"));
-            content.MapNodes.Add(Node("node-09", MapNodeType.Combat, 4, "node-10", "node-11"));
-            content.MapNodes.Add(Node("node-10", MapNodeType.Combat, 4, "node-12"));
-            content.MapNodes.Add(Node("node-11", MapNodeType.Elite, 6, "node-12"));
-            content.MapNodes.Add(Node("node-12", MapNodeType.Event, 4, "node-13", "node-14"));
-            content.MapNodes.Add(Node("node-13", MapNodeType.Treasure, 3, "node-15"));
-            content.MapNodes.Add(Node("node-14", MapNodeType.Combat, 5, "node-15"));
-            content.MapNodes.Add(Node("node-15", MapNodeType.Combat, 6, "node-16"));
-            content.MapNodes.Add(Node("node-16", MapNodeType.Combat, 7, "node-17"));
-            content.MapNodes.Add(Node("node-17", MapNodeType.Combat, 8, "node-18"));
-            content.MapNodes.Add(Node("node-18", MapNodeType.Boss, 10));
+            content.MapNodes.Add(Node("town", MapNodeType.Event, 0, "narrow_bridge"));
+            content.MapNodes.Add(Node("narrow_bridge", MapNodeType.Combat, 1, "cave", "cemetery"));
+            content.MapNodes.Add(Node("cave", MapNodeType.Treasure, 3, "goblin_village"));
+            content.MapNodes.Add(Node("cemetery", MapNodeType.Combat, 2, "goblin_village"));
+            content.MapNodes.Add(Node("goblin_village", MapNodeType.Elite, 4, "tomb_pass", "mountain_pass"));
+            content.MapNodes.Add(Node("tomb_pass", MapNodeType.Elite, 6, "lost_forest"));
+            content.MapNodes.Add(Node("mountain_pass", MapNodeType.Treasure, 4, "lost_forest"));
+            content.MapNodes.Add(Node("lost_forest", MapNodeType.Combat, 7, "last_bastion"));
+            content.MapNodes.Add(Node("last_bastion", MapNodeType.Boss, 10));
         }
 
         private static MapNodeBlueprint Node(

@@ -124,6 +124,7 @@ namespace TaskbarTactics.Core.Models
         public string CurrentNodeId = string.Empty;
         public int Seed;
         public int CompletedNodes;
+        public List<string> CompletedNodeIds = new List<string>();
         public List<string> CollectedItemIds = new List<string>();
     }
 
