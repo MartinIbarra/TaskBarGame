@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04a4a962f0da1674db46d3e14286e65a, type: 3}
+  m_Name: bog_slime
+  m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.EnemyDefinition
+  id: bog_slime
+  displayNameEs: Slime pantanoso
+  maxHealth: 105
+  power: 13
+  defense: 5
+  range: 2
+  isBoss: 0
+  artwork: {fileID: 21300000, guid: e465cb5e2d1a6054fb40b670c45a8750, type: 3}

@@ -79,6 +79,7 @@ namespace TaskbarTactics.Presentation
         {
             stripHud.Bind(this, windowMode);
             managementUi.Bind(this, windowMode);
+            combatPresenter?.ShowBattleback(State.Expedition.CurrentNodeId);
             if (State.Expedition.IsActive)
             {
                 expeditionRoutine = StartCoroutine(RunExpedition());
@@ -267,7 +268,12 @@ namespace TaskbarTactics.Presentation
                         node,
                         State.Expedition.Seed + State.Expedition.CompletedNodes);
                     CombatResult result = combatSimulator.Simulate(request);
-                    yield return combatPresenter.Play(request, result, catalog, combatPresentationSeconds);
+                    yield return combatPresenter.Play(
+                        request,
+                        result,
+                        catalog,
+                        combatPresentationSeconds,
+                        node.Id);
                     outcome = result.Outcome;
                     State.Party.IsFormationLocked = false;
                 }

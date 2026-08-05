@@ -132,8 +132,6 @@ namespace TaskbarTactics.Presentation
 
             foreach (MapNodeView node in nodes)
             {
-                bool hasArtistNodes = nodeArtworkOverlay != null &&
-                                      nodeArtworkOverlay.texture != null;
                 MapNodeDefinition definition = app.Catalog.Map.FindNode(node.NodeId);
                 bool isCurrent = node.NodeId == currentNodeId;
                 bool isCompleted = completed.Contains(node.NodeId);
@@ -146,7 +144,7 @@ namespace TaskbarTactics.Presentation
                     LockedNode;
                 if (node.Marker != null)
                 {
-                    node.Marker.gameObject.SetActive(!hasArtistNodes);
+                    node.Marker.gameObject.SetActive(true);
                     node.Marker.color = color;
                 }
 
@@ -213,7 +211,7 @@ namespace TaskbarTactics.Presentation
                 case "goblin_village":
                     return "Aldea goblin";
                 case "tomb_pass":
-                    return "Paso del tumulo";
+                    return "Paso del Tomuer";
                 case "mountain_pass":
                     return "Paso entre montanas";
                 case "lost_forest":

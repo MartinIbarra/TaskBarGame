@@ -3,18 +3,28 @@ using UnityEngine.EventSystems;
 
 namespace TaskbarTactics.Presentation
 {
-    public sealed class DraggableMapView : MonoBehaviour, IBeginDragHandler, IDragHandler
+    public sealed class DraggableMapView :
+        MonoBehaviour,
+        IBeginDragHandler,
+        IDragHandler,
+        IScrollHandler
     {
         [SerializeField] private RectTransform content;
-        [SerializeField] private Vector2 minPosition = new Vector2(-180f, -40f);
-        [SerializeField] private Vector2 maxPosition = new Vector2(80f, 160f);
+        [SerializeField] private RectTransform viewport;
+        [SerializeField, Min(0.25f)] private float minZoom = 0.9f;
+        [SerializeField, Min(0.25f)] private float maxZoom = 2.4f;
+        [SerializeField, Min(0.01f)] private float zoomStep = 0.12f;
 
         private Vector2 dragStartPointer;
         private Vector2 dragStartPosition;
+        private float zoom = 1f;
 
         public void Configure(RectTransform targetContent)
         {
             content = targetContent;
+            viewport = transform as RectTransform;
+            zoom = content != null ? content.localScale.x : 1f;
+            ClampContent();
         }
 
         public void OnBeginDrag(PointerEventData eventData)
@@ -36,10 +46,77 @@ namespace TaskbarTactics.Presentation
             }
 
             Vector2 delta = eventData.position - dragStartPointer;
-            Vector2 next = dragStartPosition + delta;
-            next.x = Mathf.Clamp(next.x, minPosition.x, maxPosition.x);
-            next.y = Mathf.Clamp(next.y, minPosition.y, maxPosition.y);
-            content.anchoredPosition = next;
+            content.anchoredPosition = dragStartPosition + delta;
+            ClampContent();
+        }
+
+        public void OnScroll(PointerEventData eventData)
+        {
+            if (content == null)
+            {
+                return;
+            }
+
+            float nextZoom = Mathf.Clamp(
+                zoom + eventData.scrollDelta.y * zoomStep,
+                minZoom,
+                maxZoom);
+            if (Mathf.Approximately(nextZoom, zoom))
+            {
+                return;
+            }
+
+            zoom = nextZoom;
+            content.localScale = new Vector3(zoom, zoom, 1f);
+            ClampContent();
+        }
+
+        private void ClampContent()
+        {
+            if (content == null)
+            {
+                return;
+            }
+
+            if (viewport == null)
+            {
+                viewport = transform as RectTransform;
+            }
+
+            if (viewport == null)
+            {
+                return;
+            }
+
+            Vector2 viewportSize = viewport.rect.size;
+            Vector2 contentSize = content.rect.size * zoom;
+            Vector2 position = content.anchoredPosition;
+
+            position.x = ClampHorizontal(position.x, viewportSize.x, contentSize.x);
+            position.y = ClampVertical(position.y, viewportSize.y, contentSize.y);
+            content.anchoredPosition = position;
+        }
+
+        private static float ClampHorizontal(float value, float viewportSize, float contentSize)
+        {
+            if (contentSize <= viewportSize)
+            {
+                return (viewportSize - contentSize) * 0.5f;
+            }
+
+            float min = viewportSize - contentSize;
+            return Mathf.Clamp(value, min, 0f);
+        }
+
+        private static float ClampVertical(float value, float viewportSize, float contentSize)
+        {
+            if (contentSize <= viewportSize)
+            {
+                return (contentSize - viewportSize) * 0.5f;
+            }
+
+            float max = contentSize - viewportSize;
+            return Mathf.Clamp(value, 0f, max);
         }
     }
 }

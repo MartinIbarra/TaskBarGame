@@ -63,6 +63,11 @@ namespace TaskbarTactics.Content
             return enemies.Find(item => item.Id == id);
         }
 
+        public EncounterDefinition FindEncounter(string id)
+        {
+            return encounters.Find(item => item.Id == id);
+        }
+
         public LootTable CreateLootTable()
         {
             return new LootTable
@@ -95,9 +100,15 @@ namespace TaskbarTactics.Content
                 };
             }).ToList();
 
-            int enemyCount = node.Type == MapNodeType.Boss ? 1 : node.Type == MapNodeType.Elite ? 3 : 2;
-            List<EnemyDefinition> pool = enemies
-                .Where(enemy => enemy.IsBoss == (node.Type == MapNodeType.Boss)).ToList();
+            EncounterDefinition encounter = FindEncounter(node.Id);
+            List<EnemyDefinition> pool = encounter != null && encounter.Enemies.Count > 0
+                ? encounter.Enemies.ToList()
+                : enemies.Where(enemy => enemy.IsBoss == (node.Type == MapNodeType.Boss)).ToList();
+            int enemyCount = node.Type == MapNodeType.Boss
+                ? 1
+                : node.Type == MapNodeType.Elite
+                    ? Mathf.Min(3, pool.Count)
+                    : Mathf.Min(2, pool.Count);
             List<CombatantState> enemyUnits = new List<CombatantState>();
             for (int i = 0; i < enemyCount; i++)
             {

@@ -15,6 +15,6 @@ MonoBehaviour:
   id: goblin_village
   difficulty: 4
   enemies:
-  - {fileID: 11400000, guid: 3362f1e3b67aed5429047bdbf9f0673e, type: 2}
-  - {fileID: 11400000, guid: 8c13904a5e989ea45bcc28bd9fe8081d, type: 2}
-  - {fileID: 11400000, guid: 3dad2ed5dc76db14d9e57a52d4de4775, type: 2}
+  - {fileID: 11400000, guid: 086fcc259f1a00d458815dc006346da4, type: 2}
+  - {fileID: 11400000, guid: 04a85510f4eb7c3429363a67189cdb15, type: 2}
+  - {fileID: 11400000, guid: f06b5dc1023f91b4b9e79240584f5116, type: 2}

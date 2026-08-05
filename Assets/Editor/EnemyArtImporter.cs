@@ -15,6 +15,7 @@ namespace TaskbarTactics.Editor
             "shaman",
             "skeleton",
             "cultist",
+            "bog_slime",
             "ogre",
             "wraith",
             "barrow_king"

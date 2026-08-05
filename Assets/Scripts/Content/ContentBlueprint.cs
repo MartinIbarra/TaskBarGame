@@ -89,6 +89,7 @@ namespace TaskbarTactics.Content
             content.Enemies.Add(new EnemyBlueprint("shaman", "Chamán", 65, 18, 2, 5, false));
             content.Enemies.Add(new EnemyBlueprint("skeleton", "Esqueleto", 90, 14, 4, 2, false));
             content.Enemies.Add(new EnemyBlueprint("cultist", "Cultista", 75, 20, 2, 4, false));
+            content.Enemies.Add(new EnemyBlueprint("bog_slime", "Slime pantanoso", 105, 13, 5, 2, false));
             content.Enemies.Add(new EnemyBlueprint("ogre", "Ogro", 185, 24, 6, 2, false));
             content.Enemies.Add(new EnemyBlueprint("wraith", "Espectro", 100, 25, 3, 4, false));
             content.Enemies.Add(new EnemyBlueprint("barrow_king", "Rey del Túmulo", 640, 32, 9, 4, true));

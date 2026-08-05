@@ -15,5 +15,6 @@ MonoBehaviour:
   id: cemetery
   difficulty: 2
   enemies:
-  - {fileID: 11400000, guid: ef95cbd95156ccf43ab3147e7cdb72d1, type: 2}
-  - {fileID: 11400000, guid: f06b5dc1023f91b4b9e79240584f5116, type: 2}
+  - {fileID: 11400000, guid: 3362f1e3b67aed5429047bdbf9f0673e, type: 2}
+  - {fileID: 11400000, guid: 07b3218e5fe66f845becc4a51211df55, type: 2}
+  - {fileID: 11400000, guid: 8c13904a5e989ea45bcc28bd9fe8081d, type: 2}
