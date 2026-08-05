@@ -19,3 +19,4 @@ MonoBehaviour:
   defense: 9
   range: 4
   isBoss: 1
+  artwork: {fileID: 21300000, guid: 9b3963b82df64764c8befd0c69b9dc66, type: 3}

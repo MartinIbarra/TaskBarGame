@@ -14,97 +14,49 @@ MonoBehaviour:
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.MapDefinition
   id: barrow_road
   nodes:
-  - Id: node-01
+  - Id: town
+    Type: 2
+    Difficulty: 0
+    NextNodeIds:
+    - narrow_bridge
+  - Id: narrow_bridge
     Type: 0
     Difficulty: 1
     NextNodeIds:
-    - node-02
-    - node-03
-  - Id: node-02
-    Type: 1
-    Difficulty: 1
-    NextNodeIds:
-    - node-04
-  - Id: node-03
-    Type: 0
-    Difficulty: 2
-    NextNodeIds:
-    - node-04
-    - node-05
-  - Id: node-04
-    Type: 0
-    Difficulty: 2
-    NextNodeIds:
-    - node-06
-  - Id: node-05
-    Type: 3
-    Difficulty: 4
-    NextNodeIds:
-    - node-06
-  - Id: node-06
-    Type: 2
-    Difficulty: 2
-    NextNodeIds:
-    - node-07
-    - node-08
-  - Id: node-07
-    Type: 0
-    Difficulty: 3
-    NextNodeIds:
-    - node-09
-  - Id: node-08
-    Type: 1
-    Difficulty: 2
-    NextNodeIds:
-    - node-09
-  - Id: node-09
-    Type: 0
-    Difficulty: 4
-    NextNodeIds:
-    - node-10
-    - node-11
-  - Id: node-10
-    Type: 0
-    Difficulty: 4
-    NextNodeIds:
-    - node-12
-  - Id: node-11
-    Type: 3
-    Difficulty: 6
-    NextNodeIds:
-    - node-12
-  - Id: node-12
-    Type: 2
-    Difficulty: 4
-    NextNodeIds:
-    - node-13
-    - node-14
-  - Id: node-13
+    - cave
+    - cemetery
+  - Id: cave
     Type: 1
     Difficulty: 3
     NextNodeIds:
-    - node-15
-  - Id: node-14
+    - goblin_village
+  - Id: cemetery
     Type: 0
-    Difficulty: 5
+    Difficulty: 2
     NextNodeIds:
-    - node-15
-  - Id: node-15
-    Type: 0
+    - goblin_village
+  - Id: goblin_village
+    Type: 3
+    Difficulty: 4
+    NextNodeIds:
+    - tomb_pass
+    - mountain_pass
+  - Id: tomb_pass
+    Type: 3
     Difficulty: 6
     NextNodeIds:
-    - node-16
-  - Id: node-16
+    - lost_forest
+  - Id: mountain_pass
+    Type: 1
+    Difficulty: 4
+    NextNodeIds:
+    - lost_forest
+  - Id: lost_forest
     Type: 0
     Difficulty: 7
     NextNodeIds:
-    - node-17
-  - Id: node-17
-    Type: 0
-    Difficulty: 8
-    NextNodeIds:
-    - node-18
-  - Id: node-18
+    - last_bastion
+  - Id: last_bastion
     Type: 4
     Difficulty: 10
     NextNodeIds: []

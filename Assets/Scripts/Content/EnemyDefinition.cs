@@ -11,6 +11,8 @@ namespace TaskbarTactics.Content
         [SerializeField] private int defense;
         [SerializeField] private int range;
         [SerializeField] private bool isBoss;
+        [SerializeField, Tooltip("Character artwork used by combat presentation views.")]
+        private Sprite artwork;
 
         public string DisplayNameEs => displayNameEs;
         public int MaxHealth => maxHealth;
@@ -18,6 +20,7 @@ namespace TaskbarTactics.Content
         public int Defense => defense;
         public int Range => range;
         public bool IsBoss => isBoss;
+        public Sprite Artwork => artwork;
 
         public void Configure(EnemyBlueprint data)
         {

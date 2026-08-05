@@ -72,8 +72,8 @@ namespace TaskbarTactics.Tests
 
             GameAppController app = Object.FindFirstObjectByType<GameAppController>();
             Assert.That(app.State.Expedition.IsActive, Is.True);
-            Assert.That(app.State.Expedition.CurrentNodeId, Is.EqualTo("node-01"));
-            Assert.That(app.State.Party.IsFormationLocked, Is.True);
+            Assert.That(app.State.Expedition.CurrentNodeId, Is.EqualTo("town"));
+            Assert.That(app.State.Party.IsFormationLocked, Is.False);
         }
     }
 }

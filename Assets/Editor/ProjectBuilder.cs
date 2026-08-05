@@ -45,9 +45,10 @@ namespace TaskbarTactics.Editor
             CreateLocalizationAssets();
             GameContentCatalog catalog = CreateContentAssets();
             Sprite unitSprite = CreatePlaceholderSprite();
+            Sprite circleSprite = CreateCircleSprite();
             RuntimeAnimatorController animator = CreateAnimationController();
             UnitView unitPrefab = CreateUnitPrefab(unitSprite, animator);
-            CreateMainScene(catalog, unitPrefab, unitSprite);
+            CreateMainScene(catalog, unitPrefab, unitSprite, circleSprite);
             ConfigureProject();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -101,6 +102,8 @@ namespace TaskbarTactics.Editor
                 "Assets/Art/Generated",
                 "Assets/Animations",
                 "Assets/Localization",
+                "Assets/Resources",
+                "Assets/Resources/Maps",
                 GeneratedRoot,
                 GeneratedRoot + "/Content",
                 GeneratedRoot + "/Content/Heroes",
@@ -248,6 +251,7 @@ namespace TaskbarTactics.Editor
                 EnemyDefinition asset = LoadOrCreate<EnemyDefinition>(
                     $"{GeneratedRoot}/Content/Enemies/{data.Id}.asset");
                 asset.Configure(data);
+                AssignEnemyArtwork(asset, data.Id);
                 EditorUtility.SetDirty(asset);
                 return asset;
             }).ToList();
@@ -258,6 +262,7 @@ namespace TaskbarTactics.Editor
             EditorUtility.SetDirty(map);
 
             List<EncounterDefinition> encounters = new List<EncounterDefinition>();
+            Dictionary<string, EnemyDefinition> enemyById = enemies.ToDictionary(enemy => enemy.Id);
             List<EnemyDefinition> normalEnemies = enemies.Where(enemy => !enemy.IsBoss).ToList();
             EnemyDefinition boss = enemies.First(enemy => enemy.IsBoss);
             foreach (MapNodeBlueprint node in blueprint.MapNodes.Where(node =>
@@ -267,10 +272,19 @@ namespace TaskbarTactics.Editor
             {
                 EncounterDefinition encounter = LoadOrCreate<EncounterDefinition>(
                     $"{GeneratedRoot}/Content/Encounters/{node.Id}.asset");
-                IEnumerable<EnemyDefinition> units = node.Type == Core.Models.MapNodeType.Boss
-                    ? new[] { boss }
-                    : Enumerable.Range(0, node.Type == Core.Models.MapNodeType.Elite ? 3 : 2)
-                        .Select(index => normalEnemies[(node.Difficulty + index) % normalEnemies.Count]);
+                List<EnemyDefinition> units = EnemyIdsForNode(node.Id)
+                    .Where(enemyById.ContainsKey)
+                    .Select(enemyId => enemyById[enemyId])
+                    .ToList();
+                if (units.Count == 0)
+                {
+                    units = node.Type == Core.Models.MapNodeType.Boss
+                        ? new List<EnemyDefinition> { boss }
+                        : Enumerable.Range(0, node.Type == Core.Models.MapNodeType.Elite ? 3 : 2)
+                            .Select(index => normalEnemies[(node.Difficulty + index) % normalEnemies.Count])
+                            .ToList();
+                }
+
                 encounter.Configure(node.Id, node.Difficulty, units);
                 EditorUtility.SetDirty(encounter);
                 encounters.Add(encounter);
@@ -294,6 +308,77 @@ namespace TaskbarTactics.Editor
                 new[] { defaultCosmetic });
             EditorUtility.SetDirty(catalog);
             return catalog;
+        }
+
+        private static IEnumerable<string> EnemyIdsForNode(string nodeId)
+        {
+            switch (nodeId)
+            {
+                case "narrow_bridge":
+                    return new[] { "goblin", "wolf", "bog_slime" };
+                case "cemetery":
+                    return new[] { "skeleton", "wraith", "cultist" };
+                case "goblin_village":
+                    return new[] { "goblin", "goblin_archer", "shaman" };
+                case "tomb_pass":
+                    return new[] { "skeleton", "wraith", "bog_slime" };
+                case "lost_forest":
+                    return new[] { "wolf", "wraith", "bog_slime" };
+                case "last_bastion":
+                    return new[] { "barrow_king" };
+                default:
+                    return Array.Empty<string>();
+            }
+        }
+
+        private static void AssignEnemyArtwork(EnemyDefinition definition, string enemyId)
+        {
+            string spritePath = $"Assets/Art/Enemies/Concepts/{enemyId}.png";
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(spritePath) == null)
+            {
+                return;
+            }
+
+            ConfigureCharacterSprite(spritePath);
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+            if (sprite == null)
+            {
+                return;
+            }
+
+            SerializedObject serializedDefinition = new SerializedObject(definition);
+            SerializedProperty artwork = serializedDefinition.FindProperty("artwork");
+            if (artwork != null)
+            {
+                artwork.objectReferenceValue = sprite;
+                serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
+
+        private static void ConfigureCharacterSprite(string path)
+        {
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null)
+            {
+                return;
+            }
+
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = 256f;
+            importer.spritePivot = new Vector2(0.5f, 0f);
+            importer.filterMode = FilterMode.Point;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            TextureImporterSettings settings = new TextureImporterSettings();
+            importer.ReadTextureSettings(settings);
+            settings.spriteAlignment = (int)SpriteAlignment.Custom;
+            settings.spritePivot = new Vector2(0.5f, 0f);
+            importer.SetTextureSettings(settings);
+            importer.SaveAndReimport();
         }
 
         private static T LoadOrCreate<T>(string path) where T : ScriptableObject
@@ -558,10 +643,60 @@ namespace TaskbarTactics.Editor
             return child;
         }
 
+        private static Sprite CreateCircleSprite()
+        {
+            const string path = "Assets/Art/Generated/map_node_circle.png";
+            const int size = 32;
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color32 transparent = new Color32(0, 0, 0, 0);
+            Color32[] pixels = Enumerable.Repeat(transparent, size * size).ToArray();
+            Vector2 center = new Vector2((size - 1) * 0.5f, (size - 1) * 0.5f);
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float distance = Vector2.Distance(new Vector2(x, y), center);
+                    if (distance <= 14.8f)
+                    {
+                        byte alpha = distance >= 13.2f ? (byte)230 : (byte)255;
+                        pixels[y * size + x] = new Color32(255, 222, 148, alpha);
+                    }
+
+                    if (distance <= 8.2f)
+                    {
+                        pixels[y * size + x] = new Color32(39, 30, 18, 245);
+                    }
+
+                    if (distance <= 5.4f)
+                    {
+                        pixels[y * size + x] = new Color32(255, 229, 166, 255);
+                    }
+                }
+            }
+
+            texture.SetPixels32(pixels);
+            texture.Apply();
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            File.WriteAllBytes(path, texture.EncodeToPNG());
+            Object.DestroyImmediate(texture);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(path);
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.spritePixelsPerUnit = size;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = true;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
         private static void CreateMainScene(
             GameContentCatalog catalog,
             UnitView unitPrefab,
-            Sprite cellSprite)
+            Sprite cellSprite,
+            Sprite circleSprite)
         {
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             GameObject systems = new GameObject("Systems");
@@ -580,7 +715,7 @@ namespace TaskbarTactics.Editor
             WindowModeController window = windowObject.AddComponent<WindowModeController>();
 
             StripHudController strip = BuildStripUi(stripUi.transform);
-            ManagementUiController management = BuildManagementUi(managementUi.transform);
+            ManagementUiController management = BuildManagementUi(managementUi.transform, circleSprite);
 
             GameObject appObject = new GameObject("Game Application");
             appObject.transform.SetParent(systems.transform);
@@ -624,14 +759,37 @@ namespace TaskbarTactics.Editor
             GameObject combatObject = new GameObject("Combat Presentation");
             combatObject.transform.SetParent(parent);
             CombatPresenter presenter = combatObject.AddComponent<CombatPresenter>();
+            SpriteRenderer battleback = CreateBattleback(combatObject.transform);
             Transform heroGrid = new GameObject("Hero Grid").transform;
             heroGrid.SetParent(combatObject.transform);
             Transform enemyGrid = new GameObject("Enemy Grid").transform;
             enemyGrid.SetParent(combatObject.transform);
             List<Transform> heroCells = CreateGrid(heroGrid, -4.4f, cellSprite, new Color(0.08f, 0.18f, 0.25f));
             List<Transform> enemyCells = CreateGrid(enemyGrid, 1.1f, cellSprite, new Color(0.25f, 0.08f, 0.1f));
-            presenter.Configure(unitPrefab, heroCells, enemyCells);
+            presenter.Configure(unitPrefab, heroCells, enemyCells, battleback);
             return presenter;
+        }
+
+        private static SpriteRenderer CreateBattleback(Transform parent)
+        {
+            GameObject battlebackObject = new GameObject("Battleback");
+            battlebackObject.transform.SetParent(parent, false);
+            battlebackObject.transform.localPosition = new Vector3(0f, 0f, 2f);
+            SpriteRenderer renderer = battlebackObject.AddComponent<SpriteRenderer>();
+            Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                "Assets/Resources/Battlebacks/default.png");
+            if (texture != null)
+            {
+                renderer.sprite = Sprite.Create(
+                    texture,
+                    new Rect(0f, 0f, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f),
+                    100f);
+            }
+
+            renderer.sortingOrder = -20;
+            renderer.color = renderer.sprite == null ? Color.clear : Color.white;
+            return renderer;
         }
 
         private static List<Transform> CreateGrid(
@@ -682,11 +840,11 @@ namespace TaskbarTactics.Editor
             Image bar = CreateImage(root, "Status Bar", Panel);
             SetStretch(bar.rectTransform, 0, 0, 0, 150);
             TMP_Text status = CreateText(bar.transform, "Status Label", "Escuadrón en el campamento",
-                18, TextAlignmentOptions.Left, new Vector2(12, 7), new Vector2(500, 32));
+                18, TextAlignmentOptions.Left, new Vector2(106, 7), new Vector2(390, 32));
             TMP_Text node = CreateText(bar.transform, "Node Label", "Campamento",
                 18, TextAlignmentOptions.Center, new Vector2(510, 7), new Vector2(200, 32));
-            Button manage = CreateButton(bar.transform, "Manage Button", "Gestionar",
-                new Vector2(720, 3), new Vector2(125, 34), Accent);
+            Button manage = CreateButton(bar.transform, "Manage Button", "HUD",
+                new Vector2(12, 3), new Vector2(82, 34), Accent);
             Button menu = CreateButton(bar.transform, "Menu Button", "•••",
                 new Vector2(852, 3), new Vector2(48, 34), PanelLight);
             Image attention = CreateImage(root, "Attention Indicator", new Color(1f, 0.72f, 0.18f));
@@ -708,7 +866,7 @@ namespace TaskbarTactics.Editor
             return controller;
         }
 
-        private static ManagementUiController BuildManagementUi(Transform root)
+        private static ManagementUiController BuildManagementUi(Transform root, Sprite circleSprite)
         {
             Image background = CreateImage(root, "Management Background", Background);
             SetStretch(background.rectTransform, 0, 0, 0, 0);
@@ -783,14 +941,16 @@ namespace TaskbarTactics.Editor
             List<Button> routeButtons = new List<Button>
             {
                 CreateButton(panels[5].transform, "Safety Route Button", "Seguridad",
-                    new Vector2(24, 300), new Vector2(180, 44), PanelLight),
+                    new Vector2(24, 250), new Vector2(220, 44), PanelLight),
                 CreateButton(panels[5].transform, "Loot Route Button", "Botín",
-                    new Vector2(220, 300), new Vector2(180, 44), PanelLight),
+                    new Vector2(24, 304), new Vector2(220, 44), PanelLight),
                 CreateButton(panels[5].transform, "Challenge Route Button", "Desafío",
-                    new Vector2(416, 300), new Vector2(180, 44), PanelLight)
+                    new Vector2(24, 358), new Vector2(220, 44), PanelLight)
             };
             Button start = CreateButton(panels[5].transform, "Start Expedition Button",
-                "INICIAR EXPEDICIÓN", new Vector2(24, 390), new Vector2(572, 52), Accent);
+                "INICIAR EXPEDICIÓN", new Vector2(24, 420), new Vector2(220, 52), Accent);
+
+            MapUiController mapVisual = BuildMapVisual(panels[5].transform, summaries[5], circleSprite);
 
             Button language = CreateButton(panels[6].transform, "Language Button",
                 "Cambiar ES / EN", new Vector2(24, 300), new Vector2(220, 44), Accent);
@@ -812,6 +972,7 @@ namespace TaskbarTactics.Editor
                 summaries[4],
                 summaries[5],
                 summaries[6],
+                mapVisual,
                 cycleActive,
                 cyclePassive,
                 equipButtons,
@@ -820,6 +981,301 @@ namespace TaskbarTactics.Editor
                 language,
                 quit);
             return controller;
+        }
+
+        private static MapUiController BuildMapVisual(
+            Transform parent,
+            TMP_Text summary,
+            Sprite circleSprite)
+        {
+            summary.rectTransform.sizeDelta = new Vector2(230, 150);
+
+            GameObject root = new GameObject("Map Visual", typeof(RectTransform));
+            root.transform.SetParent(parent, false);
+            RectTransform rootRect = root.GetComponent<RectTransform>();
+            rootRect.anchorMin = rootRect.anchorMax = new Vector2(0, 1);
+            rootRect.pivot = new Vector2(0, 1);
+            rootRect.anchoredPosition = new Vector2(280, -58);
+            rootRect.sizeDelta = new Vector2(420, 502);
+            Image viewport = root.AddComponent<Image>();
+            viewport.color = new Color(0.03f, 0.04f, 0.05f, 0.95f);
+            root.AddComponent<RectMask2D>();
+
+            Texture2D mapTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(
+                "Assets/Resources/Maps/map1.png");
+            RectTransform artworkRoot = CreateMapArtworkRoot(root.transform);
+            RawImage background = CreateMapBackground(artworkRoot, mapTexture);
+
+            RectTransform artworkLayer = CreateMapLayer(artworkRoot, "Artist Overlays");
+            RectTransform routesLayer = CreateMapLayer(artworkRoot, "Routes");
+            RectTransform nodesLayer = CreateMapLayer(artworkRoot, "Nodes");
+            RawImage nodeArtworkOverlay = CreateMapArtworkOverlay(
+                artworkLayer, "Node Artwork Overlay", "Maps/map1_nodes");
+            List<MapRouteArtworkOverlay> routeArtworkOverlays = CreateMapRouteArtworkOverlays(artworkLayer);
+
+            Dictionary<string, Vector2> positions = new Dictionary<string, Vector2>
+            {
+                ["town"] = new Vector2(368, 605),
+                ["narrow_bridge"] = new Vector2(302, 535),
+                ["cave"] = new Vector2(324, 456),
+                ["cemetery"] = new Vector2(203, 506),
+                ["goblin_village"] = new Vector2(179, 386),
+                ["tomb_pass"] = new Vector2(210, 266),
+                ["mountain_pass"] = new Vector2(80, 294),
+                ["lost_forest"] = new Vector2(116, 202),
+                ["last_bastion"] = new Vector2(98, 115)
+            };
+
+            string[,] routeIds =
+            {
+                { "town", "narrow_bridge" },
+                { "narrow_bridge", "cave" },
+                { "narrow_bridge", "cemetery" },
+                { "cave", "goblin_village" },
+                { "cemetery", "goblin_village" },
+                { "goblin_village", "tomb_pass" },
+                { "goblin_village", "mountain_pass" },
+                { "tomb_pass", "lost_forest" },
+                { "mountain_pass", "lost_forest" },
+                { "lost_forest", "last_bastion" }
+            };
+
+            List<MapRouteView> routes = new List<MapRouteView>();
+            for (int i = 0; i < routeIds.GetLength(0); i++)
+            {
+                string from = routeIds[i, 0];
+                string to = routeIds[i, 1];
+                routes.Add(CreateMapRoute(routesLayer, from, to, positions[from], positions[to]));
+            }
+
+            List<MapNodeView> nodes = positions.Select(pair =>
+                CreateMapNode(nodesLayer, pair.Key, pair.Value, circleSprite)).ToList();
+            List<MapRoutePreferenceLegend> legends = CreateMapRouteLegend(root.transform);
+
+            MapUiController controller = root.AddComponent<MapUiController>();
+            controller.Configure(
+                background,
+                nodes,
+                routes,
+                legends,
+                nodeArtworkOverlay,
+                routeArtworkOverlays);
+            root.AddComponent<DraggableMapView>().Configure(artworkRoot);
+            return controller;
+        }
+
+        private static RectTransform CreateMapArtworkRoot(Transform parent)
+        {
+            GameObject root = new GameObject("Map Artwork", typeof(RectTransform));
+            root.transform.SetParent(parent, false);
+            RectTransform rect = root.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0, 1);
+            rect.pivot = new Vector2(0, 1);
+            rect.anchoredPosition = new Vector2(0f, 148f);
+            rect.sizeDelta = new Vector2(520, 650);
+            return rect;
+        }
+
+        private static RawImage CreateMapBackground(Transform parent, Texture2D texture)
+        {
+            GameObject backgroundObject = new GameObject(
+                "Map Background", typeof(RectTransform), typeof(CanvasRenderer), typeof(RawImage));
+            backgroundObject.transform.SetParent(parent, false);
+            RectTransform rect = backgroundObject.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            RawImage background = backgroundObject.GetComponent<RawImage>();
+            background.texture = texture;
+            background.color = Color.white;
+            return background;
+        }
+
+        private static List<MapRouteArtworkOverlay> CreateMapRouteArtworkOverlays(Transform parent)
+        {
+            return new List<MapRouteArtworkOverlay>
+            {
+                new MapRouteArtworkOverlay
+                {
+                    PreferenceName = "Safety",
+                    Image = CreateMapArtworkOverlay(parent, "Safety Route Artwork", "Maps/map1_route_safety")
+                },
+                new MapRouteArtworkOverlay
+                {
+                    PreferenceName = "Loot",
+                    Image = CreateMapArtworkOverlay(parent, "Loot Route Artwork", "Maps/map1_route_loot")
+                },
+                new MapRouteArtworkOverlay
+                {
+                    PreferenceName = "Challenge",
+                    Image = CreateMapArtworkOverlay(parent, "Challenge Route Artwork", "Maps/map1_route_challenge")
+                }
+            };
+        }
+
+        private static RawImage CreateMapArtworkOverlay(Transform parent, string name, string resourcePath)
+        {
+            GameObject overlay = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(RawImage));
+            overlay.transform.SetParent(parent, false);
+            RectTransform rect = overlay.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            RawImage image = overlay.GetComponent<RawImage>();
+            image.texture = Resources.Load<Texture2D>(resourcePath);
+            image.color = image.texture == null
+                ? new Color(1f, 1f, 1f, 0f)
+                : new Color(1f, 1f, 1f, 0.95f);
+            overlay.SetActive(image.texture != null);
+            return image;
+        }
+
+        private static List<MapRoutePreferenceLegend> CreateMapRouteLegend(Transform parent)
+        {
+            GameObject root = new GameObject("Route Preference Legend", typeof(RectTransform));
+            root.transform.SetParent(parent, false);
+            RectTransform rootRect = root.GetComponent<RectTransform>();
+            rootRect.anchorMin = rootRect.anchorMax = new Vector2(0, 1);
+            rootRect.pivot = new Vector2(0, 1);
+            rootRect.anchoredPosition = new Vector2(14, -432);
+            rootRect.sizeDelta = new Vector2(372, 58);
+
+            string[] names =
+            {
+                "Safety: ruta segura",
+                "Loot: busca tesoros",
+                "Challenge: busca elites"
+            };
+            List<MapRoutePreferenceLegend> legends = new List<MapRoutePreferenceLegend>();
+            for (int i = 0; i < names.Length; i++)
+            {
+                TMP_Text label = CreateText(root.transform, $"Legend {i + 1}", names[i], 10,
+                    TextAlignmentOptions.Left, new Vector2(0, i * 18), new Vector2(260, 18));
+                string preferenceName = names[i].Split(':')[0];
+                legends.Add(new MapRoutePreferenceLegend
+                {
+                    PreferenceName = preferenceName,
+                    Label = label
+                });
+            }
+
+            return legends;
+        }
+
+        private static RectTransform CreateMapLayer(Transform parent, string name)
+        {
+            GameObject layer = new GameObject(name, typeof(RectTransform));
+            layer.transform.SetParent(parent, false);
+            RectTransform rect = layer.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            return rect;
+        }
+
+        private static MapRouteView CreateMapRoute(
+            Transform parent,
+            string from,
+            string to,
+            Vector2 start,
+            Vector2 end)
+        {
+            GameObject routeRoot = new GameObject($"{from} to {to}", typeof(RectTransform));
+            routeRoot.transform.SetParent(parent, false);
+            RectTransform routeRect = routeRoot.GetComponent<RectTransform>();
+            routeRect.anchorMin = routeRect.anchorMax = new Vector2(0, 1);
+            routeRect.pivot = new Vector2(0, 1);
+            routeRect.anchoredPosition = Vector2.zero;
+            routeRect.sizeDelta = Vector2.zero;
+
+            Vector2 uiStart = new Vector2(start.x, -start.y);
+            Vector2 uiEnd = new Vector2(end.x, -end.y);
+            Vector2 delta = uiEnd - uiStart;
+            float distance = delta.magnitude;
+            Vector2 direction = delta.normalized;
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            int dashCount = Mathf.Max(2, Mathf.FloorToInt(distance / 18f));
+            List<Image> dashes = new List<Image>();
+            for (int i = 0; i < dashCount; i++)
+            {
+                float t = dashCount == 1 ? 0.5f : i / (dashCount - 1f);
+                Vector2 position = Vector2.Lerp(uiStart, uiEnd, t);
+                Image dash = CreateImage(routeRoot.transform, $"Dash {i + 1:00}", new Color(1, 1, 1, 0.18f));
+                RectTransform rect = dash.rectTransform;
+                rect.anchorMin = rect.anchorMax = new Vector2(0, 1);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = position;
+                rect.sizeDelta = new Vector2(10, 3);
+                rect.localRotation = Quaternion.Euler(0, 0, angle);
+                dashes.Add(dash);
+            }
+
+            return new MapRouteView
+            {
+                FromNodeId = from,
+                ToNodeId = to,
+                Dashes = dashes
+            };
+        }
+
+        private static MapNodeView CreateMapNode(
+            Transform parent,
+            string nodeId,
+            Vector2 position,
+            Sprite circleSprite)
+        {
+            const float nodeMarkerOffsetX = 71f;
+            const float nodeMarkerOffsetY = 10f;
+            Vector2 fineTune = MapNodeFineTune(nodeId);
+            GameObject nodeRoot = new GameObject(nodeId, typeof(RectTransform));
+            nodeRoot.transform.SetParent(parent, false);
+            RectTransform nodeRect = nodeRoot.GetComponent<RectTransform>();
+            nodeRect.anchorMin = nodeRect.anchorMax = new Vector2(0, 1);
+            nodeRect.pivot = new Vector2(0.5f, 0.5f);
+            nodeRect.anchoredPosition = new Vector2(
+                position.x + nodeMarkerOffsetX + fineTune.x,
+                -position.y + nodeMarkerOffsetY + fineTune.y);
+            nodeRect.sizeDelta = new Vector2(150, 46);
+
+            Image marker = CreateImage(nodeRoot.transform, "Marker", new Color(0.18f, 0.19f, 0.2f, 0.82f));
+            marker.sprite = circleSprite;
+            marker.type = Image.Type.Simple;
+            marker.preserveAspect = true;
+            marker.rectTransform.anchorMin = marker.rectTransform.anchorMax = new Vector2(0, 0.5f);
+            marker.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            marker.rectTransform.anchoredPosition = new Vector2(0, 0);
+            marker.rectTransform.sizeDelta = new Vector2(10, 10);
+
+            TMP_Text label = CreateText(nodeRoot.transform, "Label", nodeId, 10,
+                TextAlignmentOptions.Left, new Vector2(14, 8), new Vector2(136, 36));
+            label.textWrappingMode = TextWrappingModes.Normal;
+
+            return new MapNodeView
+            {
+                NodeId = nodeId,
+                Marker = marker,
+                Label = label
+            };
+        }
+
+        private static Vector2 MapNodeFineTune(string nodeId)
+        {
+            switch (nodeId)
+            {
+                case "town":
+                case "narrow_bridge":
+                case "cemetery":
+                case "cave":
+                    return new Vector2(2f, 2f);
+                case "lost_forest":
+                case "last_bastion":
+                    return new Vector2(1f, -2f);
+                default:
+                    return Vector2.zero;
+            }
         }
 
         private static Image CreateImage(Transform parent, string name, Color color)

@@ -86,23 +86,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f06b5dc1023f91b4b9e79240584f5116, type: 2}
   - {fileID: 11400000, guid: 3362f1e3b67aed5429047bdbf9f0673e, type: 2}
   - {fileID: 11400000, guid: 8c13904a5e989ea45bcc28bd9fe8081d, type: 2}
+  - {fileID: 11400000, guid: 6bbab04485f72724c82c947da6da8648, type: 2}
   - {fileID: 11400000, guid: 3dad2ed5dc76db14d9e57a52d4de4775, type: 2}
   - {fileID: 11400000, guid: 07b3218e5fe66f845becc4a51211df55, type: 2}
   - {fileID: 11400000, guid: 24f006cee44026e438d7fd7289b9cf91, type: 2}
   encounters:
-  - {fileID: 11400000, guid: f6e011fc972027747a131fd09d86f4a1, type: 2}
-  - {fileID: 11400000, guid: b8b1f1e3859ade74ab82dcb8fe028b1a, type: 2}
-  - {fileID: 11400000, guid: 4f5910b8636a9c246b61e4904380de14, type: 2}
-  - {fileID: 11400000, guid: 31a9f80b374198e47a1208f01e68b57e, type: 2}
-  - {fileID: 11400000, guid: 8673c9d5d4237b342a7f38f867d368a0, type: 2}
-  - {fileID: 11400000, guid: ac1d0450c4e6b8e49b763d91344cbce6, type: 2}
-  - {fileID: 11400000, guid: a10ff332246f69249a2ebf6b462bc7b5, type: 2}
-  - {fileID: 11400000, guid: 9361bbfaba6e6d043b25fb8729cfa704, type: 2}
-  - {fileID: 11400000, guid: e81839bd17e8088469f330a93695615f, type: 2}
-  - {fileID: 11400000, guid: 960b7ee89a890b14cb062ab8d2d6478d, type: 2}
-  - {fileID: 11400000, guid: 0d09ae106144e8a42a254fd71ef8bac0, type: 2}
-  - {fileID: 11400000, guid: 7861c27a1da511244a6efd9247ccd73c, type: 2}
-  - {fileID: 11400000, guid: e668ed9b4bb10934093ea0c7eb9fe7e4, type: 2}
+  - {fileID: 11400000, guid: 05eeee773b0d88a4197a4d9bb5e413d3, type: 2}
+  - {fileID: 11400000, guid: f7335685f384f244aa375e5a5812eb85, type: 2}
+  - {fileID: 11400000, guid: 7c7f70bd60651e745a8dd6c4f08d8c21, type: 2}
+  - {fileID: 11400000, guid: fa1f530bc4a73a847bb59c4deda85a8e, type: 2}
+  - {fileID: 11400000, guid: 931fced86ef64c143ad603485780be6f, type: 2}
+  - {fileID: 11400000, guid: d697ab37e4eec9842a884968244b6600, type: 2}
   map: {fileID: 11400000, guid: 7847f18943332bd48b80f4818af7034b, type: 2}
   cosmetics:
   - {fileID: 11400000, guid: 7729c27d805e6b34698fc1b2aa2abba6, type: 2}

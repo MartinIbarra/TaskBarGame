@@ -25,6 +25,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private TMP_Text inventorySummary;
         [SerializeField] private TMP_Text mapSummary;
         [SerializeField] private TMP_Text settingsSummary;
+        [SerializeField] private MapUiController mapUi;
 
         [Header("Actions")]
         [SerializeField] private Button cycleActiveSkillButton;
@@ -50,6 +51,7 @@ namespace TaskbarTactics.Presentation
             TMP_Text inventory,
             TMP_Text map,
             TMP_Text settings,
+            MapUiController mapVisual,
             Button cycleActive,
             Button cyclePassive,
             IEnumerable<Button> equipSlots,
@@ -69,6 +71,7 @@ namespace TaskbarTactics.Presentation
             inventorySummary = inventory;
             mapSummary = map;
             settingsSummary = settings;
+            mapUi = mapVisual;
             cycleActiveSkillButton = cycleActive;
             cyclePassiveSkillButton = cyclePassive;
             equipSlotButtons = equipSlots.ToList();
@@ -177,9 +180,18 @@ namespace TaskbarTactics.Presentation
 
             mapSummary.text =
                 $"Nodo: {app.State.Expedition.CurrentNodeId}\n" +
-                $"Completados: {app.State.Expedition.CompletedNodes}/18\n" +
+                $"Completados: {app.State.Expedition.CompletedNodes}/{app.Catalog.Map.Nodes.Count}\n" +
                 $"Prioridad: {app.State.Party.RoutePreference}\n\n" +
-                "El mapa contiene combates, tesoros, eventos, élites y un jefe.";
+                "Los caminos blancos se habilitan al completar cada nodo.";
+            mapUi?.Refresh(app);
+            for (int i = 0; i < routeButtons.Count && i < 3; i++)
+            {
+                bool selectedRoute = (int)app.State.Party.RoutePreference == i;
+                routeButtons[i].image.color = selectedRoute
+                    ? new Color(0.25f, 0.7f, 0.8f)
+                    : new Color(0.18f, 0.21f, 0.27f);
+            }
+
             settingsSummary.text =
                 $"Idioma: {app.State.LanguageCode.ToUpperInvariant()}\n" +
                 "Avisos: visuales y silenciosos\n" +

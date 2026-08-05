@@ -19,16 +19,18 @@ namespace TaskbarTactics.Tests
         }
 
         [Test]
-        public void AuthoredMapHasRequiredEighteenNodeDistribution()
+        public void AuthoredMapMatchesFirstPlayableRoute()
         {
             ContentBlueprint blueprint = ContentBlueprint.CreateVerticalSlice();
 
-            Assert.That(blueprint.MapNodes, Has.Count.EqualTo(18));
-            Assert.That(blueprint.MapNodes.Count(node => node.Type == MapNodeType.Combat), Is.EqualTo(10));
-            Assert.That(blueprint.MapNodes.Count(node => node.Type == MapNodeType.Treasure), Is.EqualTo(3));
-            Assert.That(blueprint.MapNodes.Count(node => node.Type == MapNodeType.Event), Is.EqualTo(2));
+            Assert.That(blueprint.MapNodes, Has.Count.EqualTo(9));
+            Assert.That(blueprint.MapNodes.Count(node => node.Type == MapNodeType.Combat), Is.EqualTo(3));
+            Assert.That(blueprint.MapNodes.Count(node => node.Type == MapNodeType.Treasure), Is.EqualTo(2));
+            Assert.That(blueprint.MapNodes.Count(node => node.Type == MapNodeType.Event), Is.EqualTo(1));
             Assert.That(blueprint.MapNodes.Count(node => node.Type == MapNodeType.Elite), Is.EqualTo(2));
             Assert.That(blueprint.MapNodes.Count(node => node.Type == MapNodeType.Boss), Is.EqualTo(1));
+            Assert.That(blueprint.MapNodes[0].Id, Is.EqualTo("town"));
+            Assert.That(blueprint.MapNodes[8].Id, Is.EqualTo("last_bastion"));
         }
 
         [Test]
