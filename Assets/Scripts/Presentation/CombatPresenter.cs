@@ -121,7 +121,7 @@ namespace TaskbarTactics.Presentation
                 return 0.8f;
             }
 
-            return definition != null && definition.IsBoss ? 1.45f : 1f;
+            return definition != null && definition.IsBoss ? 1.1f : 1f;
         }
 
         private UnitView Spawn(CombatantState state, IReadOnlyList<Transform> cells)
@@ -144,7 +144,7 @@ namespace TaskbarTactics.Presentation
             battlebackRenderer.color = battlebackRenderer.sprite == null
                 ? Color.clear
                 : Color.white;
-            FitBattlebackToCamera();
+            battlebackRenderer.transform.localScale = Vector3.one;
         }
 
         private Sprite LoadBattleback(string nodeId)
@@ -175,18 +175,5 @@ namespace TaskbarTactics.Presentation
             return sprite;
         }
 
-        private void FitBattlebackToCamera()
-        {
-            if (battlebackRenderer?.sprite == null || Camera.main == null)
-            {
-                return;
-            }
-
-            float cameraHeight = Camera.main.orthographicSize * 2f;
-            float cameraWidth = cameraHeight * Camera.main.aspect;
-            Vector2 spriteSize = battlebackRenderer.sprite.bounds.size;
-            float scale = Mathf.Max(cameraWidth / spriteSize.x, cameraHeight / spriteSize.y);
-            battlebackRenderer.transform.localScale = new Vector3(scale, scale, 1f);
-        }
     }
 }

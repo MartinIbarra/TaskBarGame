@@ -53,6 +53,7 @@ namespace TaskbarTactics.Presentation
         private static readonly Color AvailableNode = new Color(0.92f, 0.88f, 0.72f, 0.95f);
         private static readonly Color CurrentNode = new Color(1f, 0.74f, 0.2f, 1f);
         private static readonly Color CompletedNode = new Color(0.32f, 0.83f, 0.5f, 1f);
+        private static readonly Color ChallengeNode = new Color(1f, 1f, 1f, 1f);
         private static readonly Color LockedRoute = new Color(1f, 1f, 1f, 0.04f);
         private static readonly Color AvailableRoute = new Color(1f, 1f, 1f, 0.22f);
 
@@ -109,6 +110,8 @@ namespace TaskbarTactics.Presentation
             HashSet<string> completed = new HashSet<string>(
                 app.State.Expedition.CompletedNodeIds ?? Enumerable.Empty<string>());
             string currentNodeId = app.State.Expedition.CurrentNodeId;
+            bool challengeMode = app.State.Party.RoutePreference.ToString()
+                .Equals("Challenge", StringComparison.OrdinalIgnoreCase);
             if (!app.State.Expedition.IsActive && string.IsNullOrEmpty(currentNodeId))
             {
                 currentNodeId = app.Catalog.Map.Nodes.FirstOrDefault()?.Id ?? string.Empty;
@@ -123,7 +126,7 @@ namespace TaskbarTactics.Presentation
                 {
                     if (dash != null)
                     {
-                        dash.color = hasArtistRoutes
+                        dash.color = hasArtistRoutes || challengeMode
                             ? new Color(1f, 1f, 1f, 0f)
                             : unlocked ? AvailableRoute : LockedRoute;
                     }
@@ -138,10 +141,12 @@ namespace TaskbarTactics.Presentation
                 bool isAvailable = app.Catalog.Map.Nodes.Any(item =>
                     completed.Contains(item.Id) && item.NextNodeIds.Contains(node.NodeId));
 
-                Color color = isCompleted ? CompletedNode :
-                    isCurrent ? CurrentNode :
-                    isAvailable ? AvailableNode :
-                    LockedNode;
+                Color color = challengeMode
+                    ? ChallengeNode
+                    : isCompleted ? CompletedNode :
+                        isCurrent ? CurrentNode :
+                        isAvailable ? AvailableNode :
+                        LockedNode;
                 if (node.Marker != null)
                 {
                     node.Marker.gameObject.SetActive(true);
@@ -190,9 +195,9 @@ namespace TaskbarTactics.Presentation
                     app.State.Party.RoutePreference.ToString(),
                     StringComparison.OrdinalIgnoreCase);
                 overlay.Image.gameObject.SetActive(overlay.Image.texture != null);
-                overlay.Image.color = active
+                overlay.Image.color = active && !challengeMode
                     ? new Color(1f, 1f, 1f, 0.95f)
-                    : new Color(1f, 1f, 1f, 0.25f);
+                    : new Color(1f, 1f, 1f, 0f);
             }
         }
 

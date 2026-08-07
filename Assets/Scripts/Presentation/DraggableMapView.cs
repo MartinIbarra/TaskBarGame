@@ -11,6 +11,7 @@ namespace TaskbarTactics.Presentation
     {
         [SerializeField] private RectTransform content;
         [SerializeField] private RectTransform viewport;
+        [SerializeField, Min(0.25f)] private float initialZoom = 1.6f;
         [SerializeField, Min(0.25f)] private float minZoom = 0.9f;
         [SerializeField, Min(0.25f)] private float maxZoom = 2.4f;
         [SerializeField, Min(0.01f)] private float zoomStep = 0.12f;
@@ -23,7 +24,12 @@ namespace TaskbarTactics.Presentation
         {
             content = targetContent;
             viewport = transform as RectTransform;
-            zoom = content != null ? content.localScale.x : 1f;
+            zoom = Mathf.Clamp(initialZoom, minZoom, maxZoom);
+            if (content != null)
+            {
+                content.localScale = new Vector3(zoom, zoom, 1f);
+            }
+
             ClampContent();
         }
 

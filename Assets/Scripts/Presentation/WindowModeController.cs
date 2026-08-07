@@ -29,7 +29,11 @@ namespace TaskbarTactics.Presentation
             windowController = new WindowsWindowController();
             if (gameCamera != null)
             {
+#if UNITY_EDITOR
+                gameCamera.backgroundColor = new Color(0.18f, 0.19f, 0.22f, 1f);
+#else
                 gameCamera.backgroundColor = WindowsWindowController.ColorKey;
+#endif
             }
 
             yield return null;

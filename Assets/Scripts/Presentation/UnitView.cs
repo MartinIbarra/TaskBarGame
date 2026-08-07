@@ -11,7 +11,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private TMP_Text label;
         [SerializeField] private UnitAnimationBridge animationBridge;
         [SerializeField, Min(0.1f), Tooltip("World-space height used for imported hero artwork.")]
-        private float targetArtworkHeight = 1.35f;
+        private float targetArtworkHeight = 0.4f;
 
         private int maxHealth;
         private int currentHealth;

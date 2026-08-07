@@ -8,7 +8,7 @@ namespace TaskbarTactics.Platform.Windows
     public sealed class WindowsWindowController : IWindowController
     {
         private const int StripWidth = 960;
-        private const int StripHeight = 192;
+        private const int StripHeight = 176;
         private const int ManagementWidth = 960;
         private const int ManagementHeight = 640;
         private const int GwlStyle = -16;

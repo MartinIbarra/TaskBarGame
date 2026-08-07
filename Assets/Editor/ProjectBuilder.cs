@@ -30,11 +30,11 @@ namespace TaskbarTactics.Editor
         private const string TmpResourcesRoot = "Assets/TextMesh Pro/Resources";
         private const string TmpFontPath =
             TmpResourcesRoot + "/Fonts & Materials/LiberationSans SDF.asset";
-        private static readonly Color Background = new Color(0.055f, 0.071f, 0.11f, 1f);
-        private static readonly Color Panel = new Color(0.09f, 0.12f, 0.18f, 0.98f);
-        private static readonly Color PanelLight = new Color(0.14f, 0.18f, 0.25f, 1f);
+        private static readonly Color Background = new Color(0.061f, 0.078f, 0.121f, 1f);
+        private static readonly Color Panel = new Color(0.10f, 0.132f, 0.198f, 0.98f);
+        private static readonly Color PanelLight = new Color(0.154f, 0.198f, 0.275f, 1f);
         private static readonly Color Accent = new Color(0.22f, 0.66f, 0.78f, 1f);
-        private static readonly Color TextColor = new Color(0.9f, 0.93f, 0.96f, 1f);
+        private static readonly Color TextColor = new Color(0.96f, 0.98f, 1f, 1f);
         private static TMP_FontAsset defaultFont;
 
         [MenuItem("Taskbar Tactics/Build Editable Vertical Slice")]
@@ -602,8 +602,8 @@ namespace TaskbarTactics.Editor
             hud.transform.SetParent(root.transform, false);
             GameObject healthBackground = CreateSpriteChild(
                 hud.transform, "Health Background", sprite, new Color(0.16f, 0.04f, 0.06f), 20);
-            healthBackground.transform.localPosition = new Vector3(0, 1.45f, 0);
-            healthBackground.transform.localScale = new Vector3(0.9f, 0.08f, 1);
+            healthBackground.transform.localPosition = new Vector3(0, 0.5f, 0);
+            healthBackground.transform.localScale = new Vector3(0.42f, 0.04f, 1);
 
             GameObject healthFill = CreateSpriteChild(
                 healthBackground.transform, "Health Fill", sprite, new Color(0.18f, 0.85f, 0.4f), 21);
@@ -612,14 +612,14 @@ namespace TaskbarTactics.Editor
 
             GameObject labelObject = new GameObject("Name Label");
             labelObject.transform.SetParent(hud.transform, false);
-            labelObject.transform.localPosition = new Vector3(0, -0.18f, 0);
+            labelObject.transform.localPosition = new Vector3(0, -0.12f, 0);
             TextMeshPro label = labelObject.AddComponent<TextMeshPro>();
             label.font = defaultFont;
-            label.fontSize = 1.5f;
+            label.fontSize = 0.34f;
             label.alignment = TextAlignmentOptions.Center;
             label.color = TextColor;
             label.sortingOrder = 22;
-            label.rectTransform.sizeDelta = new Vector2(3f, 0.5f);
+            label.rectTransform.sizeDelta = new Vector2(1.1f, 0.18f);
             view.ConfigureReferences(body, healthFill.GetComponent<SpriteRenderer>(), label, bridge);
 
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, UnitPrefabPath);
@@ -692,6 +692,30 @@ namespace TaskbarTactics.Editor
             return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
 
+        private static Sprite LoadUiSprite(string path, Vector4 border)
+        {
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.spritePixelsPerUnit = 100;
+                importer.filterMode = FilterMode.Bilinear;
+                importer.mipmapEnabled = false;
+                importer.alphaIsTransparency = true;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                TextureImporterSettings settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
+                settings.spriteMeshType = SpriteMeshType.FullRect;
+                settings.spriteBorder = border;
+                importer.SetTextureSettings(settings);
+                importer.SaveAndReimport();
+            }
+
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
         private static void CreateMainScene(
             GameContentCatalog catalog,
             UnitView unitPrefab,
@@ -701,7 +725,7 @@ namespace TaskbarTactics.Editor
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             GameObject systems = new GameObject("Systems");
             GameObject gameplay = new GameObject("Gameplay");
-            GameObject stripUi = CreateCanvasRoot("Strip UI", new Vector2(960, 192));
+            GameObject stripUi = CreateCanvasRoot("Strip UI", new Vector2(960, 176));
             GameObject managementUi = CreateCanvasRoot("Management UI", new Vector2(960, 640));
             GameObject audio = new GameObject("Audio");
             audio.AddComponent<AudioSource>();
@@ -715,7 +739,10 @@ namespace TaskbarTactics.Editor
             WindowModeController window = windowObject.AddComponent<WindowModeController>();
 
             StripHudController strip = BuildStripUi(stripUi.transform);
-            ManagementUiController management = BuildManagementUi(managementUi.transform, circleSprite);
+            Sprite hudVerticalSprite = LoadUiSprite("Assets/Resources/UI/hudv.png", new Vector4(18, 18, 18, 18));
+            Sprite hudHorizontalSprite = LoadUiSprite("Assets/Resources/UI/hudh.png", new Vector4(18, 18, 18, 18));
+            ManagementUiController management = BuildManagementUi(
+                managementUi.transform, circleSprite, hudVerticalSprite, hudHorizontalSprite);
 
             GameObject appObject = new GameObject("Game Application");
             appObject.transform.SetParent(systems.transform);
@@ -742,7 +769,9 @@ namespace TaskbarTactics.Editor
             cameraObject.tag = "MainCamera";
             Camera camera = cameraObject.AddComponent<Camera>();
             camera.orthographic = true;
-            camera.orthographicSize = 3.6f;
+            // The Windows strip is 960x176, but Editor play mode needs a wider camera
+            // to preview the battle composition before the native transparent window is applied.
+            camera.orthographicSize = 1.8f;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = new Color(1, 0, 1, 1);
             camera.transform.position = new Vector3(0, 0, -10);
@@ -764,8 +793,10 @@ namespace TaskbarTactics.Editor
             heroGrid.SetParent(combatObject.transform);
             Transform enemyGrid = new GameObject("Enemy Grid").transform;
             enemyGrid.SetParent(combatObject.transform);
-            List<Transform> heroCells = CreateGrid(heroGrid, -4.4f, cellSprite, new Color(0.08f, 0.18f, 0.25f));
-            List<Transform> enemyCells = CreateGrid(enemyGrid, 1.1f, cellSprite, new Color(0.25f, 0.08f, 0.1f));
+            List<Transform> heroCells = CreateGrid(
+                heroGrid, -3.0f, 0.76f, 0.32f, cellSprite, new Color(0.08f, 0.18f, 0.25f));
+            List<Transform> enemyCells = CreateGrid(
+                enemyGrid, 0.75f, 0.9f, 0.26f, cellSprite, new Color(0.25f, 0.08f, 0.1f), 0.28f);
             presenter.Configure(unitPrefab, heroCells, enemyCells, battleback);
             return presenter;
         }
@@ -795,8 +826,11 @@ namespace TaskbarTactics.Editor
         private static List<Transform> CreateGrid(
             Transform parent,
             float startX,
+            float spacingX,
+            float spacingY,
             Sprite sprite,
-            Color color)
+            Color color,
+            float rowOffsetX = 0f)
         {
             List<Transform> cells = new List<Transform>();
             for (int row = 0; row < 3; row++)
@@ -806,8 +840,8 @@ namespace TaskbarTactics.Editor
                     GameObject cell = new GameObject($"Cell {row},{column}");
                     cell.transform.SetParent(parent);
                     cell.transform.position = new Vector3(
-                        startX + column * 1.45f,
-                        1.5f - row * 1.45f,
+                        startX + column * spacingX + row * rowOffsetX,
+                        0.1f - row * spacingY,
                         1);
                     SpriteRenderer renderer = cell.AddComponent<SpriteRenderer>();
                     renderer.sprite = sprite;
@@ -838,15 +872,20 @@ namespace TaskbarTactics.Editor
         {
             StripHudController controller = root.gameObject.AddComponent<StripHudController>();
             Image bar = CreateImage(root, "Status Bar", Panel);
-            SetStretch(bar.rectTransform, 0, 0, 0, 150);
+            RectTransform barRect = bar.rectTransform;
+            barRect.anchorMin = new Vector2(0, 0);
+            barRect.anchorMax = new Vector2(1, 0);
+            barRect.pivot = new Vector2(0.5f, 0);
+            barRect.anchoredPosition = new Vector2(0, 48);
+            barRect.sizeDelta = new Vector2(0, 44);
             TMP_Text status = CreateText(bar.transform, "Status Label", "Escuadrón en el campamento",
-                18, TextAlignmentOptions.Left, new Vector2(106, 7), new Vector2(390, 32));
+                16, TextAlignmentOptions.Left, new Vector2(106, 7), new Vector2(520, 28));
             TMP_Text node = CreateText(bar.transform, "Node Label", "Campamento",
-                18, TextAlignmentOptions.Center, new Vector2(510, 7), new Vector2(200, 32));
+                16, TextAlignmentOptions.Center, new Vector2(636, 7), new Vector2(190, 28));
             Button manage = CreateButton(bar.transform, "Manage Button", "HUD",
-                new Vector2(12, 3), new Vector2(82, 34), Accent);
+                new Vector2(12, 5), new Vector2(82, 30), Accent);
             Button menu = CreateButton(bar.transform, "Menu Button", "•••",
-                new Vector2(852, 3), new Vector2(48, 34), PanelLight);
+                new Vector2(852, 5), new Vector2(48, 30), PanelLight);
             Image attention = CreateImage(root, "Attention Indicator", new Color(1f, 0.72f, 0.18f));
             attention.rectTransform.anchorMin = attention.rectTransform.anchorMax = new Vector2(1, 1);
             attention.rectTransform.pivot = new Vector2(1, 1);
@@ -866,9 +905,14 @@ namespace TaskbarTactics.Editor
             return controller;
         }
 
-        private static ManagementUiController BuildManagementUi(Transform root, Sprite circleSprite)
+        private static ManagementUiController BuildManagementUi(
+            Transform root,
+            Sprite circleSprite,
+            Sprite hudVerticalSprite,
+            Sprite hudHorizontalSprite)
         {
             Image background = CreateImage(root, "Management Background", Background);
+            ApplyUiFrame(background, hudHorizontalSprite);
             SetStretch(background.rectTransform, 0, 0, 0, 0);
             TMP_Text title = CreateText(background.transform, "Title", "TASKBAR TACTICS",
                 26, TextAlignmentOptions.Left, new Vector2(24, 18), new Vector2(500, 42));
@@ -886,6 +930,7 @@ namespace TaskbarTactics.Editor
             {
                 tabs.Add(CreateButton(background.transform, $"{tabNames[i]} Tab", tabNames[i],
                     new Vector2(20, 80 + i * 58), new Vector2(160, 44), PanelLight));
+                ApplyUiFrame(tabs[i].GetComponent<Image>(), hudHorizontalSprite);
             }
 
             List<GameObject> panels = new List<GameObject>();
@@ -893,6 +938,7 @@ namespace TaskbarTactics.Editor
             for (int i = 0; i < tabNames.Length; i++)
             {
                 Image panel = CreateImage(background.transform, $"{tabNames[i]} Panel", Panel);
+                ApplyUiFrame(panel, hudVerticalSprite);
                 panel.rectTransform.anchorMin = new Vector2(0, 0);
                 panel.rectTransform.anchorMax = new Vector2(1, 1);
                 panel.rectTransform.offsetMin = new Vector2(200, 24);
@@ -958,6 +1004,8 @@ namespace TaskbarTactics.Editor
                 "Salir del juego", new Vector2(260, 300), new Vector2(220, 44),
                 new Color(0.62f, 0.18f, 0.22f));
 
+            ApplyManagementUiSkin(background.transform, hudVerticalSprite, hudHorizontalSprite);
+
             ManagementUiController controller =
                 root.gameObject.AddComponent<ManagementUiController>();
             controller.Configure(
@@ -1009,8 +1057,6 @@ namespace TaskbarTactics.Editor
             RectTransform artworkLayer = CreateMapLayer(artworkRoot, "Artist Overlays");
             RectTransform routesLayer = CreateMapLayer(artworkRoot, "Routes");
             RectTransform nodesLayer = CreateMapLayer(artworkRoot, "Nodes");
-            RawImage nodeArtworkOverlay = CreateMapArtworkOverlay(
-                artworkLayer, "Node Artwork Overlay", "Maps/map1_nodes");
             List<MapRouteArtworkOverlay> routeArtworkOverlays = CreateMapRouteArtworkOverlays(artworkLayer);
 
             Dictionary<string, Vector2> positions = new Dictionary<string, Vector2>
@@ -1058,7 +1104,7 @@ namespace TaskbarTactics.Editor
                 nodes,
                 routes,
                 legends,
-                nodeArtworkOverlay,
+                null,
                 routeArtworkOverlays);
             root.AddComponent<DraggableMapView>().Configure(artworkRoot);
             return controller;
@@ -1340,6 +1386,38 @@ namespace TaskbarTactics.Editor
             text.rectTransform.anchoredPosition = Vector2.zero;
             text.rectTransform.sizeDelta = Vector2.zero;
             return button;
+        }
+
+        private static void ApplyManagementUiSkin(
+            Transform root,
+            Sprite panelSprite,
+            Sprite buttonSprite)
+        {
+            foreach (Image image in root.GetComponentsInChildren<Image>(true))
+            {
+                if (image.name.EndsWith("Panel", StringComparison.Ordinal) ||
+                    image.name == "Management Background")
+                {
+                    ApplyUiFrame(image, panelSprite);
+                }
+                else if (image.GetComponent<Button>() != null ||
+                         image.name.EndsWith("Tab", StringComparison.Ordinal))
+                {
+                    ApplyUiFrame(image, buttonSprite);
+                }
+            }
+        }
+
+        private static void ApplyUiFrame(Image image, Sprite sprite)
+        {
+            if (image == null || sprite == null)
+            {
+                return;
+            }
+
+            image.sprite = sprite;
+            image.type = Image.Type.Sliced;
+            image.preserveAspect = false;
         }
 
         private static void SetStretch(
