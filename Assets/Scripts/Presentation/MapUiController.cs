@@ -14,6 +14,7 @@ namespace TaskbarTactics.Presentation
         public string NodeId;
         public Image Marker;
         public TMP_Text Label;
+        public Image CurrentFlag;
     }
 
     [Serializable]
@@ -48,6 +49,9 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private RawImage nodeArtworkOverlay;
         [SerializeField] private List<MapRouteArtworkOverlay> routeArtworkOverlays =
             new List<MapRouteArtworkOverlay>();
+        [SerializeField] private DraggableMapView draggableMap;
+
+        private string lastFocusedNodeId;
 
         private static readonly Color LockedNode = new Color(0.18f, 0.19f, 0.2f, 0.82f);
         private static readonly Color AvailableNode = new Color(0.92f, 0.88f, 0.72f, 0.95f);
@@ -55,7 +59,7 @@ namespace TaskbarTactics.Presentation
         private static readonly Color CompletedNode = new Color(0.32f, 0.83f, 0.5f, 1f);
         private static readonly Color ChallengeNode = new Color(1f, 1f, 1f, 1f);
         private static readonly Color LockedRoute = new Color(1f, 1f, 1f, 0.04f);
-        private static readonly Color AvailableRoute = new Color(1f, 1f, 1f, 0.22f);
+        private static readonly Color PlannedRoute = new Color(1f, 1f, 1f, 0.82f);
 
         public void Configure(
             RawImage background,
@@ -71,6 +75,7 @@ namespace TaskbarTactics.Presentation
             legends = routeLegends.ToList();
             nodeArtworkOverlay = nodeOverlay;
             routeArtworkOverlays = routeOverlays.ToList();
+            draggableMap = GetComponent<DraggableMapView>();
         }
 
         public void Configure(
@@ -119,20 +124,24 @@ namespace TaskbarTactics.Presentation
 
             foreach (MapRouteView route in routes)
             {
-                bool unlocked = completed.Contains(route.FromNodeId);
                 bool hasArtistRoutes = routeArtworkOverlays.Any(item =>
                     item.Image != null && item.Image.texture != null);
+                bool plannedRoute = IsRouteOnPreferencePath(
+                    route.FromNodeId,
+                    route.ToNodeId,
+                    app.State.Party.RoutePreference.ToString());
                 foreach (Image dash in route.Dashes)
                 {
                     if (dash != null)
                     {
                         dash.color = hasArtistRoutes || challengeMode
                             ? new Color(1f, 1f, 1f, 0f)
-                            : unlocked ? AvailableRoute : LockedRoute;
+                            : plannedRoute ? PlannedRoute : LockedRoute;
                     }
                 }
             }
 
+            RectTransform currentNodeTransform = null;
             foreach (MapNodeView node in nodes)
             {
                 MapNodeDefinition definition = app.Catalog.Map.FindNode(node.NodeId);
@@ -153,6 +162,11 @@ namespace TaskbarTactics.Presentation
                     node.Marker.color = color;
                 }
 
+                if (node.CurrentFlag != null)
+                {
+                    node.CurrentFlag.gameObject.SetActive(isCurrent);
+                }
+
                 if (node.Label != null)
                 {
                     node.Label.gameObject.SetActive(true);
@@ -161,6 +175,18 @@ namespace TaskbarTactics.Presentation
                         ? $"{DisplayName(node.NodeId)}\n{definition.Type} - Dif. {definition.Difficulty}"
                         : DisplayName(node.NodeId);
                 }
+
+                if (isCurrent && node.Marker != null)
+                {
+                    currentNodeTransform = node.Marker.transform.parent as RectTransform;
+                }
+            }
+
+            if (currentNodeTransform != null && currentNodeId != lastFocusedNodeId)
+            {
+                draggableMap ??= GetComponent<DraggableMapView>();
+                draggableMap?.FocusOnDefaultZoom(currentNodeTransform);
+                lastFocusedNodeId = currentNodeId;
             }
 
             foreach (MapRoutePreferenceLegend legend in legends)
@@ -226,6 +252,50 @@ namespace TaskbarTactics.Presentation
                 default:
                     return nodeId;
             }
+        }
+
+        private static bool IsRouteOnPreferencePath(string fromNodeId, string toNodeId, string preferenceName)
+        {
+            switch (preferenceName)
+            {
+                case "Loot":
+                    return IsRoute(
+                        fromNodeId,
+                        toNodeId,
+                        "town",
+                        "narrow_bridge",
+                        "cave",
+                        "goblin_village",
+                        "mountain_pass",
+                        "lost_forest",
+                        "last_bastion");
+                case "Safety":
+                    return IsRoute(
+                        fromNodeId,
+                        toNodeId,
+                        "town",
+                        "narrow_bridge",
+                        "cemetery",
+                        "goblin_village",
+                        "mountain_pass",
+                        "lost_forest",
+                        "last_bastion");
+                default:
+                    return false;
+            }
+        }
+
+        private static bool IsRoute(string fromNodeId, string toNodeId, params string[] path)
+        {
+            for (int i = 0; i < path.Length - 1; i++)
+            {
+                if (path[i] == fromNodeId && path[i + 1] == toNodeId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

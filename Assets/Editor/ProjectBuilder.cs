@@ -30,8 +30,10 @@ namespace TaskbarTactics.Editor
         private const string TmpResourcesRoot = "Assets/TextMesh Pro/Resources";
         private const string TmpFontPath =
             TmpResourcesRoot + "/Fonts & Materials/LiberationSans SDF.asset";
-        private static readonly Color Background = new Color(0.061f, 0.078f, 0.121f, 1f);
-        private static readonly Color Panel = new Color(0.10f, 0.132f, 0.198f, 0.98f);
+        private const string UiFontSourcePath = "Assets/Resources/UI/Fonts/VCR_OSD_MONO.ttf";
+        private const string UiFontAssetPath = "Assets/Resources/UI/Fonts/VCR_OSD_MONO SDF.asset";
+        private static readonly Color Background = new Color(0.076f, 0.098f, 0.151f, 1f);
+        private static readonly Color Panel = new Color(0.125f, 0.165f, 0.248f, 0.98f);
         private static readonly Color PanelLight = new Color(0.154f, 0.198f, 0.275f, 1f);
         private static readonly Color Accent = new Color(0.22f, 0.66f, 0.78f, 1f);
         private static readonly Color TextColor = new Color(0.96f, 0.98f, 1f, 1f);
@@ -104,6 +106,12 @@ namespace TaskbarTactics.Editor
                 "Assets/Localization",
                 "Assets/Resources",
                 "Assets/Resources/Maps",
+                "Assets/Resources/UI",
+                "Assets/Resources/UI/Fonts",
+                "Assets/Resources/Events",
+                "Assets/Resources/Events/Town",
+                "Assets/Resources/Audio",
+                "Assets/Resources/Audio/Events",
                 GeneratedRoot,
                 GeneratedRoot + "/Content",
                 GeneratedRoot + "/Content/Heroes",
@@ -141,13 +149,93 @@ namespace TaskbarTactics.Editor
 
         private static void EnsureTextMeshProResources()
         {
-            defaultFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(TmpFontPath);
-            if (defaultFont == null)
+            defaultFont = LoadOrCreateUiFontAsset();
+            if (defaultFont != null)
             {
-                throw new InvalidOperationException(
-                    "Faltan los recursos esenciales de TextMeshPro. Ejecute primero " +
-                    "Taskbar Tactics/Import TextMeshPro Essentials.");
+                return;
             }
+
+            defaultFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(TmpFontPath);
+            if (defaultFont != null)
+            {
+                return;
+            }
+
+            throw new InvalidOperationException(
+                "Faltan los recursos esenciales de TextMeshPro. Ejecute primero " +
+                "Taskbar Tactics/Import TextMeshPro Essentials.");
+        }
+
+        private static TMP_FontAsset LoadOrCreateUiFontAsset()
+        {
+            TMP_FontAsset fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(UiFontAssetPath);
+            if (IsUsableFontAsset(fontAsset))
+            {
+                return fontAsset;
+            }
+
+            if (fontAsset != null)
+            {
+                AssetDatabase.DeleteAsset(UiFontAssetPath);
+            }
+
+            Font sourceFont = AssetDatabase.LoadAssetAtPath<Font>(UiFontSourcePath);
+            if (sourceFont == null)
+            {
+                return null;
+            }
+
+            fontAsset = TMP_FontAsset.CreateFontAsset(sourceFont);
+            if (!HasFontAtlas(fontAsset))
+            {
+                return null;
+            }
+
+            Texture2D atlas = fontAsset.atlasTextures.FirstOrDefault();
+            Material material = fontAsset.material;
+            if (material == null)
+            {
+                Shader shader = Shader.Find("TextMeshPro/Distance Field");
+                if (shader == null)
+                {
+                    return null;
+                }
+
+                material = new Material(shader)
+                {
+                    name = "VCR_OSD_MONO Material"
+                };
+                material.SetTexture("_MainTex", atlas);
+                fontAsset.material = material;
+            }
+
+            AssetDatabase.CreateAsset(fontAsset, UiFontAssetPath);
+            if (atlas != null && !AssetDatabase.Contains(atlas))
+            {
+                atlas.name = "VCR_OSD_MONO Atlas";
+                AssetDatabase.AddObjectToAsset(atlas, fontAsset);
+            }
+
+            if (material != null && !AssetDatabase.Contains(material))
+            {
+                AssetDatabase.AddObjectToAsset(material, fontAsset);
+            }
+
+            AssetDatabase.SaveAssets();
+            return fontAsset;
+        }
+
+        private static bool IsUsableFontAsset(TMP_FontAsset fontAsset)
+        {
+            return HasFontAtlas(fontAsset) && fontAsset.material != null;
+        }
+
+        private static bool HasFontAtlas(TMP_FontAsset fontAsset)
+        {
+            return fontAsset != null &&
+                   fontAsset.atlasTextures != null &&
+                   fontAsset.atlasTextures.Length > 0 &&
+                   fontAsset.atlasTextures[0] != null;
         }
 
         private static void OnTmpImportCompleted(string packageName)
@@ -716,6 +804,47 @@ namespace TaskbarTactics.Editor
             return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
 
+        private static Sprite[] LoadCandleSprites()
+        {
+            string[] paths =
+            {
+                "Assets/Resources/UI/Candle/vela0.png",
+                "Assets/Resources/UI/Candle/vela1.png",
+                "Assets/Resources/UI/Candle/vela2.png"
+            };
+            return paths.Select(LoadPixelUiSprite).Where(sprite => sprite != null).ToArray();
+        }
+
+        private static Sprite[] LoadMapFlagSprites()
+        {
+            string[] paths =
+            {
+                "Assets/Resources/UI/MapFlag/flag1.png",
+                "Assets/Resources/UI/MapFlag/flag2.png",
+                "Assets/Resources/UI/MapFlag/flag3.png"
+            };
+            return paths.Select(LoadPixelUiSprite).Where(sprite => sprite != null).ToArray();
+        }
+
+        private static Sprite LoadPixelUiSprite(string path)
+        {
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.spritePixelsPerUnit = 100;
+                importer.filterMode = FilterMode.Point;
+                importer.mipmapEnabled = false;
+                importer.alphaIsTransparency = true;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.SaveAndReimport();
+            }
+
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
         private static void CreateMainScene(
             GameContentCatalog catalog,
             UnitView unitPrefab,
@@ -739,15 +868,18 @@ namespace TaskbarTactics.Editor
             WindowModeController window = windowObject.AddComponent<WindowModeController>();
 
             StripHudController strip = BuildStripUi(stripUi.transform);
-            Sprite hudVerticalSprite = LoadUiSprite("Assets/Resources/UI/hudv.png", new Vector4(18, 18, 18, 18));
-            Sprite hudHorizontalSprite = LoadUiSprite("Assets/Resources/UI/hudh.png", new Vector4(18, 18, 18, 18));
+            TownIntroPresenter townIntro = BuildTownIntro(stripUi.transform);
+            Sprite hudVerticalSprite = LoadUiSprite("Assets/Resources/UI/hudv1.png", new Vector4(18, 18, 18, 18));
+            Sprite hudHorizontalSprite = LoadUiSprite("Assets/Resources/UI/hudh1.png", new Vector4(18, 18, 18, 18));
+            Sprite[] candleFrames = LoadCandleSprites();
+            Sprite[] mapFlagFrames = LoadMapFlagSprites();
             ManagementUiController management = BuildManagementUi(
-                managementUi.transform, circleSprite, hudVerticalSprite, hudHorizontalSprite);
+                managementUi.transform, circleSprite, hudVerticalSprite, hudHorizontalSprite, candleFrames, mapFlagFrames);
 
             GameObject appObject = new GameObject("Game Application");
             appObject.transform.SetParent(systems.transform);
             GameAppController app = appObject.AddComponent<GameAppController>();
-            app.Configure(catalog, combatPresenter, strip, management, window);
+            app.Configure(catalog, combatPresenter, strip, management, window, townIntro);
             window.Configure(stripUi, managementUi, camera);
 
             GameObject eventSystemObject = new GameObject("Event System");
@@ -777,6 +909,7 @@ namespace TaskbarTactics.Editor
             camera.transform.position = new Vector3(0, 0, -10);
             camera.allowHDR = false;
             camera.allowMSAA = false;
+            cameraObject.AddComponent<AudioListener>();
             return camera;
         }
 
@@ -794,10 +927,10 @@ namespace TaskbarTactics.Editor
             Transform enemyGrid = new GameObject("Enemy Grid").transform;
             enemyGrid.SetParent(combatObject.transform);
             List<Transform> heroCells = CreateGrid(
-                heroGrid, -3.0f, 0.76f, 0.32f, cellSprite, new Color(0.08f, 0.18f, 0.25f));
+                heroGrid, -2.75f, 0.76f, 0.4f, cellSprite, new Color(0.08f, 0.18f, 0.25f), 0f, 4);
             List<Transform> enemyCells = CreateGrid(
-                enemyGrid, 0.75f, 0.9f, 0.26f, cellSprite, new Color(0.25f, 0.08f, 0.1f), 0.28f);
-            presenter.Configure(unitPrefab, heroCells, enemyCells, battleback);
+                enemyGrid, 1.0f, 0.9f, 0.26f, cellSprite, new Color(0.25f, 0.08f, 0.1f), 0.28f);
+            presenter.Configure(unitPrefab, heroCells, enemyCells, battleback, 4, 3);
             return presenter;
         }
 
@@ -830,12 +963,13 @@ namespace TaskbarTactics.Editor
             float spacingY,
             Sprite sprite,
             Color color,
-            float rowOffsetX = 0f)
+            float rowOffsetX = 0f,
+            int columns = 3)
         {
             List<Transform> cells = new List<Transform>();
             for (int row = 0; row < 3; row++)
             {
-                for (int column = 0; column < 3; column++)
+                for (int column = 0; column < columns; column++)
                 {
                     GameObject cell = new GameObject($"Cell {row},{column}");
                     cell.transform.SetParent(parent);
@@ -882,11 +1016,16 @@ namespace TaskbarTactics.Editor
                 16, TextAlignmentOptions.Left, new Vector2(106, 7), new Vector2(520, 28));
             TMP_Text node = CreateText(bar.transform, "Node Label", "Campamento",
                 16, TextAlignmentOptions.Center, new Vector2(636, 7), new Vector2(190, 28));
-            Button manage = CreateButton(bar.transform, "Manage Button", "HUD",
-                new Vector2(12, 5), new Vector2(82, 30), Accent);
+            Button manage = CreateButton(root, "Manage Button", "X",
+                Vector2.zero, new Vector2(24, 24), new Color(0.82f, 0.12f, 0.12f));
+            manage.GetComponentInChildren<TMP_Text>().color = Color.black;
+            manage.image.rectTransform.anchorMin = manage.image.rectTransform.anchorMax = new Vector2(1, 1);
+            manage.image.rectTransform.pivot = new Vector2(1, 1);
+            manage.image.rectTransform.anchoredPosition = new Vector2(-8, -8);
             Button menu = CreateButton(bar.transform, "Menu Button", "•••",
                 new Vector2(852, 5), new Vector2(48, 30), PanelLight);
             Image attention = CreateImage(root, "Attention Indicator", new Color(1f, 0.72f, 0.18f));
+            attention.raycastTarget = false;
             attention.rectTransform.anchorMin = attention.rectTransform.anchorMax = new Vector2(1, 1);
             attention.rectTransform.pivot = new Vector2(1, 1);
             attention.rectTransform.anchoredPosition = new Vector2(-8, -8);
@@ -901,19 +1040,91 @@ namespace TaskbarTactics.Editor
                 new Vector2(10, 9), new Vector2(130, 34), new Color(0.62f, 0.18f, 0.22f));
             menuPanel.gameObject.SetActive(false);
             attention.gameObject.SetActive(false);
+            manage.transform.SetAsLastSibling();
             controller.Configure(status, node, attention.gameObject, manage, menu, menuPanel.gameObject, quit);
             return controller;
+        }
+
+        private static TownIntroPresenter BuildTownIntro(Transform root)
+        {
+            Sprite backgroundSprite = LoadUiSprite("Assets/Resources/Events/Town/town1.png", Vector4.zero);
+            Sprite gateSprite = LoadPixelUiSprite("Assets/Resources/Events/Town/rejatown.png");
+            AssetDatabase.ImportAsset(
+                "Assets/Resources/Audio/Events/gate_open.ogg",
+                ImportAssetOptions.ForceSynchronousImport);
+            AudioClip gateOpenClip = AssetDatabase.LoadAssetAtPath<AudioClip>(
+                "Assets/Resources/Audio/Events/gate_open.ogg");
+
+            GameObject overlay = new GameObject(
+                "Town Intro Overlay",
+                typeof(RectTransform),
+                typeof(CanvasGroup),
+                typeof(RectMask2D));
+            overlay.transform.SetParent(root, false);
+            RectTransform overlayRect = overlay.GetComponent<RectTransform>();
+            overlayRect.anchorMin = Vector2.zero;
+            overlayRect.anchorMax = Vector2.one;
+            overlayRect.offsetMin = Vector2.zero;
+            overlayRect.offsetMax = Vector2.zero;
+
+            Image background = CreateImage(overlay.transform, "Town Background", Color.white);
+            background.sprite = backgroundSprite;
+            background.type = Image.Type.Simple;
+            background.preserveAspect = true;
+            background.raycastTarget = false;
+            background.rectTransform.anchorMin = background.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            background.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            background.rectTransform.anchoredPosition = new Vector2(0f, -2f);
+            background.rectTransform.sizeDelta = new Vector2(620f, 252f);
+
+            Image gate = CreateImage(overlay.transform, "Gate", Color.white);
+            gate.sprite = gateSprite;
+            gate.type = Image.Type.Simple;
+            gate.preserveAspect = true;
+            gate.raycastTarget = false;
+            gate.rectTransform.anchorMin = gate.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            gate.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            gate.rectTransform.anchoredPosition = new Vector2(0f, -7f);
+            gate.rectTransform.sizeDelta = new Vector2(259f, 116f);
+
+            GameObject heroRoot = new GameObject("Hero Runners", typeof(RectTransform));
+            heroRoot.transform.SetParent(overlay.transform, false);
+            RectTransform heroRect = heroRoot.GetComponent<RectTransform>();
+            heroRect.anchorMin = Vector2.zero;
+            heroRect.anchorMax = Vector2.one;
+            heroRect.offsetMin = Vector2.zero;
+            heroRect.offsetMax = Vector2.zero;
+            heroRoot.transform.SetSiblingIndex(gate.transform.GetSiblingIndex());
+
+            AudioSource source = overlay.AddComponent<AudioSource>();
+            source.playOnAwake = false;
+            source.loop = false;
+            source.spatialBlend = 0f;
+            source.volume = 1f;
+
+            TownIntroPresenter presenter = overlay.AddComponent<TownIntroPresenter>();
+            presenter.Configure(
+                overlay.GetComponent<CanvasGroup>(),
+                background,
+                gate.rectTransform,
+                heroRect,
+                source,
+                gateOpenClip);
+            return presenter;
         }
 
         private static ManagementUiController BuildManagementUi(
             Transform root,
             Sprite circleSprite,
             Sprite hudVerticalSprite,
-            Sprite hudHorizontalSprite)
+            Sprite hudHorizontalSprite,
+            Sprite[] candleFrames,
+            Sprite[] mapFlagFrames)
         {
             Image background = CreateImage(root, "Management Background", Background);
             ApplyUiFrame(background, hudHorizontalSprite);
             SetStretch(background.rectTransform, 0, 0, 0, 0);
+            AddCandlePair(background.transform, candleFrames, new Vector2(12, 18), new Vector2(-12, 18));
             TMP_Text title = CreateText(background.transform, "Title", "TASKBAR TACTICS",
                 26, TextAlignmentOptions.Left, new Vector2(24, 18), new Vector2(500, 42));
             title.fontStyle = FontStyles.Bold;
@@ -922,7 +1133,7 @@ namespace TaskbarTactics.Editor
 
             string[] tabNames =
             {
-                "Escuadrón", "Formación", "Habilidades", "Sinergias",
+                "Escuadrón", "Habilidades", "Sinergias",
                 "Inventario", "Mapa", "Ajustes"
             };
             List<Button> tabs = new List<Button>();
@@ -952,55 +1163,53 @@ namespace TaskbarTactics.Editor
                 summaries.Add(summary);
                 panel.gameObject.SetActive(i == 0);
             }
+            AddCandlePair(panels[0].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8));
+            AddCandlePair(panels[4].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8));
 
             List<Button> heroButtons = new List<Button>();
             for (int i = 0; i < 6; i++)
             {
-                heroButtons.Add(CreateButton(panels[0].transform, $"Hero {i + 1} Button", $"Héroe {i + 1}",
-                    new Vector2(24 + (i % 2) * 330, 300 + (i / 2) * 58),
-                    new Vector2(300, 44), PanelLight));
+                heroButtons.Add(CreateHeroClassButton(panels[0].transform, i));
             }
 
-            List<Button> formationButtons = new List<Button>();
-            for (int i = 0; i < 9; i++)
-            {
-                formationButtons.Add(CreateButton(panels[1].transform, $"Formation Cell {i / 3},{i % 3}",
-                    $"{i / 3},{i % 3}",
-                    new Vector2(310 + (i % 3) * 92, 130 + (i / 3) * 92),
-                    new Vector2(76, 76), PanelLight));
-            }
+            List<Button> formationButtons = CreateFormationPresetButtons(panels[0].transform);
 
-            Button cycleActive = CreateButton(panels[2].transform, "Cycle Active Skill Button",
+            Button cycleActive = CreateButton(panels[1].transform, "Cycle Active Skill Button",
                 "Cambiar activa", new Vector2(24, 300), new Vector2(220, 44), Accent);
-            Button cyclePassive = CreateButton(panels[2].transform, "Cycle Passive Skill Button",
+            Button cyclePassive = CreateButton(panels[1].transform, "Cycle Passive Skill Button",
                 "Cambiar pasiva", new Vector2(260, 300), new Vector2(220, 44), Accent);
 
             List<Button> equipButtons = new List<Button>();
             string[] slots = { "Arma", "Armadura", "Accesorio", "Reliquia" };
             for (int i = 0; i < slots.Length; i++)
             {
-                equipButtons.Add(CreateButton(panels[4].transform, $"Equip {slots[i]} Button",
+                equipButtons.Add(CreateButton(panels[3].transform, $"Equip {slots[i]} Button",
                     $"Equipar {slots[i]}", new Vector2(24 + (i % 2) * 250, 390 + (i / 2) * 58),
                     new Vector2(220, 44), Accent));
             }
 
             List<Button> routeButtons = new List<Button>
             {
-                CreateButton(panels[5].transform, "Safety Route Button", "Seguridad",
+                CreateButton(panels[4].transform, "Safety Route Button", "Seguridad",
                     new Vector2(24, 250), new Vector2(220, 44), PanelLight),
-                CreateButton(panels[5].transform, "Loot Route Button", "Botín",
+                CreateButton(panels[4].transform, "Loot Route Button", "Botín",
                     new Vector2(24, 304), new Vector2(220, 44), PanelLight),
-                CreateButton(panels[5].transform, "Challenge Route Button", "Desafío",
+                CreateButton(panels[4].transform, "Challenge Route Button", "Desafío",
                     new Vector2(24, 358), new Vector2(220, 44), PanelLight)
             };
-            Button start = CreateButton(panels[5].transform, "Start Expedition Button",
-                "INICIAR EXPEDICIÓN", new Vector2(24, 420), new Vector2(220, 52), Accent);
+            Button start = CreateButton(panels[4].transform, "Start Expedition Button",
+                "INICIAR EXPEDICIÓN", new Vector2(24, 420), new Vector2(150, 52), Accent);
+            Button reset = CreateButton(panels[4].transform, "Reset Expedition Button",
+                "REINICIAR\nEXPEDICIÓN", new Vector2(184, 420), new Vector2(110, 52),
+                new Color(0.82f, 0.12f, 0.12f));
+            reset.GetComponentInChildren<TMP_Text>().color = Color.black;
 
-            MapUiController mapVisual = BuildMapVisual(panels[5].transform, summaries[5], circleSprite);
+            MapUiController mapVisual = BuildMapVisual(
+                panels[4].transform, summaries[4], circleSprite, mapFlagFrames);
 
-            Button language = CreateButton(panels[6].transform, "Language Button",
+            Button language = CreateButton(panels[5].transform, "Language Button",
                 "Cambiar ES / EN", new Vector2(24, 300), new Vector2(220, 44), Accent);
-            Button quit = CreateButton(panels[6].transform, "Quit Button",
+            Button quit = CreateButton(panels[5].transform, "Quit Button",
                 "Salir del juego", new Vector2(260, 300), new Vector2(220, 44),
                 new Color(0.62f, 0.18f, 0.22f));
 
@@ -1015,26 +1224,115 @@ namespace TaskbarTactics.Editor
                 heroButtons,
                 formationButtons,
                 summaries[0],
+                summaries[1],
                 summaries[2],
                 summaries[3],
                 summaries[4],
                 summaries[5],
-                summaries[6],
                 mapVisual,
                 cycleActive,
                 cyclePassive,
                 equipButtons,
                 routeButtons,
                 start,
+                reset,
                 language,
                 quit);
             return controller;
         }
 
+        private static List<Button> CreateFormationPresetButtons(Transform parent)
+        {
+            string[] labels = { "Line4", "1+3", "2+2" };
+            string[] spritePaths =
+            {
+                "Assets/Resources/UI/Formations/form_line4.png",
+                "Assets/Resources/UI/Formations/form_1_plus_3.png",
+                "Assets/Resources/UI/Formations/form_2_plus_2.png"
+            };
+
+            CreateText(parent, "Formation Presets Label", "FORMACIÓN",
+                13, TextAlignmentOptions.Center, new Vector2(470, 78), new Vector2(270, 20));
+
+            List<Button> buttons = new List<Button>();
+            for (int i = 0; i < labels.Length; i++)
+            {
+                Button button = CreateButton(parent, $"Formation Preset {labels[i]} Button", string.Empty,
+                    new Vector2(470 + i * 92, 104), new Vector2(72, 72), PanelLight);
+                Sprite iconSprite = LoadPixelUiSprite(spritePaths[i]);
+                Image icon = CreateImage(button.transform, "Icon", Color.white);
+                icon.sprite = iconSprite;
+                icon.type = Image.Type.Simple;
+                icon.preserveAspect = true;
+                icon.raycastTarget = false;
+                icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                icon.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                icon.rectTransform.anchoredPosition = new Vector2(0, 5);
+                icon.rectTransform.sizeDelta = new Vector2(54, 54);
+                CreateText(button.transform, "Name", labels[i],
+                    10, TextAlignmentOptions.Center, new Vector2(0, 52), new Vector2(72, 18));
+                buttons.Add(button);
+            }
+
+            return buttons;
+        }
+
+        private static Button CreateHeroClassButton(Transform parent, int index)
+        {
+            string heroId = HeroIdForClassCard(index);
+            Vector2 position = new Vector2(24 + (index % 3) * 132, 206 + (index / 3) * 132);
+            Button button = CreateButton(parent, $"Hero Class {heroId} Button", string.Empty,
+                position, new Vector2(108, 124), Color.clear);
+            ColorBlock buttonColors = button.colors;
+            buttonColors.normalColor = Color.white;
+            buttonColors.highlightedColor = new Color(1f, 1f, 1f, 0.12f);
+            buttonColors.pressedColor = new Color(0.25f, 0.7f, 0.8f, 0.18f);
+            buttonColors.selectedColor = Color.white;
+            button.colors = buttonColors;
+
+            Image frame = CreateImage(button.transform, "Selection Frame", new Color(1f, 1f, 1f, 0.12f));
+            frame.raycastTarget = false;
+            frame.rectTransform.anchorMin = frame.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            frame.rectTransform.pivot = new Vector2(0.5f, 1f);
+            frame.rectTransform.anchoredPosition = new Vector2(0, -2);
+            frame.rectTransform.sizeDelta = new Vector2(106, 106);
+
+            Image icon = CreateImage(button.transform, "Class Icon", Color.white);
+            icon.sprite = LoadPixelUiSprite($"Assets/Resources/HeroClasses/{heroId}.png");
+            icon.type = Image.Type.Simple;
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
+            icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            icon.rectTransform.pivot = new Vector2(0.5f, 1f);
+            icon.rectTransform.anchoredPosition = new Vector2(0, 0);
+            icon.rectTransform.sizeDelta = new Vector2(104, 104);
+
+            TMP_Text label = CreateText(button.transform, "Class Name", heroId,
+                9.5f, TextAlignmentOptions.Center, new Vector2(0, 102), new Vector2(108, 24));
+            HeroClassCardView card = button.gameObject.AddComponent<HeroClassCardView>();
+            card.Configure(icon, label, frame);
+            return button;
+        }
+
+        private static string HeroIdForClassCard(int index)
+        {
+            string[] ids =
+            {
+                "guardian",
+                "cleric",
+                "ranger",
+                "rogue",
+                "pyromancer",
+                "spellblade"
+            };
+            return ids[Mathf.Clamp(index, 0, ids.Length - 1)];
+        }
+
         private static MapUiController BuildMapVisual(
             Transform parent,
             TMP_Text summary,
-            Sprite circleSprite)
+            Sprite circleSprite,
+            Sprite[] flagFrames)
         {
             summary.rectTransform.sizeDelta = new Vector2(230, 150);
 
@@ -1044,7 +1342,7 @@ namespace TaskbarTactics.Editor
             rootRect.anchorMin = rootRect.anchorMax = new Vector2(0, 1);
             rootRect.pivot = new Vector2(0, 1);
             rootRect.anchoredPosition = new Vector2(280, -58);
-            rootRect.sizeDelta = new Vector2(420, 502);
+            rootRect.sizeDelta = new Vector2(420, 386);
             Image viewport = root.AddComponent<Image>();
             viewport.color = new Color(0.03f, 0.04f, 0.05f, 0.95f);
             root.AddComponent<RectMask2D>();
@@ -1095,7 +1393,7 @@ namespace TaskbarTactics.Editor
             }
 
             List<MapNodeView> nodes = positions.Select(pair =>
-                CreateMapNode(nodesLayer, pair.Key, pair.Value, circleSprite)).ToList();
+                CreateMapNode(nodesLayer, pair.Key, pair.Value, circleSprite, flagFrames)).ToList();
             List<MapRoutePreferenceLegend> legends = CreateMapRouteLegend(root.transform);
 
             MapUiController controller = root.AddComponent<MapUiController>();
@@ -1151,11 +1449,6 @@ namespace TaskbarTactics.Editor
                 {
                     PreferenceName = "Loot",
                     Image = CreateMapArtworkOverlay(parent, "Loot Route Artwork", "Maps/map1_route_loot")
-                },
-                new MapRouteArtworkOverlay
-                {
-                    PreferenceName = "Challenge",
-                    Image = CreateMapArtworkOverlay(parent, "Challenge Route Artwork", "Maps/map1_route_challenge")
                 }
             };
         }
@@ -1185,7 +1478,7 @@ namespace TaskbarTactics.Editor
             RectTransform rootRect = root.GetComponent<RectTransform>();
             rootRect.anchorMin = rootRect.anchorMax = new Vector2(0, 1);
             rootRect.pivot = new Vector2(0, 1);
-            rootRect.anchoredPosition = new Vector2(14, -432);
+            rootRect.anchoredPosition = new Vector2(14, -324);
             rootRect.sizeDelta = new Vector2(372, 58);
 
             string[] names =
@@ -1271,7 +1564,8 @@ namespace TaskbarTactics.Editor
             Transform parent,
             string nodeId,
             Vector2 position,
-            Sprite circleSprite)
+            Sprite circleSprite,
+            Sprite[] flagFrames)
         {
             const float nodeMarkerOffsetX = 71f;
             const float nodeMarkerOffsetY = 10f;
@@ -1295,6 +1589,23 @@ namespace TaskbarTactics.Editor
             marker.rectTransform.anchoredPosition = new Vector2(0, 0);
             marker.rectTransform.sizeDelta = new Vector2(10, 10);
 
+            Image flag = null;
+            if (flagFrames != null && flagFrames.Length > 0)
+            {
+                flag = CreateImage(nodeRoot.transform, "Current Flag", Color.white);
+                flag.sprite = flagFrames[0];
+                flag.type = Image.Type.Simple;
+                flag.preserveAspect = true;
+                flag.raycastTarget = false;
+                flag.gameObject.SetActive(false);
+                flag.rectTransform.anchorMin = flag.rectTransform.anchorMax = new Vector2(0, 0.5f);
+                flag.rectTransform.pivot = new Vector2(0f, 0f);
+                flag.rectTransform.anchoredPosition = Vector2.zero;
+                flag.rectTransform.sizeDelta = new Vector2(22f, 22f);
+                CandleFlicker flicker = flag.gameObject.AddComponent<CandleFlicker>();
+                flicker.Configure(flag, flagFrames, 5f);
+            }
+
             TMP_Text label = CreateText(nodeRoot.transform, "Label", nodeId, 10,
                 TextAlignmentOptions.Left, new Vector2(14, 8), new Vector2(136, 36));
             label.textWrappingMode = TextWrappingModes.Normal;
@@ -1303,7 +1614,8 @@ namespace TaskbarTactics.Editor
             {
                 NodeId = nodeId,
                 Marker = marker,
-                Label = label
+                Label = label,
+                CurrentFlag = flag
             };
         }
 
@@ -1322,6 +1634,42 @@ namespace TaskbarTactics.Editor
                 default:
                     return Vector2.zero;
             }
+        }
+
+        private static void AddCandlePair(
+            Transform parent,
+            Sprite[] frames,
+            Vector2 leftPosition,
+            Vector2 rightPosition)
+        {
+            if (frames == null || frames.Length == 0)
+            {
+                return;
+            }
+
+            AddCandle(parent, "Left Candle", frames, new Vector2(0, 1), new Vector2(0, 1), leftPosition);
+            AddCandle(parent, "Right Candle", frames, new Vector2(1, 1), new Vector2(1, 1), rightPosition);
+        }
+
+        private static void AddCandle(
+            Transform parent,
+            string name,
+            Sprite[] frames,
+            Vector2 anchor,
+            Vector2 pivot,
+            Vector2 position)
+        {
+            Image candle = CreateImage(parent, name, Color.white);
+            candle.sprite = frames[0];
+            candle.type = Image.Type.Simple;
+            candle.preserveAspect = true;
+            candle.raycastTarget = false;
+            candle.rectTransform.anchorMin = candle.rectTransform.anchorMax = anchor;
+            candle.rectTransform.pivot = pivot;
+            candle.rectTransform.anchoredPosition = position;
+            candle.rectTransform.sizeDelta = new Vector2(20, 36);
+            candle.gameObject.AddComponent<CandleFlicker>().Configure(candle, frames, 7f);
+            candle.transform.SetAsLastSibling();
         }
 
         private static Image CreateImage(Transform parent, string name, Color color)

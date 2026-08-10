@@ -33,6 +33,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private List<Button> equipSlotButtons = new List<Button>();
         [SerializeField] private List<Button> routeButtons = new List<Button>();
         [SerializeField] private Button startExpeditionButton;
+        [SerializeField] private Button resetExpeditionButton;
         [SerializeField] private Button languageButton;
         [SerializeField] private Button quitButton;
 
@@ -57,6 +58,7 @@ namespace TaskbarTactics.Presentation
             IEnumerable<Button> equipSlots,
             IEnumerable<Button> routes,
             Button start,
+            Button reset,
             Button language,
             Button quit)
         {
@@ -77,6 +79,7 @@ namespace TaskbarTactics.Presentation
             equipSlotButtons = equipSlots.ToList();
             routeButtons = routes.ToList();
             startExpeditionButton = start;
+            resetExpeditionButton = reset;
             languageButton = language;
             quitButton = quit;
         }
@@ -88,6 +91,7 @@ namespace TaskbarTactics.Presentation
             closeButton.onClick.AddListener(window.ShowStrip);
             quitButton.onClick.AddListener(app.Quit);
             startExpeditionButton.onClick.AddListener(app.StartExpedition);
+            resetExpeditionButton?.onClick.AddListener(app.ResetExpeditionProgress);
             cycleActiveSkillButton.onClick.AddListener(() => app.CycleSkill(activeHeroId, false));
             cyclePassiveSkillButton.onClick.AddListener(() => app.CycleSkill(activeHeroId, true));
             languageButton.onClick.AddListener(app.ToggleLanguage);
@@ -107,8 +111,7 @@ namespace TaskbarTactics.Presentation
             for (int i = 0; i < formationButtons.Count; i++)
             {
                 int captured = i;
-                formationButtons[i].onClick.AddListener(() =>
-                    app.SetFormation(activeHeroId, new FormationPosition(captured / 3, captured % 3)));
+                formationButtons[i].onClick.AddListener(() => app.ApplyFormationPreset(captured));
             }
 
             for (int i = 0; i < routeButtons.Count && i < 3; i++)
@@ -136,7 +139,10 @@ namespace TaskbarTactics.Presentation
 
             string heroId = app.Catalog.Heroes[index].Id;
             app.SelectOrReplaceHero(heroId, activeHeroId);
-            activeHeroId = heroId;
+            HeroState clicked = app.State.Party.GetHero(heroId);
+            activeHeroId = clicked != null && clicked.IsSelected
+                ? heroId
+                : app.State.Party.Heroes.FirstOrDefault(hero => hero.IsSelected)?.DefinitionId ?? heroId;
             Refresh();
         }
 
@@ -156,8 +162,11 @@ namespace TaskbarTactics.Presentation
             }
 
             List<HeroState> selected = app.State.Party.Heroes.Where(hero => hero.IsSelected).ToList();
-            partySummary.text = string.Join("\n", selected.Select(hero =>
-                $"{Marker(hero.DefinitionId)} {app.HeroName(hero.DefinitionId)} · Nv. {hero.Level} · {hero.Position}"));
+            partySummary.text =
+                $"Seleccionados: {selected.Count}/{GameAppController.PartySize}\n" +
+                "Click: sumar/quitar clase\n" +
+                string.Join("\n", selected.Select(hero =>
+                    $"{Marker(hero.DefinitionId)} {app.HeroName(hero.DefinitionId)} · Nv. {hero.Level} · {hero.Position}"));
 
             HeroState active = app.State.Party.GetHero(activeHeroId);
             skillSummary.text = active == null
@@ -201,11 +210,15 @@ namespace TaskbarTactics.Presentation
             {
                 HeroDefinition definition = app.Catalog.Heroes[i];
                 HeroState state = app.State.Party.GetHero(definition.Id);
-                TMP_Text text = heroButtons[i].GetComponentInChildren<TMP_Text>();
-                text.text = $"{(state != null && state.IsSelected ? "●" : "○")} {app.HeroName(definition.Id)}";
-                heroButtons[i].image.color = definition.Id == activeHeroId
-                    ? new Color(0.25f, 0.7f, 0.8f)
-                    : new Color(0.18f, 0.21f, 0.27f);
+                bool isHeroSelected = state != null && state.IsSelected;
+                bool isActiveHero = definition.Id == activeHeroId;
+                HeroClassCardView card = heroButtons[i].GetComponent<HeroClassCardView>();
+                if (card != null)
+                {
+                    card.Refresh(app.HeroName(definition.Id), isHeroSelected, isActiveHero);
+                }
+
+                heroButtons[i].image.color = Color.clear;
             }
         }
 

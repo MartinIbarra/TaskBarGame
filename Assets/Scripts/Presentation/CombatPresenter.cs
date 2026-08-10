@@ -13,6 +13,8 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private UnitView unitPrefab;
         [SerializeField] private List<Transform> heroCells = new List<Transform>();
         [SerializeField] private List<Transform> enemyCells = new List<Transform>();
+        [SerializeField, Min(1)] private int heroColumns = 4;
+        [SerializeField, Min(1)] private int enemyColumns = 3;
         [SerializeField] private SpriteRenderer battlebackRenderer;
         [SerializeField] private Color enemyColor = new Color(0.78f, 0.24f, 0.25f);
 
@@ -25,10 +27,23 @@ namespace TaskbarTactics.Presentation
             IEnumerable<Transform> enemies,
             SpriteRenderer battleback = null)
         {
+            Configure(prefab, heroes, enemies, battleback, 4, 3);
+        }
+
+        public void Configure(
+            UnitView prefab,
+            IEnumerable<Transform> heroes,
+            IEnumerable<Transform> enemies,
+            SpriteRenderer battleback,
+            int heroColumnCount,
+            int enemyColumnCount)
+        {
             unitPrefab = prefab;
             heroCells = new List<Transform>(heroes);
             enemyCells = new List<Transform>(enemies);
             battlebackRenderer = battleback;
+            heroColumns = Mathf.Max(1, heroColumnCount);
+            enemyColumns = Mathf.Max(1, enemyColumnCount);
         }
 
         public IEnumerator Play(
@@ -88,7 +103,7 @@ namespace TaskbarTactics.Presentation
             Clear();
             foreach (CombatantState hero in request.Heroes)
             {
-                UnitView view = Spawn(hero, heroCells);
+                UnitView view = Spawn(hero, heroCells, heroColumns);
                 HeroDefinition definition = catalog.FindHero(hero.Id);
                 view.Initialize(
                     definition != null ? definition.DisplayNameEs : hero.Id,
@@ -99,7 +114,7 @@ namespace TaskbarTactics.Presentation
 
             foreach (CombatantState enemy in request.Enemies)
             {
-                UnitView view = Spawn(enemy, enemyCells);
+                UnitView view = Spawn(enemy, enemyCells, enemyColumns);
                 string definitionId = enemy.Id.Split('-')[0];
                 EnemyDefinition definition = catalog.FindEnemy(definitionId);
                 view.Initialize(
@@ -124,9 +139,9 @@ namespace TaskbarTactics.Presentation
             return definition != null && definition.IsBoss ? 1.1f : 1f;
         }
 
-        private UnitView Spawn(CombatantState state, IReadOnlyList<Transform> cells)
+        private UnitView Spawn(CombatantState state, IReadOnlyList<Transform> cells, int columns)
         {
-            int index = Mathf.Clamp(state.Position.Row * 3 + state.Position.Column, 0, cells.Count - 1);
+            int index = Mathf.Clamp(state.Position.Row * columns + state.Position.Column, 0, cells.Count - 1);
             UnitView view = Instantiate(unitPrefab, cells[index]);
             view.transform.localPosition = Vector3.zero;
             unitViews[state.Id] = view;

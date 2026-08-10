@@ -16,6 +16,7 @@ namespace TaskbarTactics.Presentation
 {
     public sealed class GameAppController : MonoBehaviour
     {
+        public const int PartySize = 4;
         public static string TestSaveDirectoryOverride { get; set; }
 
         [Header("Editable content and presentation")]
@@ -24,6 +25,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private StripHudController stripHud;
         [SerializeField] private ManagementUiController managementUi;
         [SerializeField] private WindowModeController windowMode;
+        [SerializeField] private TownIntroPresenter townIntroPresenter;
 
         [Header("Pacing")]
         [SerializeField, Min(30f)] private float combatPresentationSeconds = 30f;
@@ -53,13 +55,15 @@ namespace TaskbarTactics.Presentation
             CombatPresenter combat,
             StripHudController strip,
             ManagementUiController management,
-            WindowModeController window)
+            WindowModeController window,
+            TownIntroPresenter townIntro = null)
         {
             catalog = content;
             combatPresenter = combat;
             stripHud = strip;
             managementUi = management;
             windowMode = window;
+            townIntroPresenter = townIntro;
         }
 
         private void Awake()
@@ -72,6 +76,7 @@ namespace TaskbarTactics.Presentation
             saveStore = new JsonSaveStore(saveDirectory);
             State = saveStore.LoadOrDefault();
             EnsureRosterAndStarterItems();
+            EnsureSelectedPartySize();
             ResolveOfflineProgress();
         }
 
@@ -100,7 +105,7 @@ namespace TaskbarTactics.Presentation
         public void StartExpedition()
         {
             if (State.Expedition.IsActive ||
-                State.Party.Heroes.Count(hero => hero.IsSelected) != 3)
+                State.Party.Heroes.Count(hero => hero.IsSelected) != PartySize)
             {
                 return;
             }
@@ -117,7 +122,31 @@ namespace TaskbarTactics.Presentation
             };
             Save();
             RaiseStateChanged();
+            windowMode?.ShowStrip();
             expeditionRoutine = StartCoroutine(RunExpedition());
+        }
+
+        public void ResetExpeditionProgress()
+        {
+            if (expeditionRoutine != null)
+            {
+                StopCoroutine(expeditionRoutine);
+                expeditionRoutine = null;
+            }
+
+            State.Expedition = new ExpeditionState
+            {
+                IsActive = false,
+                CurrentNodeId = string.Empty,
+                Seed = 0,
+                CompletedNodes = 0,
+                CompletedNodeIds = new List<string>()
+            };
+            State.Party.IsFormationLocked = false;
+            combatPresenter?.Clear();
+            combatPresenter?.ShowBattleback("default");
+            SetStatus("Escuadrón en el campamento");
+            SaveAndRefresh();
         }
 
         public void SetRoutePreference(RoutePreference preference)
@@ -142,13 +171,24 @@ namespace TaskbarTactics.Presentation
             }
 
             HeroState hero = State.Party.GetHero(heroId);
-            if (hero == null || hero.IsSelected)
+            if (hero == null)
             {
                 return;
             }
 
             List<HeroState> selected = State.Party.Heroes.Where(item => item.IsSelected).ToList();
-            if (selected.Count >= 3)
+            if (hero.IsSelected)
+            {
+                if (selected.Count > 1)
+                {
+                    hero.IsSelected = false;
+                }
+
+                SaveAndRefresh();
+                return;
+            }
+
+            if (selected.Count >= PartySize)
             {
                 HeroState replacement = State.Party.GetHero(replaceHeroId);
                 if (replacement == null || !replacement.IsSelected)
@@ -224,6 +264,23 @@ namespace TaskbarTactics.Presentation
             SaveAndRefresh();
         }
 
+        public void ApplyFormationPreset(int presetIndex)
+        {
+            if (State.Party.IsFormationLocked)
+            {
+                return;
+            }
+
+            List<HeroState> selected = SelectedHeroes();
+            FormationPosition[] positions = FormationPreset(presetIndex);
+            for (int i = 0; i < selected.Count && i < positions.Length; i++)
+            {
+                selected[i].Position = positions[i];
+            }
+
+            SaveAndRefresh();
+        }
+
         public string HeroName(string heroId)
         {
             HeroDefinition definition = catalog.FindHero(heroId);
@@ -256,6 +313,7 @@ namespace TaskbarTactics.Presentation
                     yield break;
                 }
 
+                combatPresenter?.ShowBattleback(node.Id);
                 SetStatus(NodeStatus(node));
                 CombatOutcome outcome = CombatOutcome.Victory;
                 if (node.Type == MapNodeType.Combat ||
@@ -279,7 +337,14 @@ namespace TaskbarTactics.Presentation
                 }
                 else
                 {
-                    yield return new WaitForSecondsRealtime(nonCombatNodeSeconds);
+                    if (node.Id == "town" && townIntroPresenter != null)
+                    {
+                        yield return townIntroPresenter.Play(SelectedHeroes(), catalog);
+                    }
+                    else
+                    {
+                        yield return new WaitForSecondsRealtime(nonCombatNodeSeconds);
+                    }
                 }
 
                 if (outcome != CombatOutcome.Victory)
@@ -413,11 +478,11 @@ namespace TaskbarTactics.Presentation
                 FormationPosition[] starterPositions =
                 {
                     new FormationPosition(1, 0),
-                    new FormationPosition(0, 2),
-                    new FormationPosition(2, 2),
-                    new FormationPosition(0, 0),
+                    new FormationPosition(1, 1),
                     new FormationPosition(1, 2),
-                    new FormationPosition(2, 0)
+                    new FormationPosition(1, 3),
+                    new FormationPosition(2, 2),
+                    new FormationPosition(2, 3)
                 };
                 for (int i = 0; i < catalog.Heroes.Count; i++)
                 {
@@ -425,7 +490,7 @@ namespace TaskbarTactics.Presentation
                     State.Party.Heroes.Add(new HeroState
                     {
                         DefinitionId = definition.Id,
-                        IsSelected = i < 3,
+                        IsSelected = i < PartySize,
                         Position = starterPositions[i],
                         ActiveSkillId = definition.ActiveSkills[0].Id,
                         PassiveSkillId = definition.PassiveSkills[0].Id,
@@ -440,13 +505,45 @@ namespace TaskbarTactics.Presentation
             }
         }
 
+        private void EnsureSelectedPartySize()
+        {
+            List<HeroState> selected = State.Party.Heroes.Where(hero => hero.IsSelected).ToList();
+            if (selected.Count > PartySize)
+            {
+                foreach (HeroState hero in selected.Skip(PartySize))
+                {
+                    hero.IsSelected = false;
+                }
+            }
+
+            if (selected.Count < PartySize)
+            {
+                foreach (HeroState hero in State.Party.Heroes.Where(hero => !hero.IsSelected))
+                {
+                    hero.IsSelected = true;
+                    selected.Add(hero);
+                    if (selected.Count == PartySize)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (selected.Count == PartySize &&
+                selected.Select(hero => hero.Position).Distinct().Count() != PartySize)
+            {
+                EnsureUniqueSelectedPositions();
+            }
+        }
+
         private void EnsureUniqueSelectedPositions()
         {
             FormationPosition[] defaults =
             {
                 new FormationPosition(1, 0),
-                new FormationPosition(0, 2),
-                new FormationPosition(2, 2)
+                new FormationPosition(1, 1),
+                new FormationPosition(1, 2),
+                new FormationPosition(1, 3)
             };
             List<HeroState> selected = SelectedHeroes();
             for (int i = 0; i < selected.Count; i++)
@@ -457,7 +554,38 @@ namespace TaskbarTactics.Presentation
 
         private List<HeroState> SelectedHeroes()
         {
-            return State.Party.Heroes.Where(hero => hero.IsSelected).Take(3).ToList();
+            return State.Party.Heroes.Where(hero => hero.IsSelected).Take(PartySize).ToList();
+        }
+
+        private static FormationPosition[] FormationPreset(int presetIndex)
+        {
+            switch (presetIndex)
+            {
+                case 1:
+                    return new[]
+                    {
+                        new FormationPosition(0, 1),
+                        new FormationPosition(1, 0),
+                        new FormationPosition(1, 1),
+                        new FormationPosition(1, 2)
+                    };
+                case 2:
+                    return new[]
+                    {
+                        new FormationPosition(0, 1),
+                        new FormationPosition(0, 2),
+                        new FormationPosition(1, 1),
+                        new FormationPosition(1, 2)
+                    };
+                default:
+                    return new[]
+                    {
+                        new FormationPosition(1, 0),
+                        new FormationPosition(1, 1),
+                        new FormationPosition(1, 2),
+                        new FormationPosition(1, 3)
+                    };
+            }
         }
 
         private static int IndexOf(IReadOnlyList<SkillDefinition> choices, string id)

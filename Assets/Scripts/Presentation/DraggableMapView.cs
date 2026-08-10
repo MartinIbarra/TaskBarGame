@@ -11,10 +11,10 @@ namespace TaskbarTactics.Presentation
     {
         [SerializeField] private RectTransform content;
         [SerializeField] private RectTransform viewport;
-        [SerializeField, Min(0.25f)] private float initialZoom = 1.6f;
+        [SerializeField, Min(0.25f)] private float initialZoom = 1.3f;
         [SerializeField, Min(0.25f)] private float minZoom = 0.9f;
         [SerializeField, Min(0.25f)] private float maxZoom = 2.4f;
-        [SerializeField, Min(0.01f)] private float zoomStep = 0.12f;
+        [SerializeField, Min(0.01f)] private float zoomStep = 0.1f;
 
         private Vector2 dragStartPointer;
         private Vector2 dragStartPosition;
@@ -30,6 +30,50 @@ namespace TaskbarTactics.Presentation
                 content.localScale = new Vector3(zoom, zoom, 1f);
             }
 
+            ClampContent();
+        }
+
+        public void FocusOn(RectTransform target)
+        {
+            FocusOn(target, new Vector2(0.5f, 0.5f));
+        }
+
+        public void FocusOnDefaultZoom(RectTransform target)
+        {
+            zoom = Mathf.Clamp(initialZoom, minZoom, maxZoom);
+            if (content != null)
+            {
+                content.localScale = new Vector3(zoom, zoom, 1f);
+            }
+
+            FocusOn(target);
+        }
+
+        public void FocusOn(RectTransform target, Vector2 viewportAnchor)
+        {
+            if (content == null || target == null)
+            {
+                return;
+            }
+
+            if (viewport == null)
+            {
+                viewport = transform as RectTransform;
+            }
+
+            if (viewport == null)
+            {
+                return;
+            }
+
+            Vector2 targetPosition = target.anchoredPosition;
+            Vector2 viewportSize = viewport.rect.size;
+            Vector2 clampedAnchor = new Vector2(
+                Mathf.Clamp01(viewportAnchor.x),
+                Mathf.Clamp01(viewportAnchor.y));
+            content.anchoredPosition = new Vector2(
+                viewportSize.x * clampedAnchor.x - targetPosition.x * zoom,
+                -viewportSize.y * clampedAnchor.y - targetPosition.y * zoom);
             ClampContent();
         }
 

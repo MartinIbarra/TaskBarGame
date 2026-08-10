@@ -48,7 +48,7 @@ namespace TaskbarTactics.Tests
 
             Assert.That(app, Is.Not.Null);
             Assert.That(app.State.Party.Heroes, Has.Count.EqualTo(6));
-            Assert.That(app.State.Party.Heroes.Count(hero => hero.IsSelected), Is.EqualTo(3));
+            Assert.That(app.State.Party.Heroes.Count(hero => hero.IsSelected), Is.EqualTo(4));
             Assert.That(app.State.Inventory, Is.Not.Empty);
             Assert.That(window.CurrentMode, Is.EqualTo(WindowMode.Management));
             yield return null;

@@ -15,7 +15,7 @@ namespace TaskbarTactics.Core.Models
                 throw new ArgumentOutOfRangeException(nameof(row));
             }
 
-            if (column < 0 || column > 2)
+            if (column < 0 || column > 3)
             {
                 throw new ArgumentOutOfRangeException(nameof(column));
             }
