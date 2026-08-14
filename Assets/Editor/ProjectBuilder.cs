@@ -1256,10 +1256,10 @@ namespace TaskbarTactics.Editor
             ApplySimpleWideFrame(titleFrame, titleWideSprite);
             titleFrame.rectTransform.anchorMin = titleFrame.rectTransform.anchorMax = new Vector2(0, 1);
             titleFrame.rectTransform.pivot = new Vector2(0, 1);
-            titleFrame.rectTransform.anchoredPosition = new Vector2(255, -10);
-            titleFrame.rectTransform.sizeDelta = new Vector2(380, 67);
+            titleFrame.rectTransform.anchoredPosition = new Vector2(275, -10);
+            titleFrame.rectTransform.sizeDelta = new Vector2(342, 60);
             TMP_Text title = CreateText(background.transform, "Title", "TASKBAR TACTICS",
-                26, TextAlignmentOptions.Center, new Vector2(286, 25), new Vector2(318, 32));
+                26, TextAlignmentOptions.Center, new Vector2(300, 24), new Vector2(292, 32));
             title.fontStyle = FontStyles.Bold;
             title.textWrappingMode = TextWrappingModes.NoWrap;
             Button close = CreateButton(background.transform, "Close Button", "Volver a la barra",
@@ -1351,11 +1351,11 @@ namespace TaskbarTactics.Editor
             List<Button> routeButtons = new List<Button>
             {
                 CreateButton(panels[4].transform, "Safety Route Button", "Seguridad",
-                    new Vector2(40, 230), new Vector2(188, 68), PanelLight),
+                    new Vector2(54, 230), new Vector2(188, 68), PanelLight),
                 CreateButton(panels[4].transform, "Loot Route Button", "Botín",
-                    new Vector2(40, 292), new Vector2(188, 68), PanelLight),
+                    new Vector2(54, 292), new Vector2(188, 68), PanelLight),
                 CreateButton(panels[4].transform, "Challenge Route Button", "Desafío",
-                    new Vector2(40, 354), new Vector2(188, 68), PanelLight)
+                    new Vector2(54, 354), new Vector2(188, 68), PanelLight)
             };
             foreach (Button routeButton in routeButtons)
             {
@@ -1363,7 +1363,7 @@ namespace TaskbarTactics.Editor
             }
 
             Button start = CreateButton(panels[4].transform, "Start Expedition Button",
-                "INICIAR EXPEDICIÓN", new Vector2(40, 408), new Vector2(150, 52), Accent);
+                "INICIAR EXPEDICIÓN", new Vector2(54, 408), new Vector2(150, 52), Accent);
             ApplyUiFrame(start.GetComponent<Image>(), commandSprite);
             start.GetComponent<RectTransform>().sizeDelta = new Vector2(188, 68);
 
@@ -1678,7 +1678,7 @@ namespace TaskbarTactics.Editor
             Sprite[] flagFrames)
         {
             summary.rectTransform.sizeDelta = new Vector2(230, 150);
-            summary.rectTransform.anchoredPosition = new Vector2(40, -72);
+            summary.rectTransform.anchoredPosition = new Vector2(54, -72);
 
             GameObject root = new GameObject("Map Visual", typeof(RectTransform));
             root.transform.SetParent(parent, false);
