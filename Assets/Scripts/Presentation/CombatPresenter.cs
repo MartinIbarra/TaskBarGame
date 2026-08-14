@@ -9,6 +9,8 @@ namespace TaskbarTactics.Presentation
 {
     public sealed class CombatPresenter : MonoBehaviour
     {
+        private const float FinalBossDeathVolume = 0.7f;
+
         [Header("Reusable presentation")]
         [SerializeField] private UnitView unitPrefab;
         [SerializeField] private List<Transform> heroCells = new List<Transform>();
@@ -17,6 +19,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField, Min(1)] private int enemyColumns = 3;
         [SerializeField] private SpriteRenderer battlebackRenderer;
         [SerializeField] private Color enemyColor = new Color(0.78f, 0.24f, 0.25f);
+        [SerializeField] private AudioClip finalBossDeathClip;
 
         private readonly Dictionary<string, UnitView> unitViews = new Dictionary<string, UnitView>();
         private readonly Dictionary<string, Sprite> battlebackCache = new Dictionary<string, Sprite>();
@@ -78,6 +81,11 @@ namespace TaskbarTactics.Presentation
             {
                 yield return new WaitForSecondsRealtime(durationSeconds);
             }
+
+            if (result.Outcome == CombatOutcome.Victory && HasBossEnemy(request, catalog))
+            {
+                PlayFinalBossDeathSound();
+            }
         }
 
         public void Clear()
@@ -109,7 +117,11 @@ namespace TaskbarTactics.Presentation
                     definition != null ? definition.DisplayNameEs : hero.Id,
                     definition != null ? definition.Color : Color.cyan,
                     hero.MaxHealth,
-                    definition != null ? definition.Artwork : null);
+                    definition != null ? definition.Artwork : null,
+                    1f,
+                    false,
+                    true,
+                    $"Heroes/{hero.Id}");
             }
 
             foreach (CombatantState enemy in request.Enemies)
@@ -137,6 +149,43 @@ namespace TaskbarTactics.Presentation
             }
 
             return definition != null && definition.IsBoss ? 1.1f : 1f;
+        }
+
+        private static bool HasBossEnemy(CombatRequest request, GameContentCatalog catalog)
+        {
+            if (request == null || catalog == null)
+            {
+                return false;
+            }
+
+            foreach (CombatantState enemy in request.Enemies)
+            {
+                string definitionId = enemy.Id.Split('-')[0];
+                EnemyDefinition definition = catalog.FindEnemy(definitionId);
+                if (definition != null && definition.IsBoss)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void PlayFinalBossDeathSound()
+        {
+            finalBossDeathClip = finalBossDeathClip != null
+                ? finalBossDeathClip
+                : Resources.Load<AudioClip>("Audio/Events/boss_death_hurr");
+            if (finalBossDeathClip == null)
+            {
+                return;
+            }
+
+            AudioSource source = FindFirstObjectByType<AudioSource>();
+            if (source != null)
+            {
+                source.PlayOneShot(finalBossDeathClip, FinalBossDeathVolume);
+            }
         }
 
         private UnitView Spawn(CombatantState state, IReadOnlyList<Transform> cells, int columns)

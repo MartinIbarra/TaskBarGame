@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -70,7 +71,7 @@ namespace TaskbarTactics.Presentation
         public void PlayAttack()
         {
             animationBridge?.PlayAttack();
-            PlayTemporaryPose(3, 0.24f);
+            PlayTemporaryPoses(new[] { 3, 4 }, 0.12f);
         }
 
         public void ReceiveDamage(int amount)
@@ -81,13 +82,13 @@ namespace TaskbarTactics.Presentation
             {
                 isDead = true;
                 StopPoseRoutines();
-                ApplyPose(4);
+                ApplyPose(5);
                 animationBridge?.SetDead(true);
             }
             else
             {
                 animationBridge?.PlayHit();
-                PlayTemporaryPose(4, 0.18f);
+                PlayTemporaryPose(5, 0.18f);
             }
         }
 
@@ -163,7 +164,12 @@ namespace TaskbarTactics.Presentation
 
         private void PlayTemporaryPose(int poseIndex, float seconds)
         {
-            if (poseSprites == null || poseSprites.Length <= poseIndex || isDead)
+            PlayTemporaryPoses(new[] { poseIndex }, seconds);
+        }
+
+        private void PlayTemporaryPoses(int[] poseIndexes, float secondsPerPose)
+        {
+            if (poseSprites == null || poseIndexes == null || poseIndexes.Length == 0 || isDead)
             {
                 return;
             }
@@ -173,10 +179,10 @@ namespace TaskbarTactics.Presentation
                 StopCoroutine(temporaryPoseRoutine);
             }
 
-            temporaryPoseRoutine = StartCoroutine(PlayTemporaryPoseRoutine(poseIndex, seconds));
+            temporaryPoseRoutine = StartCoroutine(PlayTemporaryPoseRoutine(poseIndexes, secondsPerPose));
         }
 
-        private IEnumerator PlayTemporaryPoseRoutine(int poseIndex, float seconds)
+        private IEnumerator PlayTemporaryPoseRoutine(int[] poseIndexes, float secondsPerPose)
         {
             if (idleRoutine != null)
             {
@@ -184,8 +190,17 @@ namespace TaskbarTactics.Presentation
                 idleRoutine = null;
             }
 
-            ApplyPose(poseIndex);
-            yield return new WaitForSecondsRealtime(seconds);
+            foreach (int poseIndex in poseIndexes)
+            {
+                if (GetPoseSprite(poseIndex) == null)
+                {
+                    continue;
+                }
+
+                ApplyPose(poseIndex);
+                yield return new WaitForSecondsRealtime(secondsPerPose);
+            }
+
             temporaryPoseRoutine = null;
             StartIdleAnimation();
         }
@@ -222,16 +237,33 @@ namespace TaskbarTactics.Presentation
                 "idle_1",
                 "idle_2",
                 "idle_3",
-                "attack",
-                "hit"
+                "attack_1",
+                "attack_2",
+                "hit",
+                "defense"
+            };
+            string[][] fallbackNames =
+            {
+                new[] { "idle_1" },
+                new[] { "idle_2" },
+                new[] { "idle_3" },
+                new[] { "attack_1", "attack" },
+                new[] { "attack_2" },
+                new[] { "hit", "death" },
+                new[] { "defense" }
             };
             Sprite[] sprites = new Sprite[poseNames.Length];
             for (int i = 0; i < poseNames.Length; i++)
             {
-                Texture2D texture = Resources.Load<Texture2D>($"{resourcePath}/{poseNames[i]}");
-                if (texture == null)
+                Texture2D texture = LoadFirstTexture(resourcePath, fallbackNames[i]);
+                if (texture == null && i < 3)
                 {
                     return null;
+                }
+
+                if (texture == null)
+                {
+                    continue;
                 }
 
                 sprites[i] = Sprite.Create(
@@ -242,6 +274,20 @@ namespace TaskbarTactics.Presentation
             }
 
             return sprites;
+        }
+
+        private static Texture2D LoadFirstTexture(string resourcePath, IEnumerable<string> names)
+        {
+            foreach (string name in names)
+            {
+                Texture2D texture = Resources.Load<Texture2D>($"{resourcePath}/{name}");
+                if (texture != null)
+                {
+                    return texture;
+                }
+            }
+
+            return null;
         }
 
         private void StopPoseRoutines()

@@ -9,15 +9,27 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private Image target;
         [SerializeField] private List<Sprite> frames = new List<Sprite>();
         [SerializeField] private float framesPerSecond = 6f;
+        [SerializeField] private bool preserveFrameAspect = true;
 
         private float timer;
         private int frameIndex;
+        private Vector2 stableFrameSize;
+        private bool hasStarted;
 
-        public void Configure(Image image, IEnumerable<Sprite> animationFrames, float fps = 6f)
+        private void Awake()
+        {
+            CaptureCurrentSize();
+            ResetPlayback();
+        }
+
+        public void Configure(Image image, IEnumerable<Sprite> animationFrames, float fps = 6f, bool preserveAspect = true)
         {
             target = image;
             frames = new List<Sprite>(animationFrames);
             framesPerSecond = Mathf.Max(1f, fps);
+            preserveFrameAspect = preserveAspect;
+            CaptureCurrentSize();
+            ResetPlayback();
             ApplyFrame(0);
         }
 
@@ -25,6 +37,12 @@ namespace TaskbarTactics.Presentation
         {
             if (target == null || frames.Count <= 1)
             {
+                return;
+            }
+
+            if (!hasStarted)
+            {
+                hasStarted = true;
                 return;
             }
 
@@ -48,7 +66,31 @@ namespace TaskbarTactics.Presentation
 
             frameIndex = Mathf.Clamp(index, 0, frames.Count - 1);
             target.sprite = frames[frameIndex];
-            target.preserveAspect = true;
+            target.preserveAspect = preserveFrameAspect;
+            if (stableFrameSize != Vector2.zero)
+            {
+                target.rectTransform.sizeDelta = stableFrameSize;
+            }
+        }
+
+        private void CaptureCurrentSize()
+        {
+            if (target == null)
+            {
+                target = GetComponent<Image>();
+            }
+
+            if (target != null)
+            {
+                stableFrameSize = target.rectTransform.sizeDelta;
+            }
+        }
+
+        private void ResetPlayback()
+        {
+            timer = 0f;
+            frameIndex = 0;
+            hasStarted = false;
         }
     }
 }

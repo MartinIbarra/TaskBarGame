@@ -18,16 +18,39 @@ namespace TaskbarTactics.Presentation
 
         private Vector2 dragStartPointer;
         private Vector2 dragStartPosition;
+        private Vector2 initialPosition;
+        private bool useInitialPosition;
         private float zoom = 1f;
 
         public void Configure(RectTransform targetContent)
         {
+            Configure(targetContent, initialZoom, minZoom, maxZoom, Vector2.zero);
+        }
+
+        public void Configure(RectTransform targetContent, float defaultZoom, float minimumZoom, float maximumZoom, Vector2 initialPosition)
+        {
             content = targetContent;
             viewport = transform as RectTransform;
+            minZoom = Mathf.Max(0.25f, minimumZoom);
+            maxZoom = Mathf.Max(minZoom, maximumZoom);
+            initialZoom = Mathf.Clamp(defaultZoom, minZoom, maxZoom);
             zoom = Mathf.Clamp(initialZoom, minZoom, maxZoom);
             if (content != null)
             {
                 content.localScale = new Vector3(zoom, zoom, 1f);
+                content.anchoredPosition = initialPosition;
+            }
+
+            this.initialPosition = initialPosition;
+            useInitialPosition = initialPosition != Vector2.zero;
+            ClampContent();
+        }
+
+        private void Start()
+        {
+            if (useInitialPosition && content != null)
+            {
+                content.anchoredPosition = initialPosition;
             }
 
             ClampContent();

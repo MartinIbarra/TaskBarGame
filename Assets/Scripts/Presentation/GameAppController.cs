@@ -26,6 +26,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private ManagementUiController managementUi;
         [SerializeField] private WindowModeController windowMode;
         [SerializeField] private TownIntroPresenter townIntroPresenter;
+        [SerializeField] private DefeatOverlayPresenter defeatOverlayPresenter;
 
         [Header("Pacing")]
         [SerializeField, Min(30f)] private float combatPresentationSeconds = 30f;
@@ -56,7 +57,8 @@ namespace TaskbarTactics.Presentation
             StripHudController strip,
             ManagementUiController management,
             WindowModeController window,
-            TownIntroPresenter townIntro = null)
+            TownIntroPresenter townIntro = null,
+            DefeatOverlayPresenter defeatOverlay = null)
         {
             catalog = content;
             combatPresenter = combat;
@@ -64,6 +66,7 @@ namespace TaskbarTactics.Presentation
             managementUi = management;
             windowMode = window;
             townIntroPresenter = townIntro;
+            defeatOverlayPresenter = defeatOverlay;
         }
 
         private void Awake()
@@ -76,7 +79,11 @@ namespace TaskbarTactics.Presentation
             saveStore = new JsonSaveStore(saveDirectory);
             State = saveStore.LoadOrDefault();
             EnsureRosterAndStarterItems();
-            EnsureSelectedPartySize();
+            EnsureSelectedPartyLimit();
+            if (!State.Expedition.IsActive)
+            {
+                ClearSelectedParty();
+            }
             ResolveOfflineProgress();
         }
 
@@ -143,6 +150,7 @@ namespace TaskbarTactics.Presentation
                 CompletedNodeIds = new List<string>()
             };
             State.Party.IsFormationLocked = false;
+            ClearSelectedParty();
             combatPresenter?.Clear();
             combatPresenter?.ShowBattleback("default");
             SetStatus("Escuadrón en el campamento");
@@ -161,6 +169,61 @@ namespace TaskbarTactics.Presentation
             {
                 SaveAndRefresh();
             }
+        }
+
+        public void AssignHeroToFormationSlot(string heroId, FormationPosition position)
+        {
+            if (State.Party.IsFormationLocked)
+            {
+                return;
+            }
+
+            HeroState hero = State.Party.GetHero(heroId);
+            if (hero == null)
+            {
+                return;
+            }
+
+            HeroState previousOccupant = State.Party.Heroes.FirstOrDefault(item =>
+                item.DefinitionId != heroId &&
+                item.IsSelected &&
+                item.Position.Equals(position));
+            if (previousOccupant != null)
+            {
+                previousOccupant.IsSelected = false;
+            }
+
+            List<HeroState> selected = State.Party.Heroes
+                .Where(item => item.IsSelected && item.DefinitionId != heroId)
+                .ToList();
+            if (!hero.IsSelected && selected.Count >= PartySize)
+            {
+                selected[selected.Count - 1].IsSelected = false;
+            }
+
+            hero.IsSelected = true;
+            hero.Position = position;
+            SaveAndRefresh();
+        }
+
+        public bool UnequipHeroFromFormationSlot(string heroId, FormationPosition position)
+        {
+            if (State.Party.IsFormationLocked)
+            {
+                return false;
+            }
+
+            HeroState hero = State.Party.GetHero(heroId);
+            if (hero == null ||
+                !hero.IsSelected ||
+                !hero.Position.Equals(position))
+            {
+                return false;
+            }
+
+            hero.IsSelected = false;
+            SaveAndRefresh();
+            return true;
         }
 
         public void SelectOrReplaceHero(string heroId, string replaceHeroId)
@@ -264,6 +327,11 @@ namespace TaskbarTactics.Presentation
             SaveAndRefresh();
         }
 
+        public void SavePartyChanges()
+        {
+            SaveAndRefresh();
+        }
+
         public void ApplyFormationPreset(int presetIndex)
         {
             if (State.Party.IsFormationLocked)
@@ -353,6 +421,11 @@ namespace TaskbarTactics.Presentation
                     SetAttention("strip.defeat");
                     SetStatus(Localize("strip.defeat"));
                     SaveAndRefresh();
+                    if (defeatOverlayPresenter != null)
+                    {
+                        yield return defeatOverlayPresenter.Play(windowMode);
+                    }
+
                     yield break;
                 }
 
@@ -490,7 +563,7 @@ namespace TaskbarTactics.Presentation
                     State.Party.Heroes.Add(new HeroState
                     {
                         DefinitionId = definition.Id,
-                        IsSelected = i < PartySize,
+                        IsSelected = false,
                         Position = starterPositions[i],
                         ActiveSkillId = definition.ActiveSkills[0].Id,
                         PassiveSkillId = definition.PassiveSkills[0].Id,
@@ -505,7 +578,7 @@ namespace TaskbarTactics.Presentation
             }
         }
 
-        private void EnsureSelectedPartySize()
+        private void EnsureSelectedPartyLimit()
         {
             List<HeroState> selected = State.Party.Heroes.Where(hero => hero.IsSelected).ToList();
             if (selected.Count > PartySize)
@@ -516,23 +589,18 @@ namespace TaskbarTactics.Presentation
                 }
             }
 
-            if (selected.Count < PartySize)
-            {
-                foreach (HeroState hero in State.Party.Heroes.Where(hero => !hero.IsSelected))
-                {
-                    hero.IsSelected = true;
-                    selected.Add(hero);
-                    if (selected.Count == PartySize)
-                    {
-                        break;
-                    }
-                }
-            }
-
             if (selected.Count == PartySize &&
                 selected.Select(hero => hero.Position).Distinct().Count() != PartySize)
             {
                 EnsureUniqueSelectedPositions();
+            }
+        }
+
+        private void ClearSelectedParty()
+        {
+            foreach (HeroState hero in State.Party.Heroes)
+            {
+                hero.IsSelected = false;
             }
         }
 
@@ -573,8 +641,8 @@ namespace TaskbarTactics.Presentation
                     return new[]
                     {
                         new FormationPosition(0, 1),
-                        new FormationPosition(0, 2),
                         new FormationPosition(1, 1),
+                        new FormationPosition(0, 2),
                         new FormationPosition(1, 2)
                     };
                 default:
