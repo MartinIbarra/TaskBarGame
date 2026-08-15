@@ -13,6 +13,18 @@ MonoBehaviour:
   m_Name: iron_sword
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.ItemDefinition
   id: iron_sword
-  slot: 0
+  descriptor:
+    InstanceId: iron_sword
+    DefinitionId: iron_sword
+    PrimarySlot: 10
+    Category: 1
+    WeaponType: 1
+    Handedness: 1
+    OffHandType: 0
+    ArmorType: 0
+    Modifiers:
+    - Stat: 2
+      Operation: 0
+      Value: 3
+      SourceId: item_base
   tagId: steel
-  basePower: 2

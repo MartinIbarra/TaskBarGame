@@ -68,9 +68,9 @@ namespace TaskbarTactics.Tests
             Button start = Resources.FindObjectsOfTypeAll<Button>()
                 .First(button => button.name == "Start Expedition Button");
             GameAppController app = Object.FindFirstObjectByType<GameAppController>();
-            app.AssignHeroToFormationSlot("guardian", new TaskbarTactics.Core.Models.FormationPosition(1, 0));
+            app.AssignHeroToFormationSlot("warrior", new TaskbarTactics.Core.Models.FormationPosition(1, 0));
             app.AssignHeroToFormationSlot("cleric", new TaskbarTactics.Core.Models.FormationPosition(1, 1));
-            app.AssignHeroToFormationSlot("ranger", new TaskbarTactics.Core.Models.FormationPosition(1, 2));
+            app.AssignHeroToFormationSlot("archer", new TaskbarTactics.Core.Models.FormationPosition(1, 2));
             app.AssignHeroToFormationSlot("rogue", new TaskbarTactics.Core.Models.FormationPosition(1, 3));
             start.onClick.Invoke();
             yield return null;

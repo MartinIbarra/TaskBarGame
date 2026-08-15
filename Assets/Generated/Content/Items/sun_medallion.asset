@@ -13,6 +13,18 @@ MonoBehaviour:
   m_Name: sun_medallion
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.ItemDefinition
   id: sun_medallion
-  slot: 2
+  descriptor:
+    InstanceId: sun_medallion
+    DefinitionId: sun_medallion
+    PrimarySlot: 2
+    Category: 3
+    WeaponType: 0
+    Handedness: 0
+    OffHandType: 0
+    ArmorType: 0
+    Modifiers:
+    - Stat: 1
+      Operation: 0
+      Value: 15
+      SourceId: item_base
   tagId: sacred
-  basePower: 2

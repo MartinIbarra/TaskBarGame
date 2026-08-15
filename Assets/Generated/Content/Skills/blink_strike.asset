@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: blink_strike
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.SkillDefinition
   id: blink_strike
-  ownerHeroId: spellblade
+  ownerHeroId: magic_warrior
   isPassive: 0
   cooldownTicks: 12
   magnitude: 1.9

@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 730fd2fd224422f4794cd9c75f3733bd, type: 3}
+  m_Name: mage
+  m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.HeroDefinition
+  id: mage
+  displayNameEs: Mage
+  displayNameEn: Mage
+  color: {r: 0.8862745, g: 0.40784314, b: 0.29411766, a: 1}
+  artwork: {fileID: 21300000, guid: 9aa2304f4be30914190154927dec6960, type: 3}
+  heroClass: 2
+  baseStats:
+    MaxHealth: 110
+    MaxMana: 160
+    AttackPower: 8
+    SpellPower: 32
+    Defense: 15
+    MagicResistance: 55
+    AttackSpeed: 0.7
+    CastSpeed: 1.25
+    AttackRange: 5
+    CriticalChance: 10
+    CriticalDamage: 1.8
+    Accuracy: 100
+    Evasion: 8
+    HealthRegeneration: 0.35
+    ManaRegeneration: 2.8
+    CooldownReduction: 5
+  growthPerLevel:
+    MaxHealth: 5
+    MaxMana: 8
+    AttackPower: 0.2
+    SpellPower: 1.7
+    Defense: 0.5
+    MagicResistance: 1.8
+    AttackSpeed: 0.001
+    CastSpeed: 0.006
+    AttackRange: 0
+    CriticalChance: 0
+    CriticalDamage: 0
+    Accuracy: 0
+    Evasion: 0
+    HealthRegeneration: 0
+    ManaRegeneration: 0
+    CooldownReduction: 0
+  equipmentProfile:
+    HeroClass: 2
+    CanDualWieldWeapons: 0
+    AllowedWeapons:
+    - WeaponType: 4
+      Handedness: 2
+    - WeaponType: 5
+      Handedness: 1
+    AllowedOffHands: 02000000
+    AllowedArmorTypes: 01000000
+  tagIds:
+  - fire
+  - arcane
+  activeSkills:
+  - {fileID: 11400000, guid: 5ca9f1be0d97ef04eadc4b303915081f, type: 2}
+  - {fileID: 11400000, guid: 0678f4bb8ee9ace4fa778f6f25af1962, type: 2}
+  passiveSkills:
+  - {fileID: 11400000, guid: b087f4b93633d964b95780632476b820, type: 2}
+  - {fileID: 11400000, guid: a5a31f7048cc11149a98af4f0f9b783f, type: 2}

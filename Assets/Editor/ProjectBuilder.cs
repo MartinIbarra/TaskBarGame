@@ -118,7 +118,8 @@ namespace TaskbarTactics.Editor
                 GeneratedRoot + "/Content/Heroes",
                 GeneratedRoot + "/Content/Skills",
                 GeneratedRoot + "/Content/Items",
-                GeneratedRoot + "/Content/Affixes",
+                GeneratedRoot + "/Content/ItemBonuses",
+                GeneratedRoot + "/Content/StatusEffects",
                 GeneratedRoot + "/Content/Synergies",
                 GeneratedRoot + "/Content/Enemies",
                 GeneratedRoot + "/Content/Encounters",
@@ -279,6 +280,7 @@ namespace TaskbarTactics.Editor
 
         private static GameContentCatalog CreateContentAssets()
         {
+            RemoveLegacyContentAssets();
             ContentBlueprint blueprint = ContentBlueprint.CreateVerticalSlice();
             Dictionary<string, SkillDefinition> skills = blueprint.Skills.ToDictionary(
                 data => data.Id,
@@ -299,6 +301,7 @@ namespace TaskbarTactics.Editor
                     data,
                     data.ActiveSkillIds.Select(id => skills[id]),
                     data.PassiveSkillIds.Select(id => skills[id]));
+                AssignHeroArtwork(asset, data.Id);
                 EditorUtility.SetDirty(asset);
                 return asset;
             }).ToList();
@@ -312,10 +315,19 @@ namespace TaskbarTactics.Editor
                 return asset;
             }).ToList();
 
-            List<AffixDefinition> affixes = blueprint.Affixes.Select(data =>
+            List<ItemBonusDefinition> itemBonuses = blueprint.ItemBonuses.Select(data =>
             {
-                AffixDefinition asset = LoadOrCreate<AffixDefinition>(
-                    $"{GeneratedRoot}/Content/Affixes/{data.Id}.asset");
+                ItemBonusDefinition asset = LoadOrCreate<ItemBonusDefinition>(
+                    $"{GeneratedRoot}/Content/ItemBonuses/{data.Id}.asset");
+                asset.Configure(data);
+                EditorUtility.SetDirty(asset);
+                return asset;
+            }).ToList();
+
+            List<StatusEffectDefinition> statusEffects = blueprint.StatusEffects.Select(data =>
+            {
+                StatusEffectDefinition asset = LoadOrCreate<StatusEffectDefinition>(
+                    $"{GeneratedRoot}/Content/StatusEffects/{data.Data.Id}.asset");
                 asset.Configure(data);
                 EditorUtility.SetDirty(asset);
                 return asset;
@@ -389,7 +401,8 @@ namespace TaskbarTactics.Editor
                 heroes,
                 skills.Values,
                 items,
-                affixes,
+                itemBonuses,
+                statusEffects,
                 synergies,
                 enemies,
                 encounters,
@@ -397,6 +410,72 @@ namespace TaskbarTactics.Editor
                 new[] { defaultCosmetic });
             EditorUtility.SetDirty(catalog);
             return catalog;
+        }
+
+        private static void RemoveLegacyContentAssets()
+        {
+            string[] legacyIds = { "guardian", "ranger", "pyromancer", "spellblade" };
+            foreach (string legacyId in legacyIds)
+            {
+                string path = $"{GeneratedRoot}/Content/Heroes/{legacyId}.asset";
+                if (AssetDatabase.LoadMainAssetAtPath(path) != null)
+                {
+                    AssetDatabase.DeleteAsset(path);
+                }
+            }
+
+            string[] legacyItemIds =
+            {
+                "blood_brooch", "cinder_relic", "rangers_bow",
+                "serpent_relic", "steel_relic"
+            };
+            foreach (string legacyItemId in legacyItemIds)
+            {
+                string path = $"{GeneratedRoot}/Content/Items/{legacyItemId}.asset";
+                if (AssetDatabase.LoadMainAssetAtPath(path) != null)
+                {
+                    AssetDatabase.DeleteAsset(path);
+                }
+            }
+
+            string legacyItemBonusFolder = GeneratedRoot + "/Content/Affixes";
+            if (AssetDatabase.IsValidFolder(legacyItemBonusFolder))
+            {
+                AssetDatabase.DeleteAsset(legacyItemBonusFolder);
+            }
+        }
+
+        private static void AssignHeroArtwork(HeroDefinition definition, string heroId)
+        {
+            string artId = LegacyHeroArtId(heroId);
+            string spritePath = $"Assets/Art/Heroes/Concepts/{artId}.png";
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(spritePath) == null)
+            {
+                return;
+            }
+
+            ConfigureCharacterSprite(spritePath);
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+            if (sprite == null)
+            {
+                return;
+            }
+
+            SerializedObject serialized = new SerializedObject(definition);
+            serialized.FindProperty("artwork").objectReferenceValue = sprite;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static string LegacyHeroArtId(string heroId)
+        {
+            switch (heroId)
+            {
+                case "warrior": return "guardian";
+                case "mage": return "pyromancer";
+                case "archer": return "ranger";
+                case "magic_warrior": return "spellblade";
+                default: return heroId;
+            }
         }
 
         private static IEnumerable<string> EnemyIdsForNode(string nodeId)
@@ -833,9 +912,9 @@ namespace TaskbarTactics.Editor
             {
                 "Assets/Resources/HeroClasses/guardian.png",
                 "Assets/Resources/HeroClasses/cleric.png",
+                "Assets/Resources/HeroClasses/pyromancer.png",
                 "Assets/Resources/HeroClasses/ranger.png",
                 "Assets/Resources/HeroClasses/rogue.png",
-                "Assets/Resources/HeroClasses/pyromancer.png",
                 "Assets/Resources/HeroClasses/spellblade.png"
             };
             return paths.Select(LoadSoftUiSprite).Where(sprite => sprite != null).ToArray();
@@ -1639,7 +1718,8 @@ namespace TaskbarTactics.Editor
             emptyBackground.rectTransform.sizeDelta = new Vector2(111, 111);
 
             Image icon = CreateImage(button.transform, "Class Icon", Color.white);
-            icon.sprite = LoadPixelUiSprite($"Assets/Resources/HeroClasses/{heroId}.png");
+            icon.sprite = LoadPixelUiSprite(
+                $"Assets/Resources/HeroClasses/{LegacyHeroArtId(heroId)}.png");
             icon.type = Image.Type.Simple;
             icon.preserveAspect = true;
             icon.raycastTarget = false;
@@ -1661,12 +1741,12 @@ namespace TaskbarTactics.Editor
         {
             string[] ids =
             {
-                "guardian",
+                "warrior",
                 "cleric",
-                "ranger",
+                "mage",
+                "archer",
                 "rogue",
-                "pyromancer",
-                "spellblade"
+                "magic_warrior"
             };
             return ids[Mathf.Clamp(index, 0, ids.Length - 1)];
         }

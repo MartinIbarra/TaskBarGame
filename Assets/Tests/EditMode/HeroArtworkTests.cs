@@ -10,11 +10,21 @@ namespace TaskbarTactics.Tests
     {
         private static readonly string[] HeroIds =
         {
+            "warrior",
+            "cleric",
+            "mage",
+            "archer",
+            "rogue",
+            "magic_warrior"
+        };
+
+        private static readonly string[] HeroArtIds =
+        {
             "guardian",
             "cleric",
+            "pyromancer",
             "ranger",
             "rogue",
-            "pyromancer",
             "spellblade"
         };
 
@@ -40,7 +50,7 @@ namespace TaskbarTactics.Tests
             }
         }
 
-        [TestCaseSource(nameof(HeroIds))]
+        [TestCaseSource(nameof(HeroArtIds))]
         public void HeroArtworkIsImportedAsCrispTransparentSprite(string heroId)
         {
             string path = $"Assets/Art/Heroes/Concepts/{heroId}.png";

@@ -40,7 +40,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private Button quitButton;
 
         private GameAppController app;
-        private string activeHeroId = "guardian";
+        private string activeHeroId = "warrior";
         private int activeFormationPreset;
         private int activePanelIndex;
         private Sprite commandNormalSprite;
@@ -131,9 +131,16 @@ namespace TaskbarTactics.Presentation
                 routeButtons[i].onClick.AddListener(() => app.SetRoutePreference(preference));
             }
 
-            for (int i = 0; i < equipSlotButtons.Count && i < 4; i++)
+            EquipmentSlot[] compactEquipmentSlots =
             {
-                EquipmentSlot slot = (EquipmentSlot)i;
+                EquipmentSlot.MainWeapon,
+                EquipmentSlot.Chest,
+                EquipmentSlot.Neck,
+                EquipmentSlot.Earring1
+            };
+            for (int i = 0; i < equipSlotButtons.Count && i < compactEquipmentSlots.Length; i++)
+            {
+                EquipmentSlot slot = compactEquipmentSlots[i];
                 equipSlotButtons[i].onClick.AddListener(() => app.CycleEquipment(activeHeroId, slot));
             }
 
@@ -465,7 +472,7 @@ namespace TaskbarTactics.Presentation
 
         private static bool CanOccupyFrontSlot(string heroId)
         {
-            return heroId == "guardian" || heroId == "spellblade";
+            return heroId == "warrior" || heroId == "magic_warrior";
         }
 
         private static FormationPosition FrontSlot(int presetIndex)

@@ -13,6 +13,18 @@ MonoBehaviour:
   m_Name: ember_staff
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.ItemDefinition
   id: ember_staff
-  slot: 0
+  descriptor:
+    InstanceId: ember_staff
+    DefinitionId: ember_staff
+    PrimarySlot: 10
+    Category: 1
+    WeaponType: 4
+    Handedness: 2
+    OffHandType: 0
+    ArmorType: 0
+    Modifiers:
+    - Stat: 3
+      Operation: 0
+      Value: 7
+      SourceId: item_base
   tagId: fire
-  basePower: 2

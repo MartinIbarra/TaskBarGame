@@ -13,6 +13,18 @@ MonoBehaviour:
   m_Name: arcane_robe
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.ItemDefinition
   id: arcane_robe
-  slot: 1
+  descriptor:
+    InstanceId: arcane_robe
+    DefinitionId: arcane_robe
+    PrimarySlot: 3
+    Category: 0
+    WeaponType: 0
+    Handedness: 0
+    OffHandType: 0
+    ArmorType: 1
+    Modifiers:
+    - Stat: 3
+      Operation: 0
+      Value: 3
+      SourceId: item_base
   tagId: arcane
-  basePower: 2

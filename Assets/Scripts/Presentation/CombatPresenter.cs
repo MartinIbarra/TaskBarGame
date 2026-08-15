@@ -121,7 +121,7 @@ namespace TaskbarTactics.Presentation
                     1f,
                     false,
                     true,
-                    $"Heroes/{hero.Id}");
+                    $"Heroes/{LegacyHeroAnimationId(hero.Id)}");
             }
 
             foreach (CombatantState enemy in request.Enemies)
@@ -149,6 +149,18 @@ namespace TaskbarTactics.Presentation
             }
 
             return definition != null && definition.IsBoss ? 1.1f : 1f;
+        }
+
+        private static string LegacyHeroAnimationId(string heroId)
+        {
+            switch (heroId)
+            {
+                case "warrior": return "guardian";
+                case "mage": return "pyromancer";
+                case "archer": return "ranger";
+                case "magic_warrior": return "spellblade";
+                default: return heroId;
+            }
         }
 
         private static bool HasBossEnemy(CombatRequest request, GameContentCatalog catalog)

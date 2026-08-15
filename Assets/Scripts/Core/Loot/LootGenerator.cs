@@ -21,7 +21,7 @@ namespace TaskbarTactics.Core.Loot
     public sealed class LootTable
     {
         public List<LootEntry> Entries = new List<LootEntry>();
-        public List<string> AffixIds = new List<string>();
+        public List<string> ItemBonusIds = new List<string>();
     }
 
     public interface ILootGenerator
@@ -55,8 +55,12 @@ namespace TaskbarTactics.Core.Loot
                     : rarityRoll < 40
                         ? ItemRarity.Rare
                         : ItemRarity.Common;
-                int affixCount = rarity == ItemRarity.Common ? 1 : 2;
-                List<string> affixes = PickAffixes(table.AffixIds, affixCount, random);
+                int bonusCount = rarity == ItemRarity.Common
+                    ? 0
+                    : rarity == ItemRarity.Rare
+                        ? 1
+                        : 2;
+                List<string> bonuses = PickBonuses(table.ItemBonusIds, bonusCount, random);
 
                 items.Add(new InventoryItem
                 {
@@ -64,7 +68,7 @@ namespace TaskbarTactics.Core.Loot
                     DefinitionId = entry.DefinitionId,
                     Slot = entry.Slot,
                     Rarity = rarity,
-                    AffixIds = affixes
+                    ItemBonusIds = bonuses
                 });
             }
 
@@ -90,12 +94,12 @@ namespace TaskbarTactics.Core.Loot
             return entries[entries.Count - 1];
         }
 
-        private static List<string> PickAffixes(
-            IReadOnlyList<string> affixIds,
+        private static List<string> PickBonuses(
+            IReadOnlyList<string> bonusIds,
             int count,
             Random random)
         {
-            List<string> available = new List<string>(affixIds);
+            List<string> available = new List<string>(bonusIds);
             List<string> selected = new List<string>();
             while (selected.Count < count && available.Count > 0)
             {

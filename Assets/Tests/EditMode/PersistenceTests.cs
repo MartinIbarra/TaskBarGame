@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using TaskbarTactics.Core.Models;
 using TaskbarTactics.Core.Progression;
@@ -37,8 +38,10 @@ namespace TaskbarTactics.Tests
             GameState actual = store.LoadOrDefault();
 
             Assert.That(actual.Version, Is.EqualTo(GameState.CurrentVersion));
-            Assert.That(actual.Party.Heroes[0].DefinitionId, Is.EqualTo("guardian"));
-            Assert.That(actual.Party.Heroes[0].EquippedItemIds[0], Is.EqualTo("item-001"));
+            Assert.That(actual.Party.Heroes[0].DefinitionId, Is.EqualTo("warrior"));
+            Assert.That(actual.Party.Heroes[0].EquippedItems[0].ItemInstanceId,
+                Is.EqualTo("item-001"));
+            Assert.That(actual.Party.Heroes[0].CurrentHealth, Is.EqualTo(180));
             Assert.That(actual.Expedition.CurrentNodeId, Is.EqualTo("node-03"));
         }
 
@@ -55,6 +58,23 @@ namespace TaskbarTactics.Tests
             GameState recovered = store.LoadOrDefault();
 
             Assert.That(recovered.Gold, Is.EqualTo(100));
+        }
+
+        [Test]
+        public void VersionOneSaveStartsFreshVersionTwoProfile()
+        {
+            JsonSaveStore store = new JsonSaveStore(directory);
+            GameState legacy = TestFixtures.CreateGameState();
+            store.Save(legacy);
+            string json = File.ReadAllText(store.PrimaryPath);
+            json = Regex.Replace(json, "\\\"Version\\\"\\s*:\\s*2", "\"Version\": 1");
+            File.WriteAllText(store.PrimaryPath, json);
+
+            GameState loaded = store.LoadOrDefault();
+
+            Assert.That(loaded.Version, Is.EqualTo(GameState.CurrentVersion));
+            Assert.That(loaded.Party.Heroes, Is.Empty);
+            Assert.That(loaded.Inventory, Is.Empty);
         }
 
         [Test]

@@ -17,7 +17,7 @@ namespace TaskbarTactics.Tests
             CombatResult second = simulator.Simulate(request);
 
             Assert.That(second.Outcome, Is.EqualTo(first.Outcome));
-            Assert.That(second.ElapsedTicks, Is.EqualTo(first.ElapsedTicks));
+            Assert.That(second.ElapsedMilliseconds, Is.EqualTo(first.ElapsedMilliseconds));
             Assert.That(second.Events, Is.EqualTo(first.Events));
             Assert.That(second.SurvivingHeroHealth, Is.EqualTo(first.SurvivingHeroHealth));
         }
@@ -59,10 +59,10 @@ namespace TaskbarTactics.Tests
             PartyState party = TestFixtures.CreateParty();
             party.IsFormationLocked = true;
 
-            bool changed = party.TrySetFormation("guardian", new FormationPosition(2, 2));
+            bool changed = party.TrySetFormation("warrior", new FormationPosition(2, 2));
 
             Assert.That(changed, Is.False);
-            Assert.That(party.GetHero("guardian").Position, Is.EqualTo(new FormationPosition(1, 0)));
+            Assert.That(party.GetHero("warrior").Position, Is.EqualTo(new FormationPosition(1, 0)));
         }
     }
 }

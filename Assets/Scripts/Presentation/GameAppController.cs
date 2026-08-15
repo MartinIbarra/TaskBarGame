@@ -5,10 +5,12 @@ using System.IO;
 using System.Linq;
 using TaskbarTactics.Content;
 using TaskbarTactics.Core.Combat;
+using TaskbarTactics.Core.Equipment;
 using TaskbarTactics.Core.Localization;
 using TaskbarTactics.Core.Loot;
 using TaskbarTactics.Core.Models;
 using TaskbarTactics.Core.Progression;
+using TaskbarTactics.Core.Stats;
 using TaskbarTactics.Infrastructure.Persistence;
 using UnityEngine;
 
@@ -83,6 +85,7 @@ namespace TaskbarTactics.Presentation
             if (!State.Expedition.IsActive)
             {
                 ClearSelectedParty();
+                RestoreAllHeroResources();
             }
             ResolveOfflineProgress();
         }
@@ -151,6 +154,7 @@ namespace TaskbarTactics.Presentation
             };
             State.Party.IsFormationLocked = false;
             ClearSelectedParty();
+            RestoreAllHeroResources();
             combatPresenter?.Clear();
             combatPresenter?.ShowBattleback("default");
             SetStatus("Escuadrón en el campamento");
@@ -305,19 +309,48 @@ namespace TaskbarTactics.Presentation
             }
 
             HeroState hero = State.Party.GetHero(heroId);
-            List<InventoryItem> candidates = State.Inventory.Where(item => item.Slot == slot).ToList();
-            if (hero == null || candidates.Count == 0)
+            HeroDefinition definition = catalog.FindHero(heroId);
+            if (hero == null || definition == null)
             {
                 return;
             }
 
-            string currentId = hero.EquippedItemIds
-                .FirstOrDefault(id => State.Inventory.Find(item => item.InstanceId == id)?.Slot == slot);
+            EquipmentLoadout loadout = catalog.CreateLoadout(hero, State.Inventory);
+            List<InventoryItem> candidates = State.Inventory
+                .Where(item => !IsEquippedByAnotherHero(heroId, item.InstanceId))
+                .Where(item => EquipmentService.CanEquip(
+                    definition.EquipmentProfile,
+                    loadout,
+                    slot,
+                    catalog.CreateItemDescriptor(item)))
+                .ToList();
+            if (candidates.Count == 0)
+            {
+                return;
+            }
+
+            string currentId = hero.GetEquippedItemId(slot);
             int currentIndex = candidates.FindIndex(item => item.InstanceId == currentId);
             InventoryItem next = candidates[(currentIndex + 1) % candidates.Count];
-            hero.EquippedItemIds.RemoveAll(id =>
-                State.Inventory.Find(item => item.InstanceId == id)?.Slot == slot);
-            hero.EquippedItemIds.Add(next.InstanceId);
+            EquipmentDescriptor descriptor = catalog.CreateItemDescriptor(next);
+            EquipmentResult result = EquipmentService.TryEquip(
+                definition.EquipmentProfile,
+                loadout,
+                slot,
+                descriptor);
+            if (!result.Succeeded)
+            {
+                return;
+            }
+
+            hero.SetEquippedItem(slot, next.InstanceId);
+            if (slot == EquipmentSlot.MainWeapon &&
+                descriptor.Handedness == Handedness.TwoHanded)
+            {
+                hero.SetEquippedItem(EquipmentSlot.SecondaryWeapon, null);
+            }
+
+            ClampHeroResources(hero);
             SaveAndRefresh();
         }
 
@@ -391,9 +424,11 @@ namespace TaskbarTactics.Presentation
                     State.Party.IsFormationLocked = true;
                     CombatRequest request = catalog.CreateCombatRequest(
                         SelectedHeroes(),
+                        State.Inventory,
                         node,
                         State.Expedition.Seed + State.Expedition.CompletedNodes);
                     CombatResult result = combatSimulator.Simulate(request);
+                    ApplyCombatResult(result);
                     yield return combatPresenter.Play(
                         request,
                         result,
@@ -405,9 +440,17 @@ namespace TaskbarTactics.Presentation
                 }
                 else
                 {
-                    if (node.Id == "town" && townIntroPresenter != null)
+                    if (node.Id == "town")
                     {
-                        yield return townIntroPresenter.Play(SelectedHeroes(), catalog);
+                        RestoreAllHeroResources();
+                        if (townIntroPresenter != null)
+                        {
+                            yield return townIntroPresenter.Play(SelectedHeroes(), catalog);
+                        }
+                        else
+                        {
+                            yield return new WaitForSecondsRealtime(nonCombatNodeSeconds);
+                        }
                     }
                     else
                     {
@@ -418,6 +461,7 @@ namespace TaskbarTactics.Presentation
                 if (outcome != CombatOutcome.Victory)
                 {
                     ExpeditionResolver.ResolveDefeat(State);
+                    RestoreAllHeroResources();
                     SetAttention("strip.defeat");
                     SetStatus(Localize("strip.defeat"));
                     SaveAndRefresh();
@@ -456,12 +500,9 @@ namespace TaskbarTactics.Presentation
             State.Expedition.CollectedItemIds.AddRange(loot.Select(item => item.InstanceId));
             foreach (HeroState hero in SelectedHeroes())
             {
-                hero.Experience += node.Difficulty <= 0 ? 0 : 20 + node.Difficulty * 5;
-                while (hero.Experience >= hero.Level * 100)
-                {
-                    hero.Experience -= hero.Level * 100;
-                    hero.Level++;
-                }
+                AddHeroExperience(
+                    hero,
+                    node.Difficulty <= 0 ? 0L : 20L + node.Difficulty * 5L);
             }
 
             if (loot.Any(item => item.Rarity == ItemRarity.Epic))
@@ -492,6 +533,7 @@ namespace TaskbarTactics.Presentation
             State.Expedition.IsActive = false;
             State.Expedition.CurrentNodeId = string.Empty;
             State.Party.IsFormationLocked = false;
+            RestoreAllHeroResources();
             SetAttention("strip.complete");
             SetStatus(Localize("strip.complete"));
         }
@@ -521,13 +563,21 @@ namespace TaskbarTactics.Presentation
                 {
                     CombatRequest request = catalog.CreateCombatRequest(
                         SelectedHeroes(),
+                        State.Inventory,
                         node,
                         State.Expedition.Seed + State.Expedition.CompletedNodes);
-                    if (combatSimulator.Simulate(request).Outcome != CombatOutcome.Victory)
+                    CombatResult result = combatSimulator.Simulate(request);
+                    ApplyCombatResult(result);
+                    if (result.Outcome != CombatOutcome.Victory)
                     {
                         ExpeditionResolver.ResolveDefeat(State);
+                        RestoreAllHeroResources();
                         break;
                     }
+                }
+                else if (node.Id == "town")
+                {
+                    RestoreAllHeroResources();
                 }
 
                 RewardNode(node);
@@ -567,7 +617,8 @@ namespace TaskbarTactics.Presentation
                         Position = starterPositions[i],
                         ActiveSkillId = definition.ActiveSkills[0].Id,
                         PassiveSkillId = definition.PassiveSkills[0].Id,
-                        EquippedItemIds = new List<string>()
+                        EquippedItems = new List<EquippedItemState>(),
+                        ActiveStatusEffects = new List<ActiveStatusEffectState>()
                     });
                 }
             }
@@ -576,6 +627,102 @@ namespace TaskbarTactics.Presentation
             {
                 State.Inventory.AddRange(lootGenerator.Generate(catalog.CreateLootTable(), 1337, 8));
             }
+
+            foreach (HeroState hero in State.Party.Heroes.Where(item =>
+                         !item.ResourcesInitialized))
+            {
+                RestoreHeroResources(hero);
+            }
+        }
+
+        private bool IsEquippedByAnotherHero(string heroId, string instanceId)
+        {
+            return State.Party.Heroes.Any(hero =>
+                hero.DefinitionId != heroId &&
+                hero.EquippedItems != null &&
+                hero.EquippedItems.Any(item => item.ItemInstanceId == instanceId));
+        }
+
+        private void AddHeroExperience(HeroState hero, long amount)
+        {
+            if (hero == null || amount <= 0L)
+            {
+                return;
+            }
+
+            HeroStats before = catalog.ResolveHeroStats(hero, State.Inventory);
+            HeroProgression progression = new HeroProgression(hero.Level, hero.Experience);
+            progression.AddExperience(amount);
+            hero.Level = progression.Level;
+            hero.Experience = progression.Experience;
+            HeroStats after = catalog.ResolveHeroStats(hero, State.Inventory);
+            hero.CurrentHealth = Mathf.Clamp(
+                hero.CurrentHealth + Mathf.Max(0, after.MaxHealth - before.MaxHealth),
+                0,
+                after.MaxHealth);
+            hero.CurrentMana = Mathf.Clamp(
+                hero.CurrentMana + Mathf.Max(0, after.MaxMana - before.MaxMana),
+                0,
+                after.MaxMana);
+            hero.ResourcesInitialized = true;
+        }
+
+        private void ApplyCombatResult(CombatResult result)
+        {
+            if (result == null)
+            {
+                return;
+            }
+
+            foreach (CombatantResourceResult resource in result.HeroResources)
+            {
+                HeroState hero = State.Party.GetHero(resource.Id);
+                if (hero == null)
+                {
+                    continue;
+                }
+
+                hero.CurrentHealth = resource.CurrentHealth;
+                hero.CurrentMana = resource.CurrentMana;
+                hero.ResourcesInitialized = true;
+                hero.ActiveStatusEffects = resource.PersistentStatusEffects ??
+                    new List<ActiveStatusEffectState>();
+                ClampHeroResources(hero);
+            }
+        }
+
+        private void RestoreAllHeroResources()
+        {
+            foreach (HeroState hero in State.Party.Heroes)
+            {
+                RestoreHeroResources(hero);
+            }
+        }
+
+        private void RestoreHeroResources(HeroState hero)
+        {
+            if (hero == null || catalog.FindHero(hero.DefinitionId) == null)
+            {
+                return;
+            }
+
+            HeroStats stats = catalog.ResolveHeroStats(hero, State.Inventory);
+            hero.CurrentHealth = stats.MaxHealth;
+            hero.CurrentMana = stats.MaxMana;
+            hero.ResourcesInitialized = true;
+            hero.ActiveStatusEffects = new List<ActiveStatusEffectState>();
+        }
+
+        private void ClampHeroResources(HeroState hero)
+        {
+            if (hero == null || catalog.FindHero(hero.DefinitionId) == null)
+            {
+                return;
+            }
+
+            HeroStats stats = catalog.ResolveHeroStats(hero, State.Inventory);
+            hero.CurrentHealth = Mathf.Clamp(hero.CurrentHealth, 0, stats.MaxHealth);
+            hero.CurrentMana = Mathf.Clamp(hero.CurrentMana, 0, stats.MaxMana);
         }
 
         private void EnsureSelectedPartyLimit()

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: stalwart
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.SkillDefinition
   id: stalwart
-  ownerHeroId: guardian
+  ownerHeroId: warrior
   isPassive: 1
   cooldownTicks: 0
   magnitude: 0.15

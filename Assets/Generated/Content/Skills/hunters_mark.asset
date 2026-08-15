@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: hunters_mark
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.SkillDefinition
   id: hunters_mark
-  ownerHeroId: ranger
+  ownerHeroId: archer
   isPassive: 0
   cooldownTicks: 12
   magnitude: 1.9

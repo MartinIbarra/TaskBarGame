@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: eagle_eye
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.SkillDefinition
   id: eagle_eye
-  ownerHeroId: ranger
+  ownerHeroId: archer
   isPassive: 1
   cooldownTicks: 0
   magnitude: 0.15

@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdf0f7977cce5b54aaeba0a253c29ff1, type: 3}
+  m_Name: steel_belt
+  m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.ItemDefinition
+  id: steel_belt
+  descriptor:
+    InstanceId: steel_belt
+    DefinitionId: steel_belt
+    PrimarySlot: 8
+    Category: 3
+    WeaponType: 0
+    Handedness: 0
+    OffHandType: 0
+    ArmorType: 0
+    Modifiers:
+    - Stat: 0
+      Operation: 0
+      Value: 12
+      SourceId: item_base
+  tagId: steel

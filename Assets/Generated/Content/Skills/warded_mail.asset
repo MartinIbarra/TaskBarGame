@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: warded_mail
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.SkillDefinition
   id: warded_mail
-  ownerHeroId: spellblade
+  ownerHeroId: magic_warrior
   isPassive: 1
   cooldownTicks: 0
   magnitude: 0.22
