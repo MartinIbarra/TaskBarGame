@@ -1009,6 +1009,7 @@ namespace TaskbarTactics.Editor
             WindowModeController window = windowObject.AddComponent<WindowModeController>();
 
             StripHudController strip = BuildStripUi(stripUi.transform);
+            NodeTransitionPresenter nodeTransition = BuildNodeTransition(stripUi.transform, strip);
             TownIntroPresenter townIntro = BuildTownIntro(stripUi.transform);
             DefeatOverlayPresenter defeatOverlay = BuildDefeatOverlay(stripUi.transform);
             Sprite hudVerticalSprite = LoadUiSprite("Assets/Resources/UI/Square.png", new Vector4(54, 54, 54, 54));
@@ -1046,7 +1047,7 @@ namespace TaskbarTactics.Editor
             GameObject appObject = new GameObject("Game Application");
             appObject.transform.SetParent(systems.transform);
             GameAppController app = appObject.AddComponent<GameAppController>();
-            app.Configure(catalog, combatPresenter, strip, management, window, townIntro, defeatOverlay);
+            app.Configure(catalog, combatPresenter, strip, management, window, townIntro, defeatOverlay, nodeTransition);
             window.Configure(stripUi, managementUi, camera);
 
             GameObject eventSystemObject = new GameObject("Event System");
@@ -1251,7 +1252,7 @@ namespace TaskbarTactics.Editor
             gate.raycastTarget = false;
             gate.rectTransform.anchorMin = gate.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             gate.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            gate.rectTransform.anchoredPosition = new Vector2(0f, -7f);
+            gate.rectTransform.anchoredPosition = new Vector2(18f, -7f);
             gate.rectTransform.sizeDelta = new Vector2(259f, 116f);
 
             GameObject heroRoot = new GameObject("Hero Runners", typeof(RectTransform));
@@ -1277,6 +1278,69 @@ namespace TaskbarTactics.Editor
                 heroRect,
                 source,
                 gateOpenClip);
+            return presenter;
+        }
+
+        private static NodeTransitionPresenter BuildNodeTransition(
+            Transform root,
+            StripHudController strip)
+        {
+            Sprite transitionSprite = LoadUiSprite("Assets/Resources/Events/transition.png", Vector4.zero);
+            GameObject overlay = new GameObject(
+                "Node Transition Overlay",
+                typeof(RectTransform),
+                typeof(CanvasGroup));
+            overlay.transform.SetParent(root, false);
+            RectTransform overlayRect = overlay.GetComponent<RectTransform>();
+            overlayRect.anchorMin = Vector2.zero;
+            overlayRect.anchorMax = Vector2.one;
+            overlayRect.offsetMin = Vector2.zero;
+            overlayRect.offsetMax = Vector2.zero;
+
+            Image banner = CreateImage(overlay.transform, "Transition Banner", Color.white);
+            banner.sprite = transitionSprite;
+            banner.type = Image.Type.Simple;
+            banner.preserveAspect = false;
+            banner.raycastTarget = false;
+            banner.rectTransform.anchorMin = banner.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            banner.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            banner.rectTransform.anchoredPosition = new Vector2(-960f, 0f);
+            banner.rectTransform.sizeDelta = new Vector2(960f, 180f);
+
+            TMP_Text title = CreateText(
+                banner.transform,
+                "Transition Node Name",
+                "Cueva",
+                24,
+                TextAlignmentOptions.Center,
+                Vector2.zero,
+                new Vector2(620f, 42f));
+            title.rectTransform.anchorMin = title.rectTransform.anchorMax = new Vector2(0.5f, 0.55f);
+            title.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            title.rectTransform.anchoredPosition = new Vector2(0f, 10f);
+            title.rectTransform.sizeDelta = new Vector2(620f, 42f);
+
+            TMP_Text subtitle = CreateText(
+                banner.transform,
+                "Transition Node Level",
+                "Acto I · Nivel 3",
+                14,
+                TextAlignmentOptions.Center,
+                Vector2.zero,
+                new Vector2(520f, 30f));
+            subtitle.rectTransform.anchorMin = subtitle.rectTransform.anchorMax = new Vector2(0.5f, 0.45f);
+            subtitle.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            subtitle.rectTransform.anchoredPosition = new Vector2(0f, -20f);
+            subtitle.rectTransform.sizeDelta = new Vector2(520f, 30f);
+
+            NodeTransitionPresenter presenter = overlay.AddComponent<NodeTransitionPresenter>();
+            presenter.Configure(
+                overlay.GetComponent<CanvasGroup>(),
+                banner.rectTransform,
+                title,
+                subtitle,
+                strip);
+            overlay.transform.SetAsLastSibling();
             return presenter;
         }
 
@@ -1330,6 +1394,7 @@ namespace TaskbarTactics.Editor
             ApplyUiFrame(background, hudHorizontalSprite);
             background.color = new Color(0.85f, 0.85f, 0.85f, 1f);
             SetStretch(background.rectTransform, 0, 0, 0, 0);
+            AddTorchShadowDim(background.transform);
             AddCandlePair(background.transform, candleFrames, new Vector2(12, 18), new Vector2(-12, 18));
             Image titleFrame = CreateImage(background.transform, "Title Frame", Color.white);
             ApplySimpleWideFrame(titleFrame, titleWideSprite);
@@ -1397,6 +1462,10 @@ namespace TaskbarTactics.Editor
                 summaries.Add(summary);
                 panel.gameObject.SetActive(i == 0);
             }
+            AddTorchShadowDim(panels[0].transform);
+            AddTorchShadowDim(panels[1].transform);
+            AddTorchShadowDim(panels[3].transform);
+            AddTorchShadowDim(panels[4].transform);
             AddCandlePair(panels[0].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
             AddCandlePair(panels[1].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
             AddCandlePair(panels[3].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
@@ -1624,7 +1693,7 @@ namespace TaskbarTactics.Editor
             const int rows = 4;
             const float slotSize = 58f;
             const float gap = 66f;
-            Vector2 start = new Vector2(85f, -105f);
+            Vector2 start = new Vector2(88f, -115f);
 
             for (int row = 0; row < rows; row++)
             {
@@ -2013,6 +2082,12 @@ namespace TaskbarTactics.Editor
             marker.rectTransform.anchoredPosition = new Vector2(0, 0);
             marker.rectTransform.sizeDelta = new Vector2(10, 10);
 
+            Image hoverArea = CreateImage(nodeRoot.transform, "Hover Area", new Color(1f, 1f, 1f, 0f));
+            hoverArea.rectTransform.anchorMin = hoverArea.rectTransform.anchorMax = new Vector2(0, 0.5f);
+            hoverArea.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            hoverArea.rectTransform.anchoredPosition = new Vector2(0, 0);
+            hoverArea.rectTransform.sizeDelta = new Vector2(40, 32);
+
             Image flag = null;
             if (flagFrames != null && flagFrames.Length > 0)
             {
@@ -2033,13 +2108,17 @@ namespace TaskbarTactics.Editor
             TMP_Text label = CreateText(nodeRoot.transform, "Label", nodeId, 10,
                 TextAlignmentOptions.Left, new Vector2(14, 8), new Vector2(136, 36));
             label.textWrappingMode = TextWrappingModes.Normal;
+            label.gameObject.SetActive(false);
+            MapNodeHoverTooltip tooltip = hoverArea.gameObject.AddComponent<MapNodeHoverTooltip>();
+            tooltip.Configure(label);
 
             return new MapNodeView
             {
                 NodeId = nodeId,
                 Marker = marker,
                 Label = label,
-                CurrentFlag = flag
+                CurrentFlag = flag,
+                Tooltip = tooltip
             };
         }
 
@@ -2076,6 +2155,14 @@ namespace TaskbarTactics.Editor
             AddCandle(parent, "Right Candle", frames, new Vector2(1, 1), new Vector2(1, 1), rightPosition, lightFrames);
         }
 
+        private static void AddTorchShadowDim(Transform parent)
+        {
+            Image dim = CreateImage(parent, "Torch Shadow Dim", new Color(0f, 0f, 0f, 0.24f));
+            dim.raycastTarget = false;
+            SetStretch(dim.rectTransform, 0, 0, 0, 0);
+            dim.transform.SetAsFirstSibling();
+        }
+
         private static void AddCandle(
             Transform parent,
             string name,
@@ -2095,7 +2182,7 @@ namespace TaskbarTactics.Editor
                 light.rectTransform.anchorMin = light.rectTransform.anchorMax = anchor;
                 light.rectTransform.pivot = pivot;
                 light.rectTransform.anchoredPosition = position + new Vector2(pivot.x == 0f ? -68f : 68f, 24f);
-                light.rectTransform.sizeDelta = new Vector2(213, 165);
+                light.rectTransform.sizeDelta = new Vector2(277, 215);
                 light.gameObject.AddComponent<CandleFlicker>().Configure(light, lightFrames, 4f, false);
             }
 
@@ -2107,7 +2194,7 @@ namespace TaskbarTactics.Editor
             candle.rectTransform.anchorMin = candle.rectTransform.anchorMax = anchor;
             candle.rectTransform.pivot = pivot;
             candle.rectTransform.anchoredPosition = position;
-            candle.rectTransform.sizeDelta = new Vector2(34, 55);
+            candle.rectTransform.sizeDelta = new Vector2(41, 66);
             candle.gameObject.AddComponent<CandleFlicker>().Configure(candle, frames, 7f);
             candle.transform.SetAsLastSibling();
         }

@@ -15,6 +15,7 @@ namespace TaskbarTactics.Presentation
         public Image Marker;
         public TMP_Text Label;
         public Image CurrentFlag;
+        public MapNodeHoverTooltip Tooltip;
     }
 
     [Serializable]
@@ -169,11 +170,22 @@ namespace TaskbarTactics.Presentation
 
                 if (node.Label != null)
                 {
-                    node.Label.gameObject.SetActive(true);
-                    node.Label.color = color;
-                    node.Label.text = definition != null
+                    node.Label.gameObject.SetActive(false);
+                }
+
+                if (node.Tooltip == null && node.Marker != null && node.Label != null)
+                {
+                    node.Tooltip = node.Marker.GetComponent<MapNodeHoverTooltip>() ??
+                        node.Marker.gameObject.AddComponent<MapNodeHoverTooltip>();
+                    node.Tooltip.Configure(node.Label);
+                }
+
+                if (node.Tooltip != null)
+                {
+                    string labelText = definition != null
                         ? $"{DisplayName(node.NodeId)}\n{definition.Type} - Dif. {definition.Difficulty}"
                         : DisplayName(node.NodeId);
+                    node.Tooltip.SetContent(labelText, CurrentNode);
                 }
 
                 if (isCurrent && node.Marker != null)

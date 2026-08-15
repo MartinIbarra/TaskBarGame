@@ -13,6 +13,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private Button menuButton;
         [SerializeField] private GameObject menuPanel;
         [SerializeField] private Button quitButton;
+        private CanvasGroup labelsGroup;
 
         public void Configure(
             TMP_Text status,
@@ -30,6 +31,13 @@ namespace TaskbarTactics.Presentation
             menuButton = menu;
             menuPanel = menuRoot;
             quitButton = quit;
+            labelsGroup = statusLabel != null
+                ? statusLabel.transform.parent.GetComponent<CanvasGroup>()
+                : null;
+            if (labelsGroup == null && statusLabel != null)
+            {
+                labelsGroup = statusLabel.transform.parent.gameObject.AddComponent<CanvasGroup>();
+            }
         }
 
         public void Bind(GameAppController app, WindowModeController window)
@@ -59,6 +67,16 @@ namespace TaskbarTactics.Presentation
         private void SetAttention(bool active)
         {
             attentionIndicator.SetActive(active);
+        }
+
+        public void SetCompactLabelsVisible(bool visible)
+        {
+            if (labelsGroup == null)
+            {
+                return;
+            }
+
+            labelsGroup.alpha = visible ? 1f : 0f;
         }
     }
 }

@@ -29,6 +29,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private WindowModeController windowMode;
         [SerializeField] private TownIntroPresenter townIntroPresenter;
         [SerializeField] private DefeatOverlayPresenter defeatOverlayPresenter;
+        [SerializeField] private NodeTransitionPresenter nodeTransitionPresenter;
 
         [Header("Pacing")]
         [SerializeField, Min(1f), Tooltip("Maximum real-time duration of a combat replay.")]
@@ -61,7 +62,8 @@ namespace TaskbarTactics.Presentation
             ManagementUiController management,
             WindowModeController window,
             TownIntroPresenter townIntro = null,
-            DefeatOverlayPresenter defeatOverlay = null)
+            DefeatOverlayPresenter defeatOverlay = null,
+            NodeTransitionPresenter nodeTransition = null)
         {
             catalog = content;
             combatPresenter = combat;
@@ -70,6 +72,7 @@ namespace TaskbarTactics.Presentation
             windowMode = window;
             townIntroPresenter = townIntro;
             defeatOverlayPresenter = defeatOverlay;
+            nodeTransitionPresenter = nodeTransition;
         }
 
         private void Awake()
@@ -464,8 +467,9 @@ namespace TaskbarTactics.Presentation
                 {
                     ExpeditionResolver.ResolveDefeat(State);
                     RestoreAllHeroResources();
-                    SetAttention("strip.defeat");
-                    SetStatus(Localize("strip.defeat"));
+                    HasAttention = true;
+                    CurrentStatus = string.Empty;
+                    AttentionChanged?.Invoke(true);
                     SaveAndRefresh();
                     if (defeatOverlayPresenter != null)
                     {
@@ -478,7 +482,15 @@ namespace TaskbarTactics.Presentation
                 RewardNode(node);
                 Advance(node);
                 SaveAndRefresh();
-                yield return new WaitForSecondsRealtime(0.5f);
+                MapNodeDefinition nextNode = catalog.Map.FindNode(State.Expedition.CurrentNodeId);
+                if (State.Expedition.IsActive && nextNode != null && nodeTransitionPresenter != null)
+                {
+                    yield return nodeTransitionPresenter.Play(nextNode);
+                }
+                else
+                {
+                    yield return new WaitForSecondsRealtime(0.5f);
+                }
             }
         }
 
