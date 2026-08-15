@@ -31,7 +31,8 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private DefeatOverlayPresenter defeatOverlayPresenter;
 
         [Header("Pacing")]
-        [SerializeField, Min(30f)] private float combatPresentationSeconds = 30f;
+        [SerializeField, Min(1f), Tooltip("Maximum real-time duration of a combat replay.")]
+        private float combatPresentationSeconds = 30f;
         [SerializeField, Min(1f)] private float nonCombatNodeSeconds = 4f;
 
         private readonly CombatSimulator combatSimulator = new CombatSimulator();

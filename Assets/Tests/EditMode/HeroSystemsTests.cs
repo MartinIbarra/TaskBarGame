@@ -275,6 +275,33 @@ namespace TaskbarTactics.Tests
         }
 
         [Test]
+        public void FirstBasicAttackWaitsForEachCombatantsOwnInterval()
+        {
+            CombatRequest request = new CombatRequest
+            {
+                Seed = 17,
+                MaxDurationMilliseconds = 1100,
+                Heroes = new List<CombatantState>
+                {
+                    TestFixtures.Combatant("fast", CombatSide.Hero, 0, 0, 10000, 1, 10)
+                },
+                Enemies = new List<CombatantState>
+                {
+                    TestFixtures.Combatant("slow", CombatSide.Enemy, 0, 0, 10000, 1, 10)
+                }
+            };
+            request.Heroes[0].AttackSpeed = 2f;
+            request.Enemies[0].AttackSpeed = 1f;
+
+            CombatResult result = new CombatSimulator().Simulate(request);
+
+            CombatEvent firstFastAttack = result.Events.Find(item => item.ActorId == "fast");
+            CombatEvent firstSlowAttack = result.Events.Find(item => item.ActorId == "slow");
+            Assert.That(firstFastAttack.TimeMilliseconds, Is.EqualTo(500));
+            Assert.That(firstSlowAttack.TimeMilliseconds, Is.EqualTo(1000));
+        }
+
+        [Test]
         public void DualWieldAttacksAlternateHands()
         {
             CombatRequest request = new CombatRequest

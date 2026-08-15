@@ -20,6 +20,8 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private SpriteRenderer battlebackRenderer;
         [SerializeField] private Color enemyColor = new Color(0.78f, 0.24f, 0.25f);
         [SerializeField] private AudioClip finalBossDeathClip;
+        [SerializeField, Min(0.1f), Tooltip("Timeline playback multiplier. Higher values replay combat faster.")]
+        private float playbackSpeed = 1f;
 
         private readonly Dictionary<string, UnitView> unitViews = new Dictionary<string, UnitView>();
         private readonly Dictionary<string, Sprite> battlebackCache = new Dictionary<string, Sprite>();
@@ -58,33 +60,45 @@ namespace TaskbarTactics.Presentation
         {
             SetBattleback(nodeId);
             SpawnUnits(request, catalog);
-            float eventDelay = result.Events.Count > 0
-                ? Mathf.Max(0.04f, durationSeconds / result.Events.Count)
-                : durationSeconds;
-
-            foreach (CombatEvent combatEvent in result.Events)
+            CombatPlaybackSchedule schedule = CombatPlaybackTimeline.Build(
+                result.Events,
+                result.ElapsedMilliseconds,
+                durationSeconds,
+                playbackSpeed);
+            foreach (CombatPlaybackFrame frame in schedule.Frames)
             {
-                if (unitViews.TryGetValue(combatEvent.ActorId, out UnitView actor))
+                if (frame.DelaySeconds > 0f)
                 {
-                    actor.PlayAttack();
+                    yield return new WaitForSecondsRealtime(frame.DelaySeconds);
                 }
 
-                if (unitViews.TryGetValue(combatEvent.TargetId, out UnitView target))
+                foreach (CombatEvent combatEvent in frame.Events)
                 {
-                    target.ReceiveDamage(combatEvent.Amount);
+                    PlayEvent(combatEvent);
                 }
-
-                yield return new WaitForSecondsRealtime(eventDelay);
             }
 
-            if (result.Events.Count == 0)
+            if (schedule.TailDelaySeconds > 0f)
             {
-                yield return new WaitForSecondsRealtime(durationSeconds);
+                yield return new WaitForSecondsRealtime(schedule.TailDelaySeconds);
             }
 
             if (result.Outcome == CombatOutcome.Victory && HasBossEnemy(request, catalog))
             {
                 PlayFinalBossDeathSound();
+            }
+        }
+
+        private void PlayEvent(CombatEvent combatEvent)
+        {
+            if (unitViews.TryGetValue(combatEvent.ActorId, out UnitView actor))
+            {
+                actor.PlayAttack();
+            }
+
+            if (unitViews.TryGetValue(combatEvent.TargetId, out UnitView target))
+            {
+                target.ReceiveDamage(combatEvent.Amount);
             }
         }
 

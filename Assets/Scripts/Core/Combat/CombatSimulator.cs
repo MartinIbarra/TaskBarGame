@@ -183,7 +183,8 @@ namespace TaskbarTactics.Core.Combat
                     clone.AttackSpeed = Math.Max(
                         HeroStatLimits.MinAttackSpeed,
                         Math.Min(HeroStatLimits.MaxAttackSpeed, clone.AttackSpeed));
-                    clone.NextAttackMilliseconds = 0;
+                    clone.NextAttackMilliseconds = AttackIntervalMilliseconds(
+                        EffectiveStats(clone).AttackSpeed);
                     clone.NextAttackHand = AttackHand.Main;
                     clone.HealthRegenerationCarry = 0f;
                     clone.ManaRegenerationCarry = 0f;

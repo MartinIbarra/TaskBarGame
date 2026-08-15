@@ -232,9 +232,18 @@ There are no global attack turns. Each combatant schedules its own next basic at
 attack interval milliseconds = 1000 / effective Attack Speed
 ```
 
+The first basic attack also waits for this individual interval; combatants no longer
+all attack at simulation time zero.
+
 The simulator uses integer milliseconds, a seeded random generator, and stable ID
 ordering when actions share a timestamp. This preserves deterministic results and makes
 offline simulation possible.
+
+`CombatPresenter` replays the resulting timestamps instead of assigning one fixed delay
+per event. Events sharing a timestamp are dispatched in the same frame, so animations
+on different units can overlap. `Playback Speed` is editable on the presenter, while
+the controller's combat presentation duration acts as a maximum: longer simulations
+are compressed proportionally without changing their relative cadence.
 
 Dual-wield attacks alternate Main, Secondary, Main, Secondary on the hero's single
 attack cadence. Shield and Book never enter this alternation. Weapon-specific attack

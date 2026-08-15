@@ -13869,6 +13869,7 @@ MonoBehaviour:
   battlebackRenderer: {fileID: 546086202}
   enemyColor: {r: 0.78, g: 0.24, b: 0.25, a: 1}
   finalBossDeathClip: {fileID: 0}
+  playbackSpeed: 1
 --- !u!1 &933125771
 GameObject:
   m_ObjectHideFlags: 0
