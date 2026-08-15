@@ -150,12 +150,17 @@ namespace TaskbarTactics.Presentation
 
         public bool AssignHeroToSlot(string heroId, FormationPosition position)
         {
-            if (IsFrontSlot(position) && !CanOccupyFrontSlot(heroId))
+            if (app == null || string.IsNullOrWhiteSpace(heroId) ||
+                IsFrontSlot(position) && !CanOccupyFrontSlot(heroId))
             {
                 return false;
             }
 
-            app.AssignHeroToFormationSlot(heroId, position);
+            if (!app.AssignHeroToFormationSlot(heroId, position))
+            {
+                return false;
+            }
+
             activeHeroId = heroId;
             Refresh();
             return true;
@@ -271,6 +276,15 @@ namespace TaskbarTactics.Presentation
                 if (card != null)
                 {
                     card.Refresh(app.HeroName(definition.Id), isHeroSelected, isActiveHero);
+                }
+
+                HeroDragSource dragSource = heroButtons[i].GetComponent<HeroDragSource>();
+                if (dragSource != null)
+                {
+                    dragSource.Configure(
+                        definition.Id,
+                        HeroFormationIcon(definition.Id),
+                        null);
                 }
 
                 heroButtons[i].image.color = Color.clear;

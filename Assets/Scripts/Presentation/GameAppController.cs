@@ -175,17 +175,17 @@ namespace TaskbarTactics.Presentation
             }
         }
 
-        public void AssignHeroToFormationSlot(string heroId, FormationPosition position)
+        public bool AssignHeroToFormationSlot(string heroId, FormationPosition position)
         {
             if (State.Party.IsFormationLocked)
             {
-                return;
+                return false;
             }
 
             HeroState hero = State.Party.GetHero(heroId);
             if (hero == null)
             {
-                return;
+                return false;
             }
 
             HeroState previousOccupant = State.Party.Heroes.FirstOrDefault(item =>
@@ -208,6 +208,7 @@ namespace TaskbarTactics.Presentation
             hero.IsSelected = true;
             hero.Position = position;
             SaveAndRefresh();
+            return true;
         }
 
         public bool UnequipHeroFromFormationSlot(string heroId, FormationPosition position)

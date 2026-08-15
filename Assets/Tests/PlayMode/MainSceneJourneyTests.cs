@@ -3,6 +3,7 @@ using System.Collections;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using TaskbarTactics.Core.Models;
 using TaskbarTactics.Core.Services;
 using TaskbarTactics.Presentation;
 using UnityEngine;
@@ -51,6 +52,33 @@ namespace TaskbarTactics.Tests
             Assert.That(app.State.Party.Heroes.Count(hero => hero.IsSelected), Is.EqualTo(0));
             Assert.That(app.State.Inventory, Is.Not.Empty);
             Assert.That(window.CurrentMode, Is.EqualTo(WindowMode.Management));
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator FormationRosterDragSourcesUseCurrentCatalogHeroIds()
+        {
+            GameAppController app = Object.FindFirstObjectByType<GameAppController>();
+            HeroDragSource[] rosterSources = Resources.FindObjectsOfTypeAll<HeroDragSource>()
+                .Where(source => source.GetComponent<Button>() != null &&
+                                 source.name.StartsWith("Hero Class", StringComparison.Ordinal))
+                .ToArray();
+            string[] catalogHeroIds = app.Catalog.Heroes
+                .Select(hero => hero.Id)
+                .ToArray();
+
+            Assert.That(rosterSources.Select(source => source.HeroId),
+                Is.EquivalentTo(catalogHeroIds));
+
+            HeroDragSource warriorSource = rosterSources.Single(source =>
+                source.HeroId == "warrior");
+            FormationSlotView targetSlot = Resources.FindObjectsOfTypeAll<FormationSlotView>()
+                .Single(slot => slot.gameObject.activeInHierarchy &&
+                                slot.Position.Equals(new FormationPosition(1, 0)));
+
+            Assert.That(targetSlot.AssignHero("guardian"), Is.False);
+            Assert.That(targetSlot.AssignHero(warriorSource.HeroId), Is.True);
+            Assert.That(app.State.Party.GetHero("warrior").IsSelected, Is.True);
             yield return null;
         }
 

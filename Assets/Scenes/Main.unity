@@ -748,7 +748,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: ranger
+  m_text: archer
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a95d6fcbd943ec54db70cfea52fd9af9, type: 2}
   m_sharedMaterial: {fileID: -357185093533477015, guid: a95d6fcbd943ec54db70cfea52fd9af9, type: 2}
@@ -4335,7 +4335,7 @@ GameObject:
   - component: {fileID: 229760330}
   - component: {fileID: 229760329}
   m_Layer: 0
-  m_Name: Hero Class spellblade Button
+  m_Name: Hero Class magic_warrior Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4376,7 +4376,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d586348b6bf27d84c827cd124e18973c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TaskbarTactics.Presentation::TaskbarTactics.Presentation.HeroDragSource
-  heroId: spellblade
+  heroId: magic_warrior
   dragSprite: {fileID: 21300000, guid: 3d331b99acfe1514fa5834952fec72dd, type: 3}
   canvas: {fileID: 0}
   grabClip: {fileID: 8300000, guid: 2bfcf5f5f1f453f4f9d0a54da461b14d, type: 3}
@@ -7145,7 +7145,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: spellblade
+  m_text: magic_warrior
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a95d6fcbd943ec54db70cfea52fd9af9, type: 2}
   m_sharedMaterial: {fileID: -357185093533477015, guid: a95d6fcbd943ec54db70cfea52fd9af9, type: 2}
@@ -8885,7 +8885,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: guardian
+  m_text: warrior
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a95d6fcbd943ec54db70cfea52fd9af9, type: 2}
   m_sharedMaterial: {fileID: -357185093533477015, guid: a95d6fcbd943ec54db70cfea52fd9af9, type: 2}
@@ -9097,7 +9097,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: pyromancer
+  m_text: mage
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a95d6fcbd943ec54db70cfea52fd9af9, type: 2}
   m_sharedMaterial: {fileID: -357185093533477015, guid: a95d6fcbd943ec54db70cfea52fd9af9, type: 2}
@@ -14684,7 +14684,7 @@ GameObject:
   - component: {fileID: 995224663}
   - component: {fileID: 995224662}
   m_Layer: 0
-  m_Name: Hero Class ranger Button
+  m_Name: Hero Class archer Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14725,7 +14725,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d586348b6bf27d84c827cd124e18973c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TaskbarTactics.Presentation::TaskbarTactics.Presentation.HeroDragSource
-  heroId: ranger
+  heroId: archer
   dragSprite: {fileID: 21300000, guid: 8926aa95e787305498a450018c59a9fb, type: 3}
   canvas: {fileID: 0}
   grabClip: {fileID: 8300000, guid: 2bfcf5f5f1f453f4f9d0a54da461b14d, type: 3}
@@ -16454,7 +16454,7 @@ GameObject:
   - component: {fileID: 1109596962}
   - component: {fileID: 1109596961}
   m_Layer: 0
-  m_Name: Hero Class pyromancer Button
+  m_Name: Hero Class mage Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16495,7 +16495,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d586348b6bf27d84c827cd124e18973c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TaskbarTactics.Presentation::TaskbarTactics.Presentation.HeroDragSource
-  heroId: pyromancer
+  heroId: mage
   dragSprite: {fileID: 21300000, guid: 38f1c2fe5f62adc478e8f0563588bf42, type: 3}
   canvas: {fileID: 0}
   grabClip: {fileID: 8300000, guid: 2bfcf5f5f1f453f4f9d0a54da461b14d, type: 3}
@@ -19974,7 +19974,7 @@ GameObject:
   - component: {fileID: 1388034765}
   - component: {fileID: 1388034764}
   m_Layer: 0
-  m_Name: Hero Class guardian Button
+  m_Name: Hero Class warrior Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -20015,7 +20015,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d586348b6bf27d84c827cd124e18973c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: TaskbarTactics.Presentation::TaskbarTactics.Presentation.HeroDragSource
-  heroId: guardian
+  heroId: warrior
   dragSprite: {fileID: 21300000, guid: 7001dc14ee6bb6644b23c50358f30179, type: 3}
   canvas: {fileID: 0}
   grabClip: {fileID: 8300000, guid: 2bfcf5f5f1f453f4f9d0a54da461b14d, type: 3}
