@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 016b169ac60e9844ca186616a7f7be81, type: 3}
-  m_Name: cemetery
+  m_Name: cave
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.EncounterDefinition
-  id: cemetery
-  difficulty: 2
+  id: cave
+  difficulty: 3
   enemies:
+  - {fileID: 11400000, guid: 6bbab04485f72724c82c947da6da8648, type: 2}
   - {fileID: 11400000, guid: 3362f1e3b67aed5429047bdbf9f0673e, type: 2}
-  - {fileID: 11400000, guid: 07b3218e5fe66f845becc4a51211df55, type: 2}
-  - {fileID: 11400000, guid: 8c13904a5e989ea45bcc28bd9fe8081d, type: 2}
   - {fileID: 11400000, guid: 3352a45f65173704aa7cf448bc7148b0, type: 2}
+  - {fileID: 11400000, guid: 3dad2ed5dc76db14d9e57a52d4de4775, type: 2}

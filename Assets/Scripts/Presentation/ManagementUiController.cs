@@ -11,10 +11,14 @@ namespace TaskbarTactics.Presentation
 {
     public sealed class ManagementUiController : MonoBehaviour
     {
+        private const float UiSoundVolume = 0.65f;
+
         [Header("Navigation")]
         [SerializeField] private List<Button> tabButtons = new List<Button>();
         [SerializeField] private List<GameObject> panels = new List<GameObject>();
         [SerializeField] private Button closeButton;
+        [SerializeField] private Button settingsShortcutButton;
+        [SerializeField] private Button quitShortcutButton;
 
         [Header("Party and formation")]
         [SerializeField] private List<Button> heroButtons = new List<Button>();
@@ -46,11 +50,14 @@ namespace TaskbarTactics.Presentation
         private Sprite commandNormalSprite;
         private Sprite commandPressedSprite;
         private Sprite commandSelectedSprite;
+        private AudioClip formationSelectClip;
 
         public void Configure(
             IEnumerable<Button> navigation,
             IEnumerable<GameObject> panelRoots,
             Button close,
+            Button settingsShortcut,
+            Button quitShortcut,
             IEnumerable<Button> heroSelection,
             IEnumerable<Button> formation,
             IEnumerable<FormationSlotView> slots,
@@ -74,6 +81,8 @@ namespace TaskbarTactics.Presentation
             tabButtons = navigation.ToList();
             panels = panelRoots.ToList();
             closeButton = close;
+            settingsShortcutButton = settingsShortcut;
+            quitShortcutButton = quitShortcut;
             heroButtons = heroSelection.ToList();
             formationButtons = formation.ToList();
             formationSlots = slots.ToList();
@@ -106,6 +115,8 @@ namespace TaskbarTactics.Presentation
             ApplyCommandButtonStates();
             app.StateChanged += Refresh;
             closeButton.onClick.AddListener(window.ShowStrip);
+            settingsShortcutButton?.onClick.AddListener(() => ShowPanel(5));
+            quitShortcutButton?.onClick.AddListener(app.Quit);
             quitButton.onClick.AddListener(app.Quit);
             startExpeditionButton.onClick.AddListener(app.StartExpedition);
             resetExpeditionButton?.onClick.AddListener(app.ResetExpeditionProgress);
@@ -150,8 +161,7 @@ namespace TaskbarTactics.Presentation
 
         public bool AssignHeroToSlot(string heroId, FormationPosition position)
         {
-            if (app == null || string.IsNullOrWhiteSpace(heroId) ||
-                IsFrontSlot(position) && !CanOccupyFrontSlot(heroId))
+            if (app == null || string.IsNullOrWhiteSpace(heroId))
             {
                 return false;
             }
@@ -215,6 +225,7 @@ namespace TaskbarTactics.Presentation
         {
             RemapSelectedHeroesToFormation(index);
             activeFormationPreset = index;
+            PlayUiSound(formationSelectClip);
             app.SavePartyChanges();
         }
 
@@ -247,9 +258,8 @@ namespace TaskbarTactics.Presentation
 
             mapSummary.text =
                 $"Nodo: {app.State.Expedition.CurrentNodeId}\n" +
-                $"Completados: {app.State.Expedition.CompletedNodes}/{app.Catalog.Map.Nodes.Count}\n" +
-                $"Prioridad: {app.State.Party.RoutePreference}\n\n" +
-                "Los caminos blancos se habilitan al completar cada nodo.";
+                $"Completados: {app.State.Expedition.CompletedNodes}/{app.Catalog.Map.Nodes.Count}\n\n" +
+                RouteDescription(app.State.Party.RoutePreference);
             mapUi?.Refresh(app);
             RefreshFormationButtonHighlight();
             for (int i = 0; i < routeButtons.Count && i < 3; i++)
@@ -296,11 +306,39 @@ namespace TaskbarTactics.Presentation
             return heroId == activeHeroId ? ">" : "•";
         }
 
+        private static string RouteDescription(RoutePreference preference)
+        {
+            switch (preference)
+            {
+                case RoutePreference.Loot:
+                    return "Campaña que prioriza la obtención de botín";
+                case RoutePreference.Challenge:
+                    return "Ultra-violento: Desafío 100%";
+                default:
+                    return "El camino más seguro posible";
+            }
+        }
+
         private void LoadCommandSprites()
         {
             commandNormalSprite = Resources.Load<Sprite>("UI/Command");
             commandPressedSprite = Resources.Load<Sprite>("UI/CommandPressed");
             commandSelectedSprite = Resources.Load<Sprite>("UI/CommandSelected");
+            formationSelectClip = Resources.Load<AudioClip>("Audio/UI/formation_select");
+        }
+
+        private static void PlayUiSound(AudioClip clip)
+        {
+            if (clip == null)
+            {
+                return;
+            }
+
+            AudioSource source = FindFirstObjectByType<AudioSource>();
+            if (source != null)
+            {
+                source.PlayOneShot(clip, UiSoundVolume);
+            }
         }
 
         private void ApplyCommandButtonStates()
@@ -318,6 +356,7 @@ namespace TaskbarTactics.Presentation
             }
 
             ApplyResetButtonState();
+            ApplyStartButtonState();
         }
 
         private void ApplyCommandButtonState(Button button)
@@ -370,6 +409,29 @@ namespace TaskbarTactics.Presentation
             }
 
             BringResetButtonForward();
+        }
+
+        private void ApplyStartButtonState()
+        {
+            if (startExpeditionButton == null || startExpeditionButton.image == null)
+            {
+                return;
+            }
+
+            startExpeditionButton.image.color = Color.white;
+            Image fill = startExpeditionButton.transform
+                .Find("Start Expedition Fill")
+                ?.GetComponent<Image>();
+            if (fill != null)
+            {
+                fill.color = new Color(0.62f, 1f, 0.58f, 0.88f);
+            }
+
+            TMP_Text label = startExpeditionButton.GetComponentInChildren<TMP_Text>();
+            if (label != null)
+            {
+                label.color = new Color(0.02f, 0.12f, 0.03f, 1f);
+            }
         }
 
         private void BringResetButtonForward()
@@ -482,11 +544,6 @@ namespace TaskbarTactics.Presentation
         private bool IsFrontSlot(FormationPosition position)
         {
             return position.Equals(FrontSlot(activeFormationPreset));
-        }
-
-        private static bool CanOccupyFrontSlot(string heroId)
-        {
-            return heroId == "warrior" || heroId == "magic_warrior";
         }
 
         private static FormationPosition FrontSlot(int presetIndex)

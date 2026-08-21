@@ -60,7 +60,7 @@ MonoBehaviour:
       Handedness: 2
     - WeaponType: 7
       Handedness: 2
-    AllowedOffHands:
+    AllowedOffHands: 
     AllowedArmorTypes: 02000000
   tagIds:
   - mark

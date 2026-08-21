@@ -104,9 +104,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6bbab04485f72724c82c947da6da8648, type: 2}
   - {fileID: 11400000, guid: 3dad2ed5dc76db14d9e57a52d4de4775, type: 2}
   - {fileID: 11400000, guid: 07b3218e5fe66f845becc4a51211df55, type: 2}
+  - {fileID: 11400000, guid: 3352a45f65173704aa7cf448bc7148b0, type: 2}
   - {fileID: 11400000, guid: 24f006cee44026e438d7fd7289b9cf91, type: 2}
   encounters:
   - {fileID: 11400000, guid: 05eeee773b0d88a4197a4d9bb5e413d3, type: 2}
+  - {fileID: 11400000, guid: 96809f8c54e3e03409e181df9f6b5ef1, type: 2}
   - {fileID: 11400000, guid: f7335685f384f244aa375e5a5812eb85, type: 2}
   - {fileID: 11400000, guid: 7c7f70bd60651e745a8dd6c4f08d8c21, type: 2}
   - {fileID: 11400000, guid: fa1f530bc4a73a847bb59c4deda85a8e, type: 2}

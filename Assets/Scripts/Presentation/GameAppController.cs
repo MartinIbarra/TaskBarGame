@@ -422,9 +422,7 @@ namespace TaskbarTactics.Presentation
                 combatPresenter?.ShowBattleback(node.Id);
                 SetStatus(NodeStatus(node));
                 CombatOutcome outcome = CombatOutcome.Victory;
-                if (node.Type == MapNodeType.Combat ||
-                    node.Type == MapNodeType.Elite ||
-                    node.Type == MapNodeType.Boss)
+                if (RunsCombat(node))
                 {
                     State.Party.IsFormationLocked = true;
                     CombatRequest request = catalog.CreateCombatRequest(
@@ -442,6 +440,10 @@ namespace TaskbarTactics.Presentation
                         node.Id);
                     outcome = result.Outcome;
                     State.Party.IsFormationLocked = false;
+                    if (outcome == CombatOutcome.Victory && ShowsChestReward(node))
+                    {
+                        yield return combatPresenter.ShowRewardChest();
+                    }
                 }
                 else
                 {
@@ -571,9 +573,7 @@ namespace TaskbarTactics.Presentation
                     break;
                 }
 
-                if (node.Type == MapNodeType.Combat ||
-                    node.Type == MapNodeType.Elite ||
-                    node.Type == MapNodeType.Boss)
+                if (RunsCombat(node))
                 {
                     CombatRequest request = catalog.CreateCombatRequest(
                         SelectedHeroes(),
@@ -606,6 +606,20 @@ namespace TaskbarTactics.Presentation
                     progress.SimulatedDuration);
                 HasAttention = true;
             }
+        }
+
+        private static bool RunsCombat(MapNodeDefinition node)
+        {
+            return node != null &&
+                   (node.Type == MapNodeType.Combat ||
+                    node.Type == MapNodeType.Elite ||
+                    node.Type == MapNodeType.Boss ||
+                    node.Id == "cave");
+        }
+
+        private static bool ShowsChestReward(MapNodeDefinition node)
+        {
+            return node != null && node.Id == "cave";
         }
 
         private void EnsureRosterAndStarterItems()

@@ -58,7 +58,7 @@ MonoBehaviour:
     AllowedWeapons:
     - WeaponType: 8
       Handedness: 1
-    AllowedOffHands:
+    AllowedOffHands: 
     AllowedArmorTypes: 02000000
   tagIds:
   - bleed

@@ -60,7 +60,7 @@ MonoBehaviour:
       Handedness: 1
     - WeaponType: 1
       Handedness: 2
-    AllowedOffHands:
+    AllowedOffHands: 
     AllowedArmorTypes: 03000000
   tagIds:
   - steel

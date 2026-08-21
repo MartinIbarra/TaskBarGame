@@ -4,6 +4,7 @@ using TaskbarTactics.Content;
 using TaskbarTactics.Core.Combat;
 using TaskbarTactics.Core.Models;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace TaskbarTactics.Presentation
 {
@@ -25,6 +26,8 @@ namespace TaskbarTactics.Presentation
 
         private readonly Dictionary<string, UnitView> unitViews = new Dictionary<string, UnitView>();
         private readonly Dictionary<string, Sprite> battlebackCache = new Dictionary<string, Sprite>();
+        private readonly HashSet<string> enemyViewIds = new HashSet<string>();
+        private Sprite rewardChestSprite;
 
         public void Configure(
             UnitView prefab,
@@ -113,11 +116,56 @@ namespace TaskbarTactics.Presentation
             }
 
             unitViews.Clear();
+            enemyViewIds.Clear();
         }
 
         public void ShowBattleback(string nodeId = null)
         {
             SetBattleback(nodeId);
+        }
+
+        public IEnumerator ShowRewardChest(float timeoutSeconds = 5f)
+        {
+            ClearEnemies();
+            Sprite sprite = LoadRewardChest();
+            if (sprite == null || enemyCells.Count == 0)
+            {
+                yield return new WaitForSecondsRealtime(timeoutSeconds);
+                yield break;
+            }
+
+            GameObject chest = new GameObject("Reward Chest");
+            int cellIndex = Mathf.Clamp(1, 0, enemyCells.Count - 1);
+            chest.transform.position = enemyCells[cellIndex].position + new Vector3(0f, -0.05f, -0.2f);
+            SpriteRenderer renderer = chest.AddComponent<SpriteRenderer>();
+            renderer.sprite = sprite;
+            renderer.sortingOrder = 30;
+            Vector3 targetScale = new Vector3(0.55f, 0.55f, 1f);
+            float emergeSeconds = 0.35f;
+            float elapsed = 0f;
+            while (elapsed < emergeSeconds)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / emergeSeconds);
+                chest.transform.localScale = Vector3.Lerp(Vector3.zero, targetScale, t);
+                yield return null;
+            }
+
+            chest.transform.localScale = targetScale;
+            float deadline = Time.unscaledTime + timeoutSeconds;
+            while (Time.unscaledTime < deadline)
+            {
+                if (Mouse.current != null &&
+                    Mouse.current.leftButton.wasPressedThisFrame &&
+                    IsPointerOver(chest, renderer))
+                {
+                    break;
+                }
+
+                yield return null;
+            }
+
+            Destroy(chest);
         }
 
         private void SpawnUnits(CombatRequest request, GameContentCatalog catalog)
@@ -141,6 +189,7 @@ namespace TaskbarTactics.Presentation
             foreach (CombatantState enemy in request.Enemies)
             {
                 UnitView view = Spawn(enemy, enemyCells, enemyColumns);
+                enemyViewIds.Add(enemy.Id);
                 string definitionId = enemy.Id.Split('-')[0];
                 EnemyDefinition definition = catalog.FindEnemy(definitionId);
                 view.Initialize(
@@ -223,6 +272,21 @@ namespace TaskbarTactics.Presentation
             return view;
         }
 
+        private void ClearEnemies()
+        {
+            foreach (string enemyId in new List<string>(enemyViewIds))
+            {
+                if (unitViews.TryGetValue(enemyId, out UnitView view) && view != null)
+                {
+                    Destroy(view.gameObject);
+                }
+
+                unitViews.Remove(enemyId);
+            }
+
+            enemyViewIds.Clear();
+        }
+
         private void SetBattleback(string nodeId)
         {
             if (battlebackRenderer == null)
@@ -263,6 +327,41 @@ namespace TaskbarTactics.Presentation
                 100f);
             battlebackCache[nodeId] = sprite;
             return sprite;
+        }
+
+        private Sprite LoadRewardChest()
+        {
+            if (rewardChestSprite != null)
+            {
+                return rewardChestSprite;
+            }
+
+            Texture2D texture = Resources.Load<Texture2D>("Events/Chest/cofre");
+            if (texture == null)
+            {
+                return null;
+            }
+
+            rewardChestSprite = Sprite.Create(
+                texture,
+                new Rect(0f, 0f, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f),
+                100f);
+            return rewardChestSprite;
+        }
+
+        private static bool IsPointerOver(GameObject target, SpriteRenderer renderer)
+        {
+            Camera camera = Camera.main;
+            if (camera == null || target == null || renderer == null)
+            {
+                return false;
+            }
+
+            Vector2 screenPoint = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
+            Vector3 worldPoint = camera.ScreenToWorldPoint(screenPoint);
+            worldPoint.z = target.transform.position.z;
+            return renderer.bounds.Contains(worldPoint);
         }
 
     }

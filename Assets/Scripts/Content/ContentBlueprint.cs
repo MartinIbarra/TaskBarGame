@@ -175,6 +175,7 @@ namespace TaskbarTactics.Content
             content.Enemies.Add(new EnemyBlueprint("bog_slime", "Slime pantanoso", 105, 13, 5, 2, false));
             content.Enemies.Add(new EnemyBlueprint("ogre", "Ogro", 185, 24, 6, 2, false));
             content.Enemies.Add(new EnemyBlueprint("wraith", "Espectro", 100, 25, 3, 4, false));
+            content.Enemies.Add(new EnemyBlueprint("soul_fury", "Furia Alma", 95, 22, 3, 4, false));
             content.Enemies.Add(new EnemyBlueprint("barrow_king", "Rey del Túmulo", 640, 32, 9, 4, true));
         }
 
