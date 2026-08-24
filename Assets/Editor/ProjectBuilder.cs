@@ -482,11 +482,13 @@ namespace TaskbarTactics.Editor
                 case "narrow_bridge":
                     return new[] { "goblin", "wolf", "bog_slime" };
                 case "cave":
-                    return new[] { "bog_slime", "skeleton", "soul_fury", "ogre" };
+                    return new[] { "bog_slime", "skeleton", "soul_fury", "ogre", "wyvern" };
                 case "cemetery":
                     return new[] { "skeleton", "wraith", "cultist", "soul_fury" };
                 case "goblin_village":
                     return new[] { "goblin", "goblin_archer", "shaman" };
+                case "mountain_pass":
+                    return new[] { "wolf", "wraith", "wyvern" };
                 case "tomb_pass":
                     return new[] { "skeleton", "wraith", "bog_slime", "soul_fury" };
                 case "lost_forest":
@@ -504,7 +506,8 @@ namespace TaskbarTactics.Editor
                    (node.Type == Core.Models.MapNodeType.Combat ||
                     node.Type == Core.Models.MapNodeType.Elite ||
                     node.Type == Core.Models.MapNodeType.Boss ||
-                    node.Id == "cave");
+                    node.Id == "cave" ||
+                    node.Id == "mountain_pass");
         }
 
         private static void AssignEnemyArtwork(EnemyDefinition definition, string enemyId)
@@ -633,14 +636,14 @@ namespace TaskbarTactics.Editor
 
             AnimationClip attack = CreateClip("Attack", false);
             SetCurve(attack, "m_LocalPosition.x",
-                new Keyframe(0f, 0f), new Keyframe(0.08f, -0.08f),
-                new Keyframe(0.18f, 0.32f), new Keyframe(0.38f, 0f));
+                new Keyframe(0f, 0f), new Keyframe(0.08f, -0.035f),
+                new Keyframe(0.18f, 0.055f), new Keyframe(0.38f, 0f));
             SetCurve(attack, "m_LocalPosition.y",
                 new Keyframe(0f, 0f), new Keyframe(0.18f, 0.035f),
                 new Keyframe(0.38f, 0f));
             SetCurve(attack, "m_LocalScale.x",
-                new Keyframe(0f, 1f), new Keyframe(0.08f, 0.94f),
-                new Keyframe(0.18f, 1.08f), new Keyframe(0.38f, 1f));
+                new Keyframe(0f, 1f), new Keyframe(0.08f, 0.97f),
+                new Keyframe(0.18f, 1.02f), new Keyframe(0.38f, 1f));
 
             AnimationClip hit = CreateClip("Hit", false);
             SetCurve(hit, "m_LocalPosition.x",
@@ -761,6 +764,10 @@ namespace TaskbarTactics.Editor
             GameObject root = new GameObject("Unit");
             UnitAnimationBridge bridge = root.AddComponent<UnitAnimationBridge>();
             UnitView view = root.AddComponent<UnitView>();
+            Sprite healthBackgroundSprite = LoadUiSprite(
+                "Assets/Resources/UI/HealthBars/background.png", Vector4.zero) ?? sprite;
+            Sprite healthFillSprite = LoadUiSprite(
+                "Assets/Resources/UI/HealthBars/hp.png", Vector4.zero) ?? sprite;
 
             GameObject visualRoot = new GameObject("Visual Root");
             visualRoot.transform.SetParent(root.transform, false);
@@ -777,25 +784,25 @@ namespace TaskbarTactics.Editor
             GameObject hud = new GameObject("HUD");
             hud.transform.SetParent(root.transform, false);
             GameObject healthBackground = CreateSpriteChild(
-                hud.transform, "Health Background", sprite, new Color(0.16f, 0.04f, 0.06f), 20);
-            healthBackground.transform.localPosition = new Vector3(0, 0.5f, 0);
-            healthBackground.transform.localScale = new Vector3(0.42f, 0.04f, 1);
+                hud.transform, "Health Background", healthBackgroundSprite, Color.white, 20);
+            healthBackground.transform.localPosition = new Vector3(0, 0.47f, 0);
+            healthBackground.transform.localScale = new Vector3(0.168f, 0.28f, 1);
 
             GameObject healthFill = CreateSpriteChild(
-                healthBackground.transform, "Health Fill", sprite, new Color(0.18f, 0.85f, 0.4f), 21);
-            healthFill.transform.localPosition = Vector3.zero;
+                healthBackground.transform, "Health Fill", healthFillSprite, Color.white, 21);
+            healthFill.transform.localPosition = new Vector3(0, 0.005f, 0);
             healthFill.transform.localScale = Vector3.one;
 
             GameObject labelObject = new GameObject("Name Label");
             labelObject.transform.SetParent(hud.transform, false);
-            labelObject.transform.localPosition = new Vector3(0, -0.12f, 0);
+            labelObject.transform.localPosition = new Vector3(0, 0.62f, 0);
             TextMeshPro label = labelObject.AddComponent<TextMeshPro>();
             label.font = defaultFont;
             label.fontSize = 0.34f;
             label.alignment = TextAlignmentOptions.Center;
             label.color = TextColor;
             label.sortingOrder = 22;
-            label.rectTransform.sizeDelta = new Vector2(1.1f, 0.18f);
+            label.rectTransform.sizeDelta = new Vector2(0.95f, 0.18f);
             view.ConfigureReferences(body, healthFill.GetComponent<SpriteRenderer>(), label, bridge);
 
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(root, UnitPrefabPath);
@@ -1022,6 +1029,7 @@ namespace TaskbarTactics.Editor
             DefeatOverlayPresenter defeatOverlay = BuildDefeatOverlay(stripUi.transform);
             Sprite hudVerticalSprite = LoadUiSprite("Assets/Resources/UI/Square.png", new Vector4(54, 54, 54, 54));
             Sprite hudHorizontalSprite = LoadUiSprite("Assets/Resources/UI/Square.png", new Vector4(54, 54, 54, 54));
+            Sprite mapPanelSprite = LoadUiSprite("Assets/Resources/UI/MapSquare.png", new Vector4(54, 54, 54, 54));
             Sprite titleWideSprite = LoadUiSprite("Assets/Resources/UI/TitleWide.png", new Vector4(32, 32, 32, 32));
             Sprite commandSprite = LoadUiSprite("Assets/Resources/UI/Command.png", new Vector4(42, 42, 42, 42));
             Sprite inventoryVerticalSprite = LoadUiSprite("Assets/Resources/UI/Vertical.png", new Vector4(54, 54, 54, 54));
@@ -1041,6 +1049,7 @@ namespace TaskbarTactics.Editor
                 circleSprite,
                 hudVerticalSprite,
                 hudHorizontalSprite,
+                mapPanelSprite,
                 titleWideSprite,
                 commandSprite,
                 inventoryVerticalSprite,
@@ -1402,6 +1411,7 @@ namespace TaskbarTactics.Editor
             Sprite circleSprite,
             Sprite hudVerticalSprite,
             Sprite hudHorizontalSprite,
+            Sprite mapPanelSprite,
             Sprite titleWideSprite,
             Sprite commandSprite,
             Sprite inventoryVerticalSprite,
@@ -1474,7 +1484,12 @@ namespace TaskbarTactics.Editor
                 Image panel = CreateImage(background.transform, i == 0 ? "Squad Panel" : $"{panelNames[i]} Panel", panelUsesOnlyMainBackground ? Color.clear : Color.white);
                 if (!panelUsesOnlyMainBackground)
                 {
-                    ApplyUiFrame(panel, i == 3 ? inventoryVerticalSprite : hudHorizontalSprite);
+                    Sprite panelSprite = i == 3
+                        ? inventoryVerticalSprite
+                        : i == 4 && mapPanelSprite != null
+                            ? mapPanelSprite
+                            : hudHorizontalSprite;
+                    ApplyUiFrame(panel, panelSprite);
                     panel.color = new Color(0.9f, 0.9f, 0.9f, 1f);
                 }
                 panel.rectTransform.anchorMin = new Vector2(0, 0);
@@ -1511,7 +1526,7 @@ namespace TaskbarTactics.Editor
             AddTorchShadowDim(panels[4].transform);
             AddCandlePair(panels[0].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
             AddCandlePair(panels[1].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
-            AddCandlePair(panels[3].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
+            AddCandlePair(panels[3].transform, candleFrames, new Vector2(10, 8), new Vector2(-22, 8), torchLightFrames);
             AddCandlePair(panels[4].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
             summaries[1].gameObject.SetActive(false);
             CreateSkillTreeView(panels[1].transform, skillTreeTexture);
@@ -1557,6 +1572,11 @@ namespace TaskbarTactics.Editor
                 "INICIAR EXPEDICIÓN", new Vector2(54, 378), new Vector2(150, 52), Accent);
             ApplyUiFrame(start.GetComponent<Image>(), commandSprite);
             start.GetComponent<RectTransform>().sizeDelta = new Vector2(188, 68);
+            TMP_Text startLabel = start.GetComponentInChildren<TMP_Text>();
+            if (startLabel != null)
+            {
+                startLabel.color = new Color(1f, 0.92f, 0.08f, 1f);
+            }
 
             MapUiController mapVisual = BuildMapVisual(
                 panels[4].transform, summaries[4], circleSprite, mapFlagFrames);
@@ -1592,7 +1612,6 @@ namespace TaskbarTactics.Editor
             }
 
             ApplySimpleCommandFrame(start, commandSprite);
-            AddButtonInteriorFill(start, "Start Expedition Fill", new Color(0.62f, 1f, 0.58f, 0.88f));
             ApplySimpleCommandFrame(language, commandSprite);
             ApplySimpleCommandFrame(reset, commandSprite);
             reset.GetComponent<Image>().color = new Color(0.82f, 0.12f, 0.12f);
@@ -1736,7 +1755,7 @@ namespace TaskbarTactics.Editor
         private static void CreateInventorySlotGrid(Transform parent, Sprite itemSlotSprite)
         {
             const int columns = 4;
-            const int rows = 4;
+            const int rows = 5;
             const float slotSize = 58f;
             const float gap = 66f;
             Vector2 start = new Vector2(88f, -115f);

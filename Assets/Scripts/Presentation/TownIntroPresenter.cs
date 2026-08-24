@@ -26,9 +26,9 @@ namespace TaskbarTactics.Presentation
         [Header("Layout")]
         [SerializeField] private Vector2 closedGatePosition = new Vector2(18f, -7f);
         [SerializeField] private Vector2 openGatePosition = new Vector2(18f, 72f);
-        [SerializeField] private float heroStartX = 342f;
+        [SerializeField] private float heroStartX = 318f;
         [SerializeField] private float heroEndX = 1002f;
-        [SerializeField] private float heroBaseY = -40f;
+        [SerializeField] private float heroBaseY = -58f;
         [SerializeField] private float heroColumnSpacing = 28f;
         [SerializeField] private float heroStartDelay = 0.12f;
         [SerializeField] private float hopHeight = 16f;

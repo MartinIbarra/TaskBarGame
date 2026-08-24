@@ -176,6 +176,7 @@ namespace TaskbarTactics.Content
             content.Enemies.Add(new EnemyBlueprint("ogre", "Ogro", 185, 24, 6, 2, false));
             content.Enemies.Add(new EnemyBlueprint("wraith", "Espectro", 100, 25, 3, 4, false));
             content.Enemies.Add(new EnemyBlueprint("soul_fury", "Furia Alma", 95, 22, 3, 4, false));
+            content.Enemies.Add(new EnemyBlueprint("wyvern", "Wyvern", 150, 28, 4, 4, false));
             content.Enemies.Add(new EnemyBlueprint("barrow_king", "Rey del Túmulo", 640, 32, 9, 4, true));
         }
 
@@ -348,9 +349,9 @@ namespace TaskbarTactics.Content
         private static void AddMap(ContentBlueprint content)
         {
             content.MapNodes.Add(Node("town", MapNodeType.Event, 0, "narrow_bridge"));
-            content.MapNodes.Add(Node("narrow_bridge", MapNodeType.Combat, 1, "cave", "cemetery"));
-            content.MapNodes.Add(Node("cave", MapNodeType.Treasure, 3, "goblin_village"));
-            content.MapNodes.Add(Node("cemetery", MapNodeType.Combat, 2, "goblin_village"));
+            content.MapNodes.Add(Node("narrow_bridge", MapNodeType.Combat, 3, "cave", "cemetery"));
+            content.MapNodes.Add(Node("cave", MapNodeType.Treasure, 4, "goblin_village"));
+            content.MapNodes.Add(Node("cemetery", MapNodeType.Combat, 4, "goblin_village"));
             content.MapNodes.Add(Node("goblin_village", MapNodeType.Elite, 4, "tomb_pass", "mountain_pass"));
             content.MapNodes.Add(Node("tomb_pass", MapNodeType.Elite, 6, "lost_forest"));
             content.MapNodes.Add(Node("mountain_pass", MapNodeType.Treasure, 4, "lost_forest"));

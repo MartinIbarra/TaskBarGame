@@ -22,6 +22,7 @@ namespace TaskbarTactics.Presentation
         private Coroutine temporaryPoseRoutine;
         private Color activeFallbackColor;
         private float activeArtworkHeightMultiplier = 1f;
+        private float activeArtworkReferenceHeight;
         private bool activeFaceLeft;
         private bool isDead;
 
@@ -55,6 +56,7 @@ namespace TaskbarTactics.Presentation
             activeFaceLeft = faceLeft;
             originalArtwork = artwork;
             poseSprites = usePoseAnimation ? LoadPoseSprites(poseResourcePath) : null;
+            activeArtworkReferenceHeight = ArtworkReferenceHeight(GetPoseSprite(0) ?? artwork);
             ApplyArtwork(GetPoseSprite(0) ?? artwork, color, artworkHeightMultiplier, faceLeft);
 
             if (label != null)
@@ -117,7 +119,9 @@ namespace TaskbarTactics.Presentation
 
             body.sprite = artwork;
             body.color = Color.white;
-            float sourceHeight = Mathf.Max(0.01f, artwork.bounds.size.y);
+            float sourceHeight = Mathf.Max(0.01f, activeArtworkReferenceHeight > 0f
+                ? activeArtworkReferenceHeight
+                : artwork.bounds.size.y);
             float targetHeight = targetArtworkHeight * Mathf.Max(0.1f, artworkHeightMultiplier);
             float scale = targetHeight / sourceHeight;
             body.transform.localScale = new Vector3(faceLeft ? -scale : scale, scale, 1f);
@@ -134,6 +138,14 @@ namespace TaskbarTactics.Presentation
             Vector3 scale = healthFill.transform.localScale;
             scale.x = ratio;
             healthFill.transform.localScale = scale;
+
+            Sprite fillSprite = healthFill.sprite;
+            if (fillSprite != null)
+            {
+                Vector3 position = healthFill.transform.localPosition;
+                position.x = -fillSprite.bounds.size.x * (1f - ratio) * 0.5f;
+                healthFill.transform.localPosition = position;
+            }
         }
 
         private void StartIdleAnimation()
@@ -274,6 +286,11 @@ namespace TaskbarTactics.Presentation
             }
 
             return sprites;
+        }
+
+        private static float ArtworkReferenceHeight(Sprite artwork)
+        {
+            return artwork != null ? artwork.bounds.size.y : 0f;
         }
 
         private static Texture2D LoadFirstTexture(string resourcePath, IEnumerable<string> names)

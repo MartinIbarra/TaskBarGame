@@ -418,19 +418,19 @@ namespace TaskbarTactics.Presentation
                 return;
             }
 
-            startExpeditionButton.image.color = Color.white;
+            startExpeditionButton.image.color = new Color(0.72f, 1f, 0.68f, 1f);
             Image fill = startExpeditionButton.transform
                 .Find("Start Expedition Fill")
                 ?.GetComponent<Image>();
             if (fill != null)
             {
-                fill.color = new Color(0.62f, 1f, 0.58f, 0.88f);
+                fill.gameObject.SetActive(false);
             }
 
             TMP_Text label = startExpeditionButton.GetComponentInChildren<TMP_Text>();
             if (label != null)
             {
-                label.color = new Color(0.02f, 0.12f, 0.03f, 1f);
+                label.color = new Color(1f, 0.92f, 0.08f, 1f);
             }
         }
 

@@ -614,7 +614,8 @@ namespace TaskbarTactics.Presentation
                    (node.Type == MapNodeType.Combat ||
                     node.Type == MapNodeType.Elite ||
                     node.Type == MapNodeType.Boss ||
-                    node.Id == "cave");
+                    node.Id == "cave" ||
+                    node.Id == "mountain_pass");
         }
 
         private static bool ShowsChestReward(MapNodeDefinition node)

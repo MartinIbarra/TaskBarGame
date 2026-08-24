@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: cemetery
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.EncounterDefinition
   id: cemetery
-  difficulty: 2
+  difficulty: 4
   enemies:
   - {fileID: 11400000, guid: 3362f1e3b67aed5429047bdbf9f0673e, type: 2}
   - {fileID: 11400000, guid: 07b3218e5fe66f845becc4a51211df55, type: 2}
