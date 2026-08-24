@@ -1526,7 +1526,7 @@ namespace TaskbarTactics.Editor
             AddTorchShadowDim(panels[4].transform);
             AddCandlePair(panels[0].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
             AddCandlePair(panels[1].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
-            AddCandlePair(panels[3].transform, candleFrames, new Vector2(10, 8), new Vector2(-22, 8), torchLightFrames);
+            AddCandlePair(panels[3].transform, candleFrames, new Vector2(10, 8), new Vector2(-20, 8), torchLightFrames);
             AddCandlePair(panels[4].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
             summaries[1].gameObject.SetActive(false);
             CreateSkillTreeView(panels[1].transform, skillTreeTexture);
