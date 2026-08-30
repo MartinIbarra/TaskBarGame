@@ -11,6 +11,7 @@ namespace TaskbarTactics.Presentation
     public sealed class CombatPresenter : MonoBehaviour
     {
         private const float FinalBossDeathVolume = 0.7f;
+        private const float BossArtworkScaleMultiplier = 1.2f;
 
         [Header("Reusable presentation")]
         [SerializeField] private UnitView unitPrefab;
@@ -28,6 +29,7 @@ namespace TaskbarTactics.Presentation
         private readonly Dictionary<string, Sprite> battlebackCache = new Dictionary<string, Sprite>();
         private readonly HashSet<string> enemyViewIds = new HashSet<string>();
         private Sprite rewardChestSprite;
+        private Sprite[] rewardChestOpeningFrames;
 
         public void Configure(
             UnitView prefab,
@@ -124,10 +126,12 @@ namespace TaskbarTactics.Presentation
             SetBattleback(nodeId);
         }
 
-        public IEnumerator ShowRewardChest(float timeoutSeconds = 5f)
+        public IEnumerator ShowRewardChest(string rewardItemId = null, float timeoutSeconds = 5f)
         {
             ClearEnemies();
-            Sprite sprite = LoadRewardChest();
+            Sprite[] openingFrames = LoadRewardChestOpeningFrames();
+            Sprite sprite = openingFrames.Length > 0 ? openingFrames[0] : LoadRewardChest();
+            Sprite rewardSprite = LoadRewardItemSprite(rewardItemId);
             if (sprite == null || enemyCells.Count == 0)
             {
                 yield return new WaitForSecondsRealtime(timeoutSeconds);
@@ -165,6 +169,16 @@ namespace TaskbarTactics.Presentation
                 yield return null;
             }
 
+            if (openingFrames.Length > 1)
+            {
+                yield return PlayRewardChestOpening(renderer, openingFrames);
+            }
+
+            if (rewardSprite != null)
+            {
+                yield return PlayRewardItemPopup(chest.transform.position, rewardSprite);
+            }
+
             Destroy(chest);
         }
 
@@ -188,10 +202,15 @@ namespace TaskbarTactics.Presentation
 
             foreach (CombatantState enemy in request.Enemies)
             {
-                UnitView view = Spawn(enemy, enemyCells, enemyColumns);
                 enemyViewIds.Add(enemy.Id);
                 string definitionId = enemy.Id.Split('-')[0];
                 EnemyDefinition definition = catalog.FindEnemy(definitionId);
+                bool isBoss = definition != null && definition.IsBoss;
+                UnitView view = Spawn(
+                    enemy,
+                    enemyCells,
+                    enemyColumns,
+                    isBoss ? BossCellIndex(enemyCells, enemyColumns) : (int?)null);
                 view.Initialize(
                     definition != null ? definition.DisplayNameEs : definitionId,
                     enemyColor,
@@ -211,7 +230,7 @@ namespace TaskbarTactics.Presentation
                 return 0.8f;
             }
 
-            return definition != null && definition.IsBoss ? 1.1f : 1f;
+            return definition != null && definition.IsBoss ? BossArtworkScaleMultiplier : 1f;
         }
 
         private static string LegacyHeroAnimationId(string heroId)
@@ -263,13 +282,31 @@ namespace TaskbarTactics.Presentation
             }
         }
 
-        private UnitView Spawn(CombatantState state, IReadOnlyList<Transform> cells, int columns)
+        private UnitView Spawn(
+            CombatantState state,
+            IReadOnlyList<Transform> cells,
+            int columns,
+            int? forcedCellIndex = null)
         {
-            int index = Mathf.Clamp(state.Position.Row * columns + state.Position.Column, 0, cells.Count - 1);
+            int requestedIndex = forcedCellIndex ?? state.Position.Row * columns + state.Position.Column;
+            int index = Mathf.Clamp(requestedIndex, 0, cells.Count - 1);
             UnitView view = Instantiate(unitPrefab, cells[index]);
             view.transform.localPosition = Vector3.zero;
             unitViews[state.Id] = view;
             return view;
+        }
+
+        private static int BossCellIndex(IReadOnlyList<Transform> cells, int columns)
+        {
+            if (cells == null || cells.Count == 0)
+            {
+                return 0;
+            }
+
+            int safeColumns = Mathf.Max(1, columns);
+            int row = Mathf.Max(0, Mathf.CeilToInt(cells.Count / (float)safeColumns) - 1);
+            int column = safeColumns / 2;
+            return Mathf.Clamp(row * safeColumns + column, 0, cells.Count - 1);
         }
 
         private void ClearEnemies()
@@ -348,6 +385,117 @@ namespace TaskbarTactics.Presentation
                 new Vector2(0.5f, 0.5f),
                 100f);
             return rewardChestSprite;
+        }
+
+        private Sprite[] LoadRewardChestOpeningFrames()
+        {
+            if (rewardChestOpeningFrames != null)
+            {
+                return rewardChestOpeningFrames;
+            }
+
+            List<Sprite> frames = new List<Sprite>();
+            for (int i = 1; i <= 4; i++)
+            {
+                Texture2D texture = Resources.Load<Texture2D>($"Events/Chest/chest{i}");
+                if (texture == null)
+                {
+                    continue;
+                }
+
+                frames.Add(Sprite.Create(
+                    texture,
+                    new Rect(0f, 0f, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f),
+                    100f));
+            }
+
+            rewardChestOpeningFrames = frames.ToArray();
+            return rewardChestOpeningFrames;
+        }
+
+        private static Sprite LoadRewardItemSprite(string itemId)
+        {
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                return null;
+            }
+
+            Texture2D texture = Resources.Load<Texture2D>($"Items/{itemId}");
+            if (texture == null)
+            {
+                return null;
+            }
+
+            return Sprite.Create(
+                texture,
+                new Rect(0f, 0f, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f),
+                100f);
+        }
+
+        private static IEnumerator PlayRewardChestOpening(SpriteRenderer renderer, IReadOnlyList<Sprite> frames)
+        {
+            const float frameSeconds = 0.12f;
+            foreach (Sprite frame in frames)
+            {
+                if (frame != null)
+                {
+                    renderer.sprite = frame;
+                }
+
+                yield return new WaitForSecondsRealtime(frameSeconds);
+            }
+        }
+
+        private static IEnumerator PlayRewardItemPopup(Vector3 chestPosition, Sprite rewardSprite)
+        {
+            GameObject popup = new GameObject("Reward Item Popup");
+            SpriteRenderer renderer = popup.AddComponent<SpriteRenderer>();
+            renderer.sprite = rewardSprite;
+            renderer.sortingOrder = 36;
+
+            Vector3 start = chestPosition + new Vector3(0f, 0.12f, -0.08f);
+            Vector3 floatPosition = chestPosition + new Vector3(0f, 0.48f, -0.08f);
+            Vector3 targetScale = new Vector3(0.78f, 0.78f, 1f);
+            const float riseSeconds = 0.35f;
+            const float holdSeconds = 0.35f;
+            const float fadeSeconds = 0.25f;
+
+            float elapsed = 0f;
+            while (elapsed < riseSeconds)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / riseSeconds);
+                float eased = Mathf.SmoothStep(0f, 1f, t);
+                popup.transform.position = Vector3.Lerp(start, floatPosition, eased);
+                popup.transform.localScale = Vector3.Lerp(Vector3.zero, targetScale, eased);
+                yield return null;
+            }
+
+            popup.transform.position = floatPosition;
+            popup.transform.localScale = targetScale;
+            elapsed = 0f;
+            while (elapsed < holdSeconds)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                popup.transform.position = floatPosition + new Vector3(0f, Mathf.Sin(elapsed * 16f) * 0.015f, 0f);
+                yield return null;
+            }
+
+            elapsed = 0f;
+            Color color = renderer.color;
+            while (elapsed < fadeSeconds)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / fadeSeconds);
+                color.a = 1f - t;
+                renderer.color = color;
+                popup.transform.position += new Vector3(0f, Time.unscaledDeltaTime * 0.12f, 0f);
+                yield return null;
+            }
+
+            Destroy(popup);
         }
 
         private static bool IsPointerOver(GameObject target, SpriteRenderer renderer)

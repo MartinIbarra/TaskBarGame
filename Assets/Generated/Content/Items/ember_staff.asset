@@ -28,3 +28,4 @@ MonoBehaviour:
       Value: 7
       SourceId: item_base
   tagId: fire
+  icon: {fileID: 0}

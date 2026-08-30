@@ -28,3 +28,4 @@ MonoBehaviour:
       Value: 0.04
       SourceId: item_base
   tagId: arcane
+  icon: {fileID: 0}

@@ -28,3 +28,4 @@ MonoBehaviour:
       Value: 4
       SourceId: item_base
   tagId: poison
+  icon: {fileID: 0}

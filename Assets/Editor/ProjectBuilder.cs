@@ -311,6 +311,7 @@ namespace TaskbarTactics.Editor
                 ItemDefinition asset = LoadOrCreate<ItemDefinition>(
                     $"{GeneratedRoot}/Content/Items/{data.Id}.asset");
                 asset.Configure(data);
+                AssignItemArtwork(asset, data.Id);
                 EditorUtility.SetDirty(asset);
                 return asset;
             }).ToList();
@@ -532,6 +533,19 @@ namespace TaskbarTactics.Editor
                 artwork.objectReferenceValue = sprite;
                 serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
             }
+        }
+
+        private static void AssignItemArtwork(ItemDefinition definition, string itemId)
+        {
+            string spritePath = $"Assets/Resources/Items/{itemId}.png";
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(spritePath) == null)
+            {
+                definition.SetIcon(null);
+                return;
+            }
+
+            Sprite sprite = LoadPixelUiSprite(spritePath);
+            definition.SetIcon(sprite);
         }
 
         private static void ConfigureCharacterSprite(string path)
@@ -1030,15 +1044,18 @@ namespace TaskbarTactics.Editor
             Sprite hudVerticalSprite = LoadUiSprite("Assets/Resources/UI/Square.png", new Vector4(54, 54, 54, 54));
             Sprite hudHorizontalSprite = LoadUiSprite("Assets/Resources/UI/Square.png", new Vector4(54, 54, 54, 54));
             Sprite mapPanelSprite = LoadUiSprite("Assets/Resources/UI/MapSquare.png", new Vector4(54, 54, 54, 54));
+            Sprite mapFrameSprite = LoadUiSprite("Assets/Resources/UI/MapFrame.png", new Vector4(16, 16, 16, 16));
             Sprite titleWideSprite = LoadUiSprite("Assets/Resources/UI/TitleWide.png", new Vector4(32, 32, 32, 32));
             Sprite commandSprite = LoadUiSprite("Assets/Resources/UI/Command.png", new Vector4(42, 42, 42, 42));
             Sprite inventoryVerticalSprite = LoadUiSprite("Assets/Resources/UI/Vertical.png", new Vector4(54, 54, 54, 54));
+            Sprite equipLayoutSprite = LoadUiSprite("Assets/Resources/UI/EquipLayout.png", new Vector4(16, 16, 16, 16));
             Sprite itemSlotSprite = LoadSoftUiSprite("Assets/Resources/UI/itemSlot.png");
             Texture2D skillTreeTexture = LoadTexture("Assets/Resources/UI/SkillTree/SkillTree.png");
             Sprite formationSlotSprite = LoadSoftUiSprite("Assets/Resources/UI/Formations/slotFormation.png");
             Sprite formationSlotBlueSprite = LoadSoftUiSprite("Assets/Resources/UI/Formations/slotFormationblue.png");
             Sprite settingsButtonSprite = LoadUiSprite("Assets/Resources/UI/SettingsButton.png", Vector4.zero);
             Sprite closeButtonSprite = LoadUiSprite("Assets/Resources/UI/CloseButton.png", Vector4.zero);
+            Sprite barButtonSprite = LoadUiSprite("Assets/Resources/UI/BarButton.png", Vector4.zero);
             Sprite[] formationHeroIcons = LoadFormationHeroIcons();
             Sprite emptyClassSprite = LoadSoftUiSprite("Assets/Resources/HeroClasses/empty.png");
             Sprite[] candleFrames = LoadCandleSprites();
@@ -1050,15 +1067,18 @@ namespace TaskbarTactics.Editor
                 hudVerticalSprite,
                 hudHorizontalSprite,
                 mapPanelSprite,
+                mapFrameSprite,
                 titleWideSprite,
                 commandSprite,
                 inventoryVerticalSprite,
+                equipLayoutSprite,
                 itemSlotSprite,
                 skillTreeTexture,
                 formationSlotSprite,
                 formationSlotBlueSprite,
                 settingsButtonSprite,
                 closeButtonSprite,
+                barButtonSprite,
                 formationHeroIcons,
                 emptyClassSprite,
                 candleFrames,
@@ -1412,15 +1432,18 @@ namespace TaskbarTactics.Editor
             Sprite hudVerticalSprite,
             Sprite hudHorizontalSprite,
             Sprite mapPanelSprite,
+            Sprite mapFrameSprite,
             Sprite titleWideSprite,
             Sprite commandSprite,
             Sprite inventoryVerticalSprite,
+            Sprite equipLayoutSprite,
             Sprite itemSlotSprite,
             Texture2D skillTreeTexture,
             Sprite formationSlotSprite,
             Sprite formationSlotBlueSprite,
             Sprite settingsButtonSprite,
             Sprite closeButtonSprite,
+            Sprite barButtonSprite,
             Sprite[] formationHeroIcons,
             Sprite emptyClassSprite,
             Sprite[] candleFrames,
@@ -1437,19 +1460,15 @@ namespace TaskbarTactics.Editor
             ApplySimpleWideFrame(titleFrame, titleWideSprite);
             titleFrame.rectTransform.anchorMin = titleFrame.rectTransform.anchorMax = new Vector2(0, 1);
             titleFrame.rectTransform.pivot = new Vector2(0, 1);
-            titleFrame.rectTransform.anchoredPosition = new Vector2(287, -10);
+            titleFrame.rectTransform.anchoredPosition = new Vector2(317, -10);
             titleFrame.rectTransform.sizeDelta = new Vector2(342, 60);
             TMP_Text title = CreateText(background.transform, "Title", "TASKBAR TACTICS",
-                26, TextAlignmentOptions.Center, new Vector2(312, 24), new Vector2(292, 32));
+                26, TextAlignmentOptions.Center, new Vector2(342, 24), new Vector2(292, 32));
             title.fontStyle = FontStyles.Bold;
             title.textWrappingMode = TextWrappingModes.NoWrap;
-            Button close = CreateButton(background.transform, "Close Button", "Volver a la barra",
-                new Vector2(638, 14), new Vector2(218, 46), Color.white);
-            ApplySimpleWideFrame(close.GetComponent<Image>(), titleWideSprite);
-            TMP_Text closeLabel = close.GetComponentInChildren<TMP_Text>();
-            closeLabel.fontSize = 15;
-            closeLabel.textWrappingMode = TextWrappingModes.NoWrap;
-            InsetButtonLabel(close, new Vector2(42, 8), new Vector2(-42, -8));
+            Button close = CreateButton(background.transform, "Close Button", string.Empty,
+                new Vector2(828, 12), new Vector2(48.3f, 48.3f), Color.white);
+            ApplyIconButton(close, barButtonSprite);
             Button settingsShortcut = CreateButton(background.transform, "Settings Shortcut Button", string.Empty,
                 new Vector2(880, 12), new Vector2(46, 46), Color.white);
             ApplyIconButton(settingsShortcut, settingsButtonSprite);
@@ -1526,10 +1545,11 @@ namespace TaskbarTactics.Editor
             AddTorchShadowDim(panels[4].transform);
             AddCandlePair(panels[0].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
             AddCandlePair(panels[1].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
-            AddCandlePair(panels[3].transform, candleFrames, new Vector2(10, 8), new Vector2(-20, 8), torchLightFrames);
+            AddCandlePair(panels[3].transform, candleFrames, new Vector2(10, 8), new Vector2(-17, 8), torchLightFrames);
             AddCandlePair(panels[4].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
             summaries[1].gameObject.SetActive(false);
             CreateSkillTreeView(panels[1].transform, skillTreeTexture);
+            CreateEquipmentPreviewLayout(panels[3].transform, equipLayoutSprite);
             summaries[3].gameObject.SetActive(false);
             CreateInventorySlotGrid(panels[3].transform, itemSlotSprite);
             List<FormationSlotView> formationSlots = CreateFormationSlotHud(
@@ -1579,7 +1599,7 @@ namespace TaskbarTactics.Editor
             }
 
             MapUiController mapVisual = BuildMapVisual(
-                panels[4].transform, summaries[4], circleSprite, mapFlagFrames);
+                panels[4].transform, summaries[4], circleSprite, mapFlagFrames, mapFrameSprite);
 
             Button language = CreateButton(panels[5].transform, "Language Button",
                 "Cambiar ES / EN", new Vector2(24, 300), new Vector2(220, 44), Accent);
@@ -1778,6 +1798,25 @@ namespace TaskbarTactics.Editor
             }
         }
 
+        private static void CreateEquipmentPreviewLayout(Transform parent, Sprite equipLayoutSprite)
+        {
+            if (equipLayoutSprite == null)
+            {
+                return;
+            }
+
+            Image layout = CreateImage(parent, "Equipment Preview Layout", Color.white);
+            layout.sprite = equipLayoutSprite;
+            layout.type = Image.Type.Sliced;
+            layout.preserveAspect = false;
+            layout.raycastTarget = false;
+            layout.rectTransform.anchorMin = layout.rectTransform.anchorMax = new Vector2(0, 1);
+            layout.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            layout.rectTransform.anchoredPosition = new Vector2(560f, -245f);
+            layout.rectTransform.sizeDelta = new Vector2(230f, 300f);
+            layout.gameObject.AddComponent<EquipmentPreviewLayoutView>();
+        }
+
         private static void CreateSkillTreeView(Transform parent, Texture2D skillTreeTexture)
         {
             GameObject viewportObject = new GameObject("Skill Tree Viewport", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Mask));
@@ -1821,7 +1860,7 @@ namespace TaskbarTactics.Editor
                 1f,
                 0.65f,
                 2.4f,
-                new Vector2(-34f, 18f));
+                new Vector2(-110f, 18f));
         }
 
         private static Button CreateHeroClassButton(
@@ -1889,7 +1928,8 @@ namespace TaskbarTactics.Editor
             Transform parent,
             TMP_Text summary,
             Sprite circleSprite,
-            Sprite[] flagFrames)
+            Sprite[] flagFrames,
+            Sprite mapFrameSprite)
         {
             summary.rectTransform.sizeDelta = new Vector2(230, 150);
             summary.rectTransform.anchoredPosition = new Vector2(54, -72);
@@ -1953,6 +1993,7 @@ namespace TaskbarTactics.Editor
             List<MapNodeView> nodes = positions.Select(pair =>
                 CreateMapNode(nodesLayer, pair.Key, pair.Value, circleSprite, flagFrames)).ToList();
             List<MapRoutePreferenceLegend> legends = CreateMapRouteLegend(root.transform);
+            AddMapFrame(root.transform, mapFrameSprite);
 
             MapUiController controller = root.AddComponent<MapUiController>();
             controller.Configure(
@@ -1964,6 +2005,25 @@ namespace TaskbarTactics.Editor
                 routeArtworkOverlays);
             root.AddComponent<DraggableMapView>().Configure(artworkRoot);
             return controller;
+        }
+
+        private static void AddMapFrame(Transform parent, Sprite frameSprite)
+        {
+            if (frameSprite == null)
+            {
+                return;
+            }
+
+            Image frame = CreateImage(parent, "Map Frame", Color.white);
+            frame.sprite = frameSprite;
+            frame.type = Image.Type.Sliced;
+            frame.preserveAspect = false;
+            frame.raycastTarget = false;
+            frame.rectTransform.anchorMin = Vector2.zero;
+            frame.rectTransform.anchorMax = Vector2.one;
+            frame.rectTransform.offsetMin = new Vector2(-8f, -8f);
+            frame.rectTransform.offsetMax = new Vector2(8f, 8f);
+            frame.transform.SetAsLastSibling();
         }
 
         private static RectTransform CreateMapArtworkRoot(Transform parent)
@@ -2170,12 +2230,23 @@ namespace TaskbarTactics.Editor
                 flicker.Configure(flag, flagFrames, 5f);
             }
 
+            Image labelBackground = CreateImage(
+                nodeRoot.transform,
+                "Tooltip Background",
+                new Color(0f, 0f, 0f, 0.5f));
+            labelBackground.raycastTarget = false;
+            labelBackground.rectTransform.anchorMin = labelBackground.rectTransform.anchorMax = new Vector2(0, 0.5f);
+            labelBackground.rectTransform.pivot = new Vector2(0f, 0.5f);
+            labelBackground.rectTransform.anchoredPosition = new Vector2(10, -2);
+            labelBackground.rectTransform.sizeDelta = new Vector2(142, 42);
+            labelBackground.gameObject.SetActive(false);
+
             TMP_Text label = CreateText(nodeRoot.transform, "Label", nodeId, 10,
                 TextAlignmentOptions.Left, new Vector2(14, 8), new Vector2(136, 36));
             label.textWrappingMode = TextWrappingModes.Normal;
             label.gameObject.SetActive(false);
             MapNodeHoverTooltip tooltip = hoverArea.gameObject.AddComponent<MapNodeHoverTooltip>();
-            tooltip.Configure(label);
+            tooltip.Configure(label, labelBackground.gameObject);
 
             return new MapNodeView
             {
@@ -2436,6 +2507,7 @@ namespace TaskbarTactics.Editor
                     image.name == "Inventario Panel" ||
                     image.name == "Ajustes Panel" ||
                     image.name.StartsWith("Escuadr", StringComparison.Ordinal) ||
+                    image.name == "Map Frame" ||
                     image.name == "Title Frame")
                 {
                     continue;

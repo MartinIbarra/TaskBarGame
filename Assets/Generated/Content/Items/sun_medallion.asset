@@ -28,3 +28,4 @@ MonoBehaviour:
       Value: 15
       SourceId: item_base
   tagId: sacred
+  icon: {fileID: 0}

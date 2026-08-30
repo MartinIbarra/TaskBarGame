@@ -62,6 +62,7 @@ namespace TaskbarTactics.Presentation
             if (label != null)
             {
                 label.text = unitName;
+                label.gameObject.SetActive(false);
             }
 
             SetHealth(maxHealth);
@@ -135,6 +136,11 @@ namespace TaskbarTactics.Presentation
             }
 
             float ratio = Mathf.Clamp01(value / (float)maxHealth);
+            if (healthFill.transform.parent != null)
+            {
+                healthFill.transform.parent.gameObject.SetActive(ratio > 0f);
+            }
+
             Vector3 scale = healthFill.transform.localScale;
             scale.x = ratio;
             healthFill.transform.localScale = scale;

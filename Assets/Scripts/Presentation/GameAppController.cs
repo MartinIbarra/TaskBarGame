@@ -440,10 +440,6 @@ namespace TaskbarTactics.Presentation
                         node.Id);
                     outcome = result.Outcome;
                     State.Party.IsFormationLocked = false;
-                    if (outcome == CombatOutcome.Victory && ShowsChestReward(node))
-                    {
-                        yield return combatPresenter.ShowRewardChest();
-                    }
                 }
                 else
                 {
@@ -481,7 +477,14 @@ namespace TaskbarTactics.Presentation
                     yield break;
                 }
 
-                RewardNode(node);
+                IReadOnlyList<InventoryItem> rewardLoot = GenerateRewardLoot(node);
+                if (ShowsChestReward(node))
+                {
+                    string rewardItemId = rewardLoot.FirstOrDefault()?.DefinitionId;
+                    yield return combatPresenter.ShowRewardChest(rewardItemId);
+                }
+
+                RewardNode(node, rewardLoot);
                 Advance(node);
                 SaveAndRefresh();
                 MapNodeDefinition nextNode = catalog.Map.FindNode(State.Expedition.CurrentNodeId);
@@ -496,7 +499,26 @@ namespace TaskbarTactics.Presentation
             }
         }
 
-        private void RewardNode(MapNodeDefinition node)
+        private IReadOnlyList<InventoryItem> GenerateRewardLoot(MapNodeDefinition node)
+        {
+            int itemCount = node.Difficulty <= 0 ? 0 :
+                node.Type == MapNodeType.Treasure ? 2 :
+                node.Type == MapNodeType.Elite || node.Type == MapNodeType.Boss ? 2 : 1;
+            if (ShowsChestReward(node))
+            {
+                itemCount = 1;
+            }
+
+            LootTable lootTable = ShowsChestReward(node)
+                ? catalog.CreateStarterWeaponLootTable()
+                : catalog.CreateLootTable();
+            return lootGenerator.Generate(
+                lootTable,
+                State.Expedition.Seed + (State.Expedition.CompletedNodes + 1) * 31,
+                itemCount);
+        }
+
+        private void RewardNode(MapNodeDefinition node, IReadOnlyList<InventoryItem> loot)
         {
             State.Expedition.CompletedNodes++;
             State.Expedition.CompletedNodeIds ??= new List<string>();
@@ -505,13 +527,7 @@ namespace TaskbarTactics.Presentation
                 State.Expedition.CompletedNodeIds.Add(node.Id);
             }
 
-            int itemCount = node.Difficulty <= 0 ? 0 :
-                node.Type == MapNodeType.Treasure ? 2 :
-                node.Type == MapNodeType.Elite || node.Type == MapNodeType.Boss ? 2 : 1;
-            IReadOnlyList<InventoryItem> loot = lootGenerator.Generate(
-                catalog.CreateLootTable(),
-                State.Expedition.Seed + State.Expedition.CompletedNodes * 31,
-                itemCount);
+            loot ??= Array.Empty<InventoryItem>();
             State.Inventory.AddRange(loot);
             State.Expedition.CollectedItemIds.AddRange(loot.Select(item => item.InstanceId));
             foreach (HeroState hero in SelectedHeroes())
@@ -594,7 +610,7 @@ namespace TaskbarTactics.Presentation
                     RestoreAllHeroResources();
                 }
 
-                RewardNode(node);
+                RewardNode(node, GenerateRewardLoot(node));
                 Advance(node);
             }
 

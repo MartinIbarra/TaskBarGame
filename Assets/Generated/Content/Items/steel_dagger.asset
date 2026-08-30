@@ -28,3 +28,4 @@ MonoBehaviour:
       Value: 2.5
       SourceId: item_base
   tagId: bleed
+  icon: {fileID: 0}

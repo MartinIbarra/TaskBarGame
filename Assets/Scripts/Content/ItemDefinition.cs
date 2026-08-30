@@ -13,16 +13,23 @@ namespace TaskbarTactics.Content
         [SerializeField, Tooltip("Slot, weapon/armor type and base stat contribution.")]
         private EquipmentDescriptor descriptor = new EquipmentDescriptor();
         [SerializeField] private string tagId;
+        [SerializeField] private Sprite icon;
 
         public EquipmentSlot Slot => descriptor.PrimarySlot;
         public EquipmentDescriptor Descriptor => descriptor;
         public string TagId => tagId;
+        public Sprite Icon => icon;
 
         public void Configure(ItemBlueprint data)
         {
             SetId(data.Id);
             descriptor = data.Descriptor;
             tagId = data.TagId;
+        }
+
+        public void SetIcon(Sprite value)
+        {
+            icon = value;
         }
 
         public EquipmentDescriptor CreateDescriptor(

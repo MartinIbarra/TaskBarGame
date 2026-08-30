@@ -51,6 +51,26 @@ namespace TaskbarTactics.Tests
         }
 
         [Test]
+        public void VerticalSliceContainsStarterWeaponLootSet()
+        {
+            ContentBlueprint blueprint = ContentBlueprint.CreateVerticalSlice();
+            string[] starterWeaponIds =
+            {
+                "wooden_sword",
+                "wooden_mace",
+                "wooden_staff",
+                "wooden_bow",
+                "wooden_dagger"
+            };
+
+            Assert.That(
+                starterWeaponIds.All(id => blueprint.Items.Any(item =>
+                    item.Id == id &&
+                    item.Descriptor.PrimarySlot == EquipmentSlot.MainWeapon)),
+                Is.True);
+        }
+
+        [Test]
         public void EveryMapExitReferencesAnExistingNode()
         {
             ContentBlueprint blueprint = ContentBlueprint.CreateVerticalSlice();

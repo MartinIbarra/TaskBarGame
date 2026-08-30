@@ -13,6 +13,15 @@ namespace TaskbarTactics.Content
     [CreateAssetMenu(menuName = "Taskbar Tactics/Content Catalog")]
     public sealed class GameContentCatalog : ScriptableObject
     {
+        private static readonly string[] StarterWeaponLootIds =
+        {
+            "wooden_sword",
+            "wooden_mace",
+            "wooden_staff",
+            "wooden_bow",
+            "wooden_dagger"
+        };
+
         [SerializeField] private List<HeroDefinition> heroes = new List<HeroDefinition>();
         [SerializeField] private List<SkillDefinition> skills = new List<SkillDefinition>();
         [SerializeField] private List<ItemDefinition> items = new List<ItemDefinition>();
@@ -98,6 +107,25 @@ namespace TaskbarTactics.Content
             return new LootTable
             {
                 Entries = items.Select(item => new LootEntry(item.Id, item.Slot, 10)).ToList(),
+                ItemBonusIds = itemBonuses.Select(item => item.Id).ToList()
+            };
+        }
+
+        public LootTable CreateStarterWeaponLootTable()
+        {
+            List<LootEntry> entries = items
+                .Where(item => StarterWeaponLootIds.Contains(item.Id))
+                .Select(item => new LootEntry(item.Id, item.Slot, 10))
+                .ToList();
+
+            if (entries.Count == 0)
+            {
+                return CreateLootTable();
+            }
+
+            return new LootTable
+            {
+                Entries = entries,
                 ItemBonusIds = itemBonuses.Select(item => item.Id).ToList()
             };
         }

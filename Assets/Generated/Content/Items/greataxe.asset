@@ -28,3 +28,4 @@ MonoBehaviour:
       Value: 6
       SourceId: item_base
   tagId: steel
+  icon: {fileID: 0}

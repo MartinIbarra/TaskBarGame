@@ -182,6 +182,16 @@ namespace TaskbarTactics.Content
 
         private static void AddItemsAndBonuses(ContentBlueprint content)
         {
+            content.Items.Add(ItemBlueprint.Weapon("wooden_sword", WeaponType.Sword,
+                Handedness.OneHanded, "steel", Flat(HeroStatType.AttackPower, 1.5f)));
+            content.Items.Add(ItemBlueprint.Weapon("wooden_mace", WeaponType.Mace,
+                Handedness.OneHanded, "sacred", Flat(HeroStatType.AttackPower, 1.5f)));
+            content.Items.Add(ItemBlueprint.Weapon("wooden_staff", WeaponType.Staff,
+                Handedness.TwoHanded, "fire", Flat(HeroStatType.SpellPower, 2.5f)));
+            content.Items.Add(ItemBlueprint.Weapon("wooden_bow", WeaponType.Bow,
+                Handedness.TwoHanded, "mark", Flat(HeroStatType.AttackPower, 2.5f)));
+            content.Items.Add(ItemBlueprint.Weapon("wooden_dagger", WeaponType.Dagger,
+                Handedness.OneHanded, "bleed", Flat(HeroStatType.AttackPower, 1.25f)));
             content.Items.Add(ItemBlueprint.Weapon("iron_sword", WeaponType.Sword,
                 Handedness.OneHanded, "steel", Flat(HeroStatType.AttackPower, 3f)));
             content.Items.Add(ItemBlueprint.Weapon("greatsword", WeaponType.Sword,
