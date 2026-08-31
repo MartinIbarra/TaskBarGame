@@ -1045,6 +1045,7 @@ namespace TaskbarTactics.Editor
             Sprite hudHorizontalSprite = LoadUiSprite("Assets/Resources/UI/Square.png", new Vector4(54, 54, 54, 54));
             Sprite mapPanelSprite = LoadUiSprite("Assets/Resources/UI/MapSquare.png", new Vector4(54, 54, 54, 54));
             Sprite mapFrameSprite = LoadUiSprite("Assets/Resources/UI/MapFrame.png", new Vector4(16, 16, 16, 16));
+            Sprite actParchmentSprite = LoadUiSprite("Assets/Resources/UI/ActParchment.png", Vector4.zero);
             Sprite titleWideSprite = LoadUiSprite("Assets/Resources/UI/TitleWide.png", new Vector4(32, 32, 32, 32));
             Sprite commandSprite = LoadUiSprite("Assets/Resources/UI/Command.png", new Vector4(42, 42, 42, 42));
             Sprite inventoryVerticalSprite = LoadUiSprite("Assets/Resources/UI/Vertical.png", new Vector4(54, 54, 54, 54));
@@ -1068,6 +1069,7 @@ namespace TaskbarTactics.Editor
                 hudHorizontalSprite,
                 mapPanelSprite,
                 mapFrameSprite,
+                actParchmentSprite,
                 titleWideSprite,
                 commandSprite,
                 inventoryVerticalSprite,
@@ -1433,6 +1435,7 @@ namespace TaskbarTactics.Editor
             Sprite hudHorizontalSprite,
             Sprite mapPanelSprite,
             Sprite mapFrameSprite,
+            Sprite actParchmentSprite,
             Sprite titleWideSprite,
             Sprite commandSprite,
             Sprite inventoryVerticalSprite,
@@ -1460,20 +1463,20 @@ namespace TaskbarTactics.Editor
             ApplySimpleWideFrame(titleFrame, titleWideSprite);
             titleFrame.rectTransform.anchorMin = titleFrame.rectTransform.anchorMax = new Vector2(0, 1);
             titleFrame.rectTransform.pivot = new Vector2(0, 1);
-            titleFrame.rectTransform.anchoredPosition = new Vector2(317, -10);
+            titleFrame.rectTransform.anchoredPosition = new Vector2(337, -10);
             titleFrame.rectTransform.sizeDelta = new Vector2(342, 60);
             TMP_Text title = CreateText(background.transform, "Title", "TASKBAR TACTICS",
-                26, TextAlignmentOptions.Center, new Vector2(342, 24), new Vector2(292, 32));
+                26, TextAlignmentOptions.Center, new Vector2(362, 24), new Vector2(292, 32));
             title.fontStyle = FontStyles.Bold;
             title.textWrappingMode = TextWrappingModes.NoWrap;
             Button close = CreateButton(background.transform, "Close Button", string.Empty,
-                new Vector2(828, 12), new Vector2(48.3f, 48.3f), Color.white);
+                new Vector2(848, 12), new Vector2(48.3f, 48.3f), Color.white);
             ApplyIconButton(close, barButtonSprite);
             Button settingsShortcut = CreateButton(background.transform, "Settings Shortcut Button", string.Empty,
-                new Vector2(880, 12), new Vector2(46, 46), Color.white);
+                new Vector2(900, 12), new Vector2(46, 46), Color.white);
             ApplyIconButton(settingsShortcut, settingsButtonSprite);
             Button quitShortcut = CreateButton(background.transform, "Quit Shortcut Button", string.Empty,
-                new Vector2(932, 12), new Vector2(46, 46), Color.white);
+                new Vector2(952, 12), new Vector2(46, 46), Color.white);
             ApplyIconButton(quitShortcut, closeButtonSprite);
 
             string[] tabNames =
@@ -1599,7 +1602,7 @@ namespace TaskbarTactics.Editor
             }
 
             MapUiController mapVisual = BuildMapVisual(
-                panels[4].transform, summaries[4], circleSprite, mapFlagFrames, mapFrameSprite);
+                panels[4].transform, summaries[4], circleSprite, mapFlagFrames, mapFrameSprite, actParchmentSprite);
 
             Button language = CreateButton(panels[5].transform, "Language Button",
                 "Cambiar ES / EN", new Vector2(24, 300), new Vector2(220, 44), Accent);
@@ -1779,6 +1782,7 @@ namespace TaskbarTactics.Editor
             const float slotSize = 58f;
             const float gap = 66f;
             Vector2 start = new Vector2(88f, -115f);
+            List<Image> slots = new List<Image>();
 
             for (int row = 0; row < rows; row++)
             {
@@ -1794,8 +1798,11 @@ namespace TaskbarTactics.Editor
                     slot.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                     slot.rectTransform.anchoredPosition = start + new Vector2(column * gap, -row * gap);
                     slot.rectTransform.sizeDelta = new Vector2(slotSize, slotSize);
+                    slots.Add(slot);
                 }
             }
+
+            parent.gameObject.AddComponent<InventorySlotGridView>().Configure(slots);
         }
 
         private static void CreateEquipmentPreviewLayout(Transform parent, Sprite equipLayoutSprite)
@@ -1929,7 +1936,8 @@ namespace TaskbarTactics.Editor
             TMP_Text summary,
             Sprite circleSprite,
             Sprite[] flagFrames,
-            Sprite mapFrameSprite)
+            Sprite mapFrameSprite,
+            Sprite actParchmentSprite)
         {
             summary.rectTransform.sizeDelta = new Vector2(230, 150);
             summary.rectTransform.anchoredPosition = new Vector2(54, -72);
@@ -1993,6 +2001,7 @@ namespace TaskbarTactics.Editor
             List<MapNodeView> nodes = positions.Select(pair =>
                 CreateMapNode(nodesLayer, pair.Key, pair.Value, circleSprite, flagFrames)).ToList();
             List<MapRoutePreferenceLegend> legends = CreateMapRouteLegend(root.transform);
+            AddMapActSelector(root.transform, actParchmentSprite);
             AddMapFrame(root.transform, mapFrameSprite);
 
             MapUiController controller = root.AddComponent<MapUiController>();
@@ -2024,6 +2033,61 @@ namespace TaskbarTactics.Editor
             frame.rectTransform.offsetMin = new Vector2(-8f, -8f);
             frame.rectTransform.offsetMax = new Vector2(8f, 8f);
             frame.transform.SetAsLastSibling();
+        }
+
+        private static void AddMapActSelector(Transform parent, Sprite badgeSprite)
+        {
+            if (badgeSprite == null)
+            {
+                return;
+            }
+
+            GameObject selector = new GameObject("Act Selector", typeof(RectTransform));
+            selector.transform.SetParent(parent, false);
+            RectTransform selectorRect = selector.GetComponent<RectTransform>();
+            selectorRect.anchorMin = selectorRect.anchorMax = new Vector2(1, 1);
+            selectorRect.pivot = new Vector2(1, 1);
+            selectorRect.anchoredPosition = new Vector2(-6, -10);
+            selectorRect.sizeDelta = new Vector2(236, 54);
+
+            AddMapActBadge(selector.transform, badgeSprite, "Act 1", new Vector2(-120, 0));
+            AddMapActBadge(selector.transform, badgeSprite, "Act 2", Vector2.zero);
+            selector.transform.SetAsLastSibling();
+        }
+
+        private static void AddMapActBadge(
+            Transform parent,
+            Sprite badgeSprite,
+            string actText,
+            Vector2 position)
+        {
+            Image badge = CreateImage(parent, "Act Badge", Color.white);
+            badge.name = $"{actText} Badge";
+            badge.sprite = badgeSprite;
+            badge.type = Image.Type.Simple;
+            badge.preserveAspect = false;
+            badge.raycastTarget = true;
+            badge.gameObject.AddComponent<Button>();
+            badge.color = new Color(1f, 1f, 1f, 0.88f);
+            badge.rectTransform.anchorMin = badge.rectTransform.anchorMax = new Vector2(1, 1);
+            badge.rectTransform.pivot = new Vector2(1, 1);
+            badge.rectTransform.anchoredPosition = position;
+            badge.rectTransform.sizeDelta = new Vector2(116, 49);
+
+            TMP_Text label = CreateText(
+                badge.transform,
+                "Act Label",
+                actText,
+                18,
+                TextAlignmentOptions.Center,
+                Vector2.zero,
+                new Vector2(82, 26));
+            label.color = new Color(0.2f, 0.1f, 0.03f, 1f);
+            label.fontStyle = FontStyles.Bold;
+            label.rectTransform.anchorMin = label.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            label.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            label.rectTransform.anchoredPosition = new Vector2(0, -3);
+            label.rectTransform.sizeDelta = new Vector2(82, 26);
         }
 
         private static RectTransform CreateMapArtworkRoot(Transform parent)
@@ -2238,7 +2302,7 @@ namespace TaskbarTactics.Editor
             labelBackground.rectTransform.anchorMin = labelBackground.rectTransform.anchorMax = new Vector2(0, 0.5f);
             labelBackground.rectTransform.pivot = new Vector2(0f, 0.5f);
             labelBackground.rectTransform.anchoredPosition = new Vector2(10, -2);
-            labelBackground.rectTransform.sizeDelta = new Vector2(142, 42);
+            labelBackground.rectTransform.sizeDelta = new Vector2(104, 42);
             labelBackground.gameObject.SetActive(false);
 
             TMP_Text label = CreateText(nodeRoot.transform, "Label", nodeId, 10,

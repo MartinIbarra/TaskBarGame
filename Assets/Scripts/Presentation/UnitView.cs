@@ -25,6 +25,9 @@ namespace TaskbarTactics.Presentation
         private float activeArtworkReferenceHeight;
         private bool activeFaceLeft;
         private bool isDead;
+        private bool capturedHealthBarDefaults;
+        private Vector3 defaultHealthBarPosition;
+        private Vector3 defaultHealthBarScale;
 
         public void ConfigureReferences(
             SpriteRenderer bodyRenderer,
@@ -46,7 +49,9 @@ namespace TaskbarTactics.Presentation
             float artworkHeightMultiplier = 1f,
             bool faceLeft = false,
             bool usePoseAnimation = false,
-            string poseResourcePath = null)
+            string poseResourcePath = null,
+            float healthBarScaleMultiplier = 1f,
+            float healthBarYOffset = 0f)
         {
             maxHealth = Mathf.Max(1, health);
             currentHealth = maxHealth;
@@ -58,6 +63,7 @@ namespace TaskbarTactics.Presentation
             poseSprites = usePoseAnimation ? LoadPoseSprites(poseResourcePath) : null;
             activeArtworkReferenceHeight = ArtworkReferenceHeight(GetPoseSprite(0) ?? artwork);
             ApplyArtwork(GetPoseSprite(0) ?? artwork, color, artworkHeightMultiplier, faceLeft);
+            ApplyHealthBarPresentation(healthBarScaleMultiplier, healthBarYOffset);
 
             if (label != null)
             {
@@ -100,6 +106,29 @@ namespace TaskbarTactics.Presentation
             animationBridge?.SetMovement(normalizedSpeed);
         }
 
+        private void ApplyHealthBarPresentation(float scaleMultiplier, float yOffset)
+        {
+            if (healthFill == null || healthFill.transform.parent == null)
+            {
+                return;
+            }
+
+            Transform healthBar = healthFill.transform.parent;
+            if (!capturedHealthBarDefaults)
+            {
+                defaultHealthBarPosition = healthBar.localPosition;
+                defaultHealthBarScale = healthBar.localScale;
+                capturedHealthBarDefaults = true;
+            }
+
+            float safeScale = Mathf.Max(0.1f, scaleMultiplier);
+            healthBar.localPosition = defaultHealthBarPosition + new Vector3(0f, yOffset, 0f);
+            healthBar.localScale = new Vector3(
+                defaultHealthBarScale.x * safeScale,
+                defaultHealthBarScale.y * safeScale,
+                defaultHealthBarScale.z);
+        }
+
         private void ApplyArtwork(
             Sprite artwork,
             Color fallbackColor,
@@ -120,9 +149,11 @@ namespace TaskbarTactics.Presentation
 
             body.sprite = artwork;
             body.color = Color.white;
-            float sourceHeight = Mathf.Max(0.01f, activeArtworkReferenceHeight > 0f
-                ? activeArtworkReferenceHeight
-                : artwork.bounds.size.y);
+            float sourceHeight = Mathf.Max(
+                0.01f,
+                activeArtworkReferenceHeight > 0f
+                    ? Mathf.Max(activeArtworkReferenceHeight, artwork.bounds.size.y)
+                    : artwork.bounds.size.y);
             float targetHeight = targetArtworkHeight * Mathf.Max(0.1f, artworkHeightMultiplier);
             float scale = targetHeight / sourceHeight;
             body.transform.localScale = new Vector3(faceLeft ? -scale : scale, scale, 1f);

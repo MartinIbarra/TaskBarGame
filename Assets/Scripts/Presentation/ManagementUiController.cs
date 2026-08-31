@@ -32,6 +32,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private TMP_Text mapSummary;
         [SerializeField] private TMP_Text settingsSummary;
         [SerializeField] private MapUiController mapUi;
+        [SerializeField] private InventorySlotGridView inventoryGrid;
 
         [Header("Actions")]
         [SerializeField] private Button cycleActiveSkillButton;
@@ -255,6 +256,7 @@ namespace TaskbarTactics.Presentation
                     $"{item.TagId.ToUpperInvariant()} · Nivel {item.Tier} ({item.SourceCount})"));
 
             inventorySummary.text = string.Empty;
+            RefreshInventoryGrid();
 
             mapSummary.text =
                 $"Nodo: {app.State.Expedition.CurrentNodeId}\n" +
@@ -299,6 +301,17 @@ namespace TaskbarTactics.Presentation
 
                 heroButtons[i].image.color = Color.clear;
             }
+        }
+
+        private void RefreshInventoryGrid()
+        {
+            if (inventoryGrid == null && panels.Count > 3 && panels[3] != null)
+            {
+                inventoryGrid = panels[3].GetComponent<InventorySlotGridView>() ??
+                    panels[3].AddComponent<InventorySlotGridView>();
+            }
+
+            inventoryGrid?.Refresh(app.Catalog, app.State.Inventory);
         }
 
         private string Marker(string heroId)

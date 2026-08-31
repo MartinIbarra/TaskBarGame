@@ -53,6 +53,11 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private DraggableMapView draggableMap;
 
         private string lastFocusedNodeId;
+        private Texture originalMapTexture;
+        private Texture actTwoMapTexture;
+        private Button actOneButton;
+        private Button actTwoButton;
+        private int selectedAct = 1;
 
         private static readonly Color LockedNode = new Color(0.18f, 0.19f, 0.2f, 0.82f);
         private static readonly Color AvailableNode = new Color(0.92f, 0.88f, 0.72f, 0.95f);
@@ -61,6 +66,7 @@ namespace TaskbarTactics.Presentation
         private static readonly Color ChallengeNode = new Color(1f, 1f, 1f, 1f);
         private static readonly Color LockedRoute = new Color(1f, 1f, 1f, 0.04f);
         private static readonly Color PlannedRoute = new Color(1f, 1f, 1f, 0.82f);
+        private static readonly Color ActBadgeText = new Color(0.2f, 0.1f, 0.03f, 1f);
 
         public void Configure(
             RawImage background,
@@ -112,6 +118,15 @@ namespace TaskbarTactics.Presentation
             {
                 return;
             }
+
+            EnsureActSelector();
+            if (selectedAct == 2)
+            {
+                ApplyActPreview();
+                return;
+            }
+
+            ApplyActPreview();
 
             HashSet<string> completed = new HashSet<string>(
                 app.State.Expedition.CompletedNodeIds ?? Enumerable.Empty<string>());
@@ -237,6 +252,197 @@ namespace TaskbarTactics.Presentation
                     ? new Color(1f, 1f, 1f, 0.95f)
                     : new Color(1f, 1f, 1f, 0f);
             }
+        }
+
+        private void EnsureActSelector()
+        {
+            if (actOneButton != null && actTwoButton != null)
+            {
+                return;
+            }
+
+            Sprite badgeSprite = Resources.Load<Sprite>("UI/ActParchment");
+            if (badgeSprite == null)
+            {
+                return;
+            }
+
+            Transform oldBadge = transform.Find("Act Badge");
+            if (oldBadge != null)
+            {
+                Destroy(oldBadge.gameObject);
+            }
+
+            Transform existingSelector = transform.Find("Act Selector");
+            if (existingSelector != null)
+            {
+                actOneButton = existingSelector.Find("Act 1 Badge")?.GetComponent<Button>();
+                actTwoButton = existingSelector.Find("Act 2 Badge")?.GetComponent<Button>();
+            }
+            else
+            {
+                GameObject selector = new GameObject("Act Selector", typeof(RectTransform));
+                selector.transform.SetParent(transform, false);
+                RectTransform selectorRect = selector.GetComponent<RectTransform>();
+                selectorRect.anchorMin = selectorRect.anchorMax = new Vector2(1f, 1f);
+                selectorRect.pivot = new Vector2(1f, 1f);
+                selectorRect.anchoredPosition = new Vector2(-6f, -10f);
+                selectorRect.sizeDelta = new Vector2(236f, 54f);
+
+                actOneButton = CreateActButton(selector.transform, badgeSprite, "Act 1", new Vector2(-120f, 0f), 1);
+                actTwoButton = CreateActButton(selector.transform, badgeSprite, "Act 2", Vector2.zero, 2);
+                existingSelector = selector.transform;
+            }
+
+            ConfigureActButton(actOneButton, 1);
+            ConfigureActButton(actTwoButton, 2);
+            existingSelector.SetAsLastSibling();
+            UpdateActButtonState();
+        }
+
+        private Button CreateActButton(
+            Transform parent,
+            Sprite badgeSprite,
+            string labelText,
+            Vector2 position,
+            int actNumber)
+        {
+            GameObject badgeObject = new GameObject(
+                $"{labelText} Badge", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            badgeObject.transform.SetParent(parent, false);
+            Image badge = badgeObject.GetComponent<Image>();
+            badge.sprite = badgeSprite;
+            badge.color = new Color(1f, 1f, 1f, 0.88f);
+            badge.preserveAspect = false;
+            badge.raycastTarget = true;
+
+            RectTransform badgeRect = badge.rectTransform;
+            badgeRect.anchorMin = badgeRect.anchorMax = new Vector2(1f, 1f);
+            badgeRect.pivot = new Vector2(1f, 1f);
+            badgeRect.anchoredPosition = position;
+            badgeRect.sizeDelta = new Vector2(116f, 49f);
+
+            GameObject labelObject = new GameObject(
+                "Act Label", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+            labelObject.transform.SetParent(badgeObject.transform, false);
+            TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
+            label.text = labelText;
+            label.font = Resources.Load<TMP_FontAsset>("UI/Fonts/VCR_OSD_MONO SDF");
+            label.fontSize = 18f;
+            label.fontStyle = FontStyles.Bold;
+            label.color = ActBadgeText;
+            label.alignment = TextAlignmentOptions.Center;
+            label.raycastTarget = false;
+
+            RectTransform labelRect = label.rectTransform;
+            labelRect.anchorMin = labelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            labelRect.pivot = new Vector2(0.5f, 0.5f);
+            labelRect.anchoredPosition = new Vector2(0f, -3f);
+            labelRect.sizeDelta = new Vector2(82f, 26f);
+
+            Button button = badgeObject.GetComponent<Button>();
+            ConfigureActButton(button, actNumber);
+            return button;
+        }
+
+        private void ConfigureActButton(Button button, int actNumber)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            button.transition = Selectable.Transition.ColorTint;
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => SelectAct(actNumber));
+        }
+
+        private void SelectAct(int actNumber)
+        {
+            selectedAct = Mathf.Clamp(actNumber, 1, 2);
+            ApplyActPreview();
+        }
+
+        private void ApplyActPreview()
+        {
+            if (mapBackground != null && originalMapTexture == null)
+            {
+                originalMapTexture = mapBackground.texture;
+            }
+
+            bool showActOneGameplay = selectedAct == 1;
+            if (mapBackground != null)
+            {
+                if (showActOneGameplay)
+                {
+                    mapBackground.texture = originalMapTexture;
+                }
+                else
+                {
+                    actTwoMapTexture ??= Resources.Load<Texture2D>("Maps/mapa2");
+                    mapBackground.texture = actTwoMapTexture != null ? actTwoMapTexture : originalMapTexture;
+                }
+            }
+
+            foreach (MapNodeView node in nodes)
+            {
+                if (node.Marker != null && node.Marker.transform.parent != null)
+                {
+                    node.Marker.transform.parent.gameObject.SetActive(showActOneGameplay);
+                }
+            }
+
+            foreach (MapRouteView route in routes)
+            {
+                foreach (Image dash in route.Dashes)
+                {
+                    if (dash != null)
+                    {
+                        dash.gameObject.SetActive(showActOneGameplay);
+                    }
+                }
+            }
+
+            foreach (MapRoutePreferenceLegend legend in legends)
+            {
+                if (legend.Label != null)
+                {
+                    legend.Label.gameObject.SetActive(showActOneGameplay);
+                }
+            }
+
+            if (nodeArtworkOverlay != null)
+            {
+                nodeArtworkOverlay.gameObject.SetActive(showActOneGameplay && nodeArtworkOverlay.texture != null);
+            }
+
+            foreach (MapRouteArtworkOverlay overlay in routeArtworkOverlays)
+            {
+                if (overlay.Image != null)
+                {
+                    overlay.Image.gameObject.SetActive(showActOneGameplay);
+                }
+            }
+
+            UpdateActButtonState();
+        }
+
+        private void UpdateActButtonState()
+        {
+            TintActButton(actOneButton, selectedAct == 1);
+            TintActButton(actTwoButton, selectedAct == 2);
+        }
+
+        private static void TintActButton(Button button, bool selected)
+        {
+            if (button == null || button.image == null)
+            {
+                return;
+            }
+
+            button.image.color = selected
+                ? new Color(1f, 1f, 1f, 0.98f)
+                : new Color(0.78f, 0.78f, 0.78f, 0.72f);
         }
 
         private static string DisplayName(string nodeId)

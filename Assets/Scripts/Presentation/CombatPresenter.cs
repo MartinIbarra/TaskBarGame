@@ -11,7 +11,9 @@ namespace TaskbarTactics.Presentation
     public sealed class CombatPresenter : MonoBehaviour
     {
         private const float FinalBossDeathVolume = 0.7f;
-        private const float BossArtworkScaleMultiplier = 1.2f;
+        private const float BossArtworkScaleMultiplier = 1.25f;
+        private const float BossHealthBarScaleMultiplier = 1.5f;
+        private const float BossHealthBarYOffset = 0.2f;
 
         [Header("Reusable presentation")]
         [SerializeField] private UnitView unitPrefab;
@@ -219,7 +221,9 @@ namespace TaskbarTactics.Presentation
                     EnemyArtworkScale(definitionId, definition),
                     true,
                     true,
-                    $"Enemies/{definitionId}");
+                    $"Enemies/{definitionId}",
+                    isBoss ? BossHealthBarScaleMultiplier : 1f,
+                    isBoss ? BossHealthBarYOffset : 0f);
             }
         }
 

@@ -157,6 +157,7 @@ namespace TaskbarTactics.Presentation
                 CompletedNodeIds = new List<string>()
             };
             State.Party.IsFormationLocked = false;
+            State.Inventory.Clear();
             ClearSelectedParty();
             RestoreAllHeroResources();
             combatPresenter?.Clear();
@@ -636,7 +637,7 @@ namespace TaskbarTactics.Presentation
 
         private static bool ShowsChestReward(MapNodeDefinition node)
         {
-            return node != null && node.Id == "cave";
+            return node != null && (node.Id == "cave" || node.Id == "last_bastion");
         }
 
         private void EnsureRosterAndStarterItems()
@@ -666,11 +667,6 @@ namespace TaskbarTactics.Presentation
                         ActiveStatusEffects = new List<ActiveStatusEffectState>()
                     });
                 }
-            }
-
-            if (State.Inventory.Count == 0)
-            {
-                State.Inventory.AddRange(lootGenerator.Generate(catalog.CreateLootTable(), 1337, 8));
             }
 
             foreach (HeroState hero in State.Party.Heroes.Where(item =>
