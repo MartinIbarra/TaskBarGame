@@ -60,3 +60,54 @@ MonoBehaviour:
     Type: 4
     Difficulty: 10
     NextNodeIds: []
+  - Id: city2
+    Type: 2
+    Difficulty: 0
+    NextNodeIds:
+    - corrupt_pass
+  - Id: corrupt_pass
+    Type: 0
+    Difficulty: 3
+    NextNodeIds:
+    - lo_hueso
+  - Id: lo_hueso
+    Type: 0
+    Difficulty: 4
+    NextNodeIds:
+    - mt_secret
+    - ancient_ruins
+  - Id: mt_secret
+    Type: 0
+    Difficulty: 5
+    NextNodeIds:
+    - ancient_ruins
+  - Id: ancient_ruins
+    Type: 0
+    Difficulty: 5
+    NextNodeIds:
+    - arbol_morto
+  - Id: arbol_morto
+    Type: 0
+    Difficulty: 6
+    NextNodeIds:
+    - mountain_pass_act2
+  - Id: mountain_pass_act2
+    Type: 0
+    Difficulty: 7
+    NextNodeIds:
+    - black_tower
+    - port
+  - Id: black_tower
+    Type: 0
+    Difficulty: 8
+    NextNodeIds:
+    - port
+  - Id: port
+    Type: 0
+    Difficulty: 9
+    NextNodeIds:
+    - lost_bay
+  - Id: lost_bay
+    Type: 4
+    Difficulty: 10
+    NextNodeIds: []

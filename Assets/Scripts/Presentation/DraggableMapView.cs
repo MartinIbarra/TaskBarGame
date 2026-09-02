@@ -46,6 +46,25 @@ namespace TaskbarTactics.Presentation
             ClampContent();
         }
 
+        public void ConfigureCentered(RectTransform targetContent, float defaultZoom, float minimumZoom, float maximumZoom)
+        {
+            content = targetContent;
+            viewport = transform as RectTransform;
+            minZoom = Mathf.Max(0.25f, minimumZoom);
+            maxZoom = Mathf.Max(minZoom, maximumZoom);
+            initialZoom = Mathf.Clamp(defaultZoom, minZoom, maxZoom);
+            zoom = Mathf.Clamp(initialZoom, minZoom, maxZoom);
+            if (content != null)
+            {
+                content.localScale = new Vector3(zoom, zoom, 1f);
+                initialPosition = CenteredContentPosition();
+                content.anchoredPosition = initialPosition;
+            }
+
+            useInitialPosition = true;
+            ClampContent();
+        }
+
         private void Start()
         {
             if (useInitialPosition && content != null)
@@ -70,6 +89,18 @@ namespace TaskbarTactics.Presentation
             }
 
             FocusOn(target);
+        }
+
+        public void ResetView()
+        {
+            zoom = Mathf.Clamp(initialZoom, minZoom, maxZoom);
+            if (content != null)
+            {
+                content.localScale = new Vector3(zoom, zoom, 1f);
+                content.anchoredPosition = initialPosition;
+            }
+
+            ClampContent();
         }
 
         public void FocusOn(RectTransform target, Vector2 viewportAnchor)
@@ -190,6 +221,20 @@ namespace TaskbarTactics.Presentation
 
             float max = contentSize - viewportSize;
             return Mathf.Clamp(value, 0f, max);
+        }
+
+        private Vector2 CenteredContentPosition()
+        {
+            if (content == null || viewport == null)
+            {
+                return Vector2.zero;
+            }
+
+            Vector2 viewportSize = viewport.rect.size;
+            Vector2 contentSize = content.rect.size * zoom;
+            return new Vector2(
+                (viewportSize.x - contentSize.x) * 0.5f,
+                (contentSize.y - viewportSize.y) * 0.5f);
         }
     }
 }

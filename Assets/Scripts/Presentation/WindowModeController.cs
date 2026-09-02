@@ -72,7 +72,7 @@ namespace TaskbarTactics.Presentation
             }
 
             Application.targetFrameRate = mode == WindowMode.Strip ? 30 : 60;
-            windowController.SetMode(mode);
+            windowController?.SetMode(mode);
             StartCoroutine(RepositionAfterResize());
         }
 
@@ -80,7 +80,7 @@ namespace TaskbarTactics.Presentation
         {
             yield return null;
             yield return new WaitForEndOfFrame();
-            windowController.Reposition();
+            windowController?.Reposition();
         }
     }
 }

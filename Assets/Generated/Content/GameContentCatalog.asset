@@ -121,6 +121,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 0ff27e8fba01474aa488c267cd6bba4e, type: 2}
   - {fileID: 11400000, guid: 931fced86ef64c143ad603485780be6f, type: 2}
   - {fileID: 11400000, guid: d697ab37e4eec9842a884968244b6600, type: 2}
+  - {fileID: 11400000, guid: f467c0c11a44a574cac497ec9286c99d, type: 2}
+  - {fileID: 11400000, guid: 259ffc1fc6053d24c883f0e5caad9b35, type: 2}
+  - {fileID: 11400000, guid: eac57c08704a9394796c430f3c47166c, type: 2}
+  - {fileID: 11400000, guid: 0e260284a6b3e5245b3f5af7a812b373, type: 2}
+  - {fileID: 11400000, guid: d8f33222138857948b79155edaca3a1a, type: 2}
+  - {fileID: 11400000, guid: 16879d4afe7eca64b811efc7ce907d89, type: 2}
+  - {fileID: 11400000, guid: cdc738068d61eba46980655ec1d28a78, type: 2}
+  - {fileID: 11400000, guid: 4cc24159307cfbf4bb140bf9d4772247, type: 2}
+  - {fileID: 11400000, guid: 525a7eb7db8dcba4182298856a2b8405, type: 2}
   map: {fileID: 11400000, guid: 7847f18943332bd48b80f4818af7034b, type: 2}
   cosmetics:
   - {fileID: 11400000, guid: 7729c27d805e6b34698fc1b2aa2abba6, type: 2}

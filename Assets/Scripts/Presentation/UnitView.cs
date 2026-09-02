@@ -22,9 +22,13 @@ namespace TaskbarTactics.Presentation
         private Coroutine temporaryPoseRoutine;
         private Color activeFallbackColor;
         private float activeArtworkHeightMultiplier = 1f;
+        private float activeArtworkWidthMultiplier = 1f;
         private float activeArtworkReferenceHeight;
+        private float activeAttackPoseYOffset;
         private bool activeFaceLeft;
         private bool isDead;
+        private bool capturedBodyDefaults;
+        private Vector3 defaultBodyLocalPosition;
         private bool capturedHealthBarDefaults;
         private Vector3 defaultHealthBarPosition;
         private Vector3 defaultHealthBarScale;
@@ -58,11 +62,12 @@ namespace TaskbarTactics.Presentation
             isDead = false;
             activeFallbackColor = color;
             activeArtworkHeightMultiplier = artworkHeightMultiplier;
+            ApplyHeroCombatPresentationProfile(poseResourcePath);
             activeFaceLeft = faceLeft;
             originalArtwork = artwork;
             poseSprites = usePoseAnimation ? LoadPoseSprites(poseResourcePath) : null;
             activeArtworkReferenceHeight = ArtworkReferenceHeight(GetPoseSprite(0) ?? artwork);
-            ApplyArtwork(GetPoseSprite(0) ?? artwork, color, artworkHeightMultiplier, faceLeft);
+            ApplyArtwork(GetPoseSprite(0) ?? artwork, color, artworkHeightMultiplier, faceLeft, 0f);
             ApplyHealthBarPresentation(healthBarScaleMultiplier, healthBarYOffset);
 
             if (label != null)
@@ -133,17 +138,24 @@ namespace TaskbarTactics.Presentation
             Sprite artwork,
             Color fallbackColor,
             float artworkHeightMultiplier,
-            bool faceLeft)
+            bool faceLeft,
+            float yOffset)
         {
             if (body == null)
             {
                 return;
             }
 
+            CaptureBodyDefaults();
+            body.transform.localPosition = defaultBodyLocalPosition + new Vector3(0f, yOffset, 0f);
+
             if (artwork == null)
             {
                 body.color = fallbackColor;
-                body.transform.localScale = new Vector3(faceLeft ? -1f : 1f, 1f, 1f);
+                body.transform.localScale = new Vector3(
+                    faceLeft ? -activeArtworkWidthMultiplier : activeArtworkWidthMultiplier,
+                    1f,
+                    1f);
                 return;
             }
 
@@ -156,7 +168,8 @@ namespace TaskbarTactics.Presentation
                     : artwork.bounds.size.y);
             float targetHeight = targetArtworkHeight * Mathf.Max(0.1f, artworkHeightMultiplier);
             float scale = targetHeight / sourceHeight;
-            body.transform.localScale = new Vector3(faceLeft ? -scale : scale, scale, 1f);
+            float widthScale = scale * activeArtworkWidthMultiplier;
+            body.transform.localScale = new Vector3(faceLeft ? -widthScale : widthScale, scale, 1f);
         }
 
         private void SetHealth(int value)
@@ -259,12 +272,46 @@ namespace TaskbarTactics.Presentation
             Sprite pose = GetPoseSprite(poseIndex);
             if (pose != null)
             {
+                bool isAttackPose = poseIndex == 3 || poseIndex == 4;
                 ApplyArtwork(
                     pose,
                     activeFallbackColor,
                     activeArtworkHeightMultiplier,
-                    activeFaceLeft);
+                    activeFaceLeft,
+                    isAttackPose ? activeAttackPoseYOffset : 0f);
             }
+        }
+
+        private void ApplyHeroCombatPresentationProfile(string poseResourcePath)
+        {
+            activeArtworkWidthMultiplier = 1f;
+            activeAttackPoseYOffset = 0f;
+
+            if (string.IsNullOrWhiteSpace(poseResourcePath))
+            {
+                return;
+            }
+
+            string normalizedPath = poseResourcePath.Replace('\\', '/').ToLowerInvariant();
+            if (normalizedPath.EndsWith("/cleric"))
+            {
+                activeArtworkWidthMultiplier = 1.05f;
+            }
+            else if (normalizedPath.EndsWith("/rogue"))
+            {
+                activeAttackPoseYOffset = 0.045f;
+            }
+        }
+
+        private void CaptureBodyDefaults()
+        {
+            if (capturedBodyDefaults || body == null)
+            {
+                return;
+            }
+
+            defaultBodyLocalPosition = body.transform.localPosition;
+            capturedBodyDefaults = true;
         }
 
         private Sprite GetPoseSprite(int poseIndex)

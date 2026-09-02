@@ -11,9 +11,13 @@ namespace TaskbarTactics.Presentation
     public sealed class CombatPresenter : MonoBehaviour
     {
         private const float FinalBossDeathVolume = 0.7f;
-        private const float BossArtworkScaleMultiplier = 1.25f;
+        private const float BossArtworkScaleMultiplier = 1.5f;
         private const float BossHealthBarScaleMultiplier = 1.5f;
         private const float BossHealthBarYOffset = 0.2f;
+        private const float SpawnIntroSeconds = 0.72f;
+        private const float SpawnIntroStaggerSeconds = 0.08f;
+        private const float HeroSpawnIntroOffsetX = -1.25f;
+        private const float EnemySpawnIntroOffsetX = 1.25f;
 
         [Header("Reusable presentation")]
         [SerializeField] private UnitView unitPrefab;
@@ -66,7 +70,8 @@ namespace TaskbarTactics.Presentation
             string nodeId = null)
         {
             SetBattleback(nodeId);
-            SpawnUnits(request, catalog);
+            List<SpawnIntroEntry> spawnIntro = SpawnUnits(request, catalog);
+            yield return PlaySpawnIntro(spawnIntro);
             CombatPlaybackSchedule schedule = CombatPlaybackTimeline.Build(
                 result.Events,
                 result.ElapsedMilliseconds,
@@ -146,7 +151,8 @@ namespace TaskbarTactics.Presentation
             SpriteRenderer renderer = chest.AddComponent<SpriteRenderer>();
             renderer.sprite = sprite;
             renderer.sortingOrder = 30;
-            Vector3 targetScale = new Vector3(0.55f, 0.55f, 1f);
+            Sprite chestSizeReference = sprite;
+            Vector3 targetScale = new Vector3(0.55f, 0.605f, 1f);
             float emergeSeconds = 0.35f;
             float elapsed = 0f;
             while (elapsed < emergeSeconds)
@@ -173,7 +179,7 @@ namespace TaskbarTactics.Presentation
 
             if (openingFrames.Length > 1)
             {
-                yield return PlayRewardChestOpening(renderer, openingFrames);
+                yield return PlayRewardChestOpening(renderer, openingFrames, chest.transform, targetScale, chestSizeReference);
             }
 
             if (rewardSprite != null)
@@ -184,12 +190,14 @@ namespace TaskbarTactics.Presentation
             Destroy(chest);
         }
 
-        private void SpawnUnits(CombatRequest request, GameContentCatalog catalog)
+        private List<SpawnIntroEntry> SpawnUnits(CombatRequest request, GameContentCatalog catalog)
         {
             Clear();
+            List<SpawnIntroEntry> spawnIntro = new List<SpawnIntroEntry>();
             foreach (CombatantState hero in request.Heroes)
             {
                 UnitView view = Spawn(hero, heroCells, heroColumns);
+                spawnIntro.Add(new SpawnIntroEntry(view, HeroSpawnIntroOffsetX));
                 HeroDefinition definition = catalog.FindHero(hero.Id);
                 view.Initialize(
                     definition != null ? definition.DisplayNameEs : hero.Id,
@@ -202,6 +210,7 @@ namespace TaskbarTactics.Presentation
                     $"Heroes/{LegacyHeroAnimationId(hero.Id)}");
             }
 
+            int bossOrdinal = 0;
             foreach (CombatantState enemy in request.Enemies)
             {
                 enemyViewIds.Add(enemy.Id);
@@ -212,7 +221,10 @@ namespace TaskbarTactics.Presentation
                     enemy,
                     enemyCells,
                     enemyColumns,
-                    isBoss ? BossCellIndex(enemyCells, enemyColumns) : (int?)null);
+                    isBoss
+                        ? BossCellIndex(enemyCells, enemyColumns, bossOrdinal++)
+                        : (int?)null);
+                spawnIntro.Add(new SpawnIntroEntry(view, EnemySpawnIntroOffsetX));
                 view.Initialize(
                     definition != null ? definition.DisplayNameEs : definitionId,
                     enemyColor,
@@ -224,6 +236,76 @@ namespace TaskbarTactics.Presentation
                     $"Enemies/{definitionId}",
                     isBoss ? BossHealthBarScaleMultiplier : 1f,
                     isBoss ? BossHealthBarYOffset : 0f);
+            }
+
+            return spawnIntro;
+        }
+
+        private static IEnumerator PlaySpawnIntro(IReadOnlyList<SpawnIntroEntry> entries)
+        {
+            if (entries == null || entries.Count == 0)
+            {
+                yield break;
+            }
+
+            float elapsed = 0f;
+            float totalSeconds = SpawnIntroSeconds + SpawnIntroStaggerSeconds * Mathf.Max(0, entries.Count - 1);
+            foreach (SpawnIntroEntry entry in entries)
+            {
+                if (entry.View == null)
+                {
+                    continue;
+                }
+
+                entry.View.transform.localPosition = new Vector3(entry.OffsetX, 0f, 0f);
+                entry.View.SetMovement(1f);
+            }
+
+            while (elapsed < totalSeconds)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                for (int i = 0; i < entries.Count; i++)
+                {
+                    SpawnIntroEntry entry = entries[i];
+                    if (entry.View == null)
+                    {
+                        continue;
+                    }
+
+                    float unitElapsed = elapsed - i * SpawnIntroStaggerSeconds;
+                    float t = Mathf.Clamp01(unitElapsed / SpawnIntroSeconds);
+                    float eased = Smooth(t);
+                    entry.View.transform.localPosition = Vector3.Lerp(
+                        new Vector3(entry.OffsetX, 0f, 0f),
+                        Vector3.zero,
+                        eased);
+                    entry.View.SetMovement(t < 1f ? 1f : 0f);
+                }
+
+                yield return null;
+            }
+
+            foreach (SpawnIntroEntry entry in entries)
+            {
+                if (entry.View == null)
+                {
+                    continue;
+                }
+
+                entry.View.transform.localPosition = Vector3.zero;
+                entry.View.SetMovement(0f);
+            }
+        }
+
+        private readonly struct SpawnIntroEntry
+        {
+            public readonly UnitView View;
+            public readonly float OffsetX;
+
+            public SpawnIntroEntry(UnitView view, float offsetX)
+            {
+                View = view;
+                OffsetX = offsetX;
             }
         }
 
@@ -300,7 +382,7 @@ namespace TaskbarTactics.Presentation
             return view;
         }
 
-        private static int BossCellIndex(IReadOnlyList<Transform> cells, int columns)
+        private static int BossCellIndex(IReadOnlyList<Transform> cells, int columns, int bossOrdinal)
         {
             if (cells == null || cells.Count == 0)
             {
@@ -309,8 +391,13 @@ namespace TaskbarTactics.Presentation
 
             int safeColumns = Mathf.Max(1, columns);
             int row = Mathf.Max(0, Mathf.CeilToInt(cells.Count / (float)safeColumns) - 1);
-            int column = safeColumns / 2;
+            int column = Mathf.Clamp(bossOrdinal, 0, safeColumns - 1);
             return Mathf.Clamp(row * safeColumns + column, 0, cells.Count - 1);
+        }
+
+        private static float Smooth(float value)
+        {
+            return value * value * (3f - 2f * value);
         }
 
         private void ClearEnemies()
@@ -335,7 +422,7 @@ namespace TaskbarTactics.Presentation
                 return;
             }
 
-            battlebackRenderer.sprite = LoadBattleback(nodeId) ?? LoadBattleback("default");
+            battlebackRenderer.sprite = LoadBattleback(BattlebackIdForNode(nodeId)) ?? LoadBattleback("default");
             battlebackRenderer.color = battlebackRenderer.sprite == null
                 ? Color.clear
                 : Color.white;
@@ -368,6 +455,21 @@ namespace TaskbarTactics.Presentation
                 100f);
             battlebackCache[nodeId] = sprite;
             return sprite;
+        }
+
+        private static string BattlebackIdForNode(string nodeId)
+        {
+            switch (nodeId)
+            {
+                case "mt_secret":
+                case "mountain_pass_act2":
+                    return "cave";
+                case "ancient_ruins":
+                case "black_tower":
+                    return "last_bastion";
+                default:
+                    return nodeId;
+            }
         }
 
         private Sprite LoadRewardChest()
@@ -438,7 +540,12 @@ namespace TaskbarTactics.Presentation
                 100f);
         }
 
-        private static IEnumerator PlayRewardChestOpening(SpriteRenderer renderer, IReadOnlyList<Sprite> frames)
+        private static IEnumerator PlayRewardChestOpening(
+            SpriteRenderer renderer,
+            IReadOnlyList<Sprite> frames,
+            Transform chest,
+            Vector3 baseScale,
+            Sprite sizeReference)
         {
             const float frameSeconds = 0.12f;
             foreach (Sprite frame in frames)
@@ -446,10 +553,30 @@ namespace TaskbarTactics.Presentation
                 if (frame != null)
                 {
                     renderer.sprite = frame;
+                    ApplyRewardChestFrameScale(chest, baseScale, sizeReference, frame);
                 }
 
                 yield return new WaitForSecondsRealtime(frameSeconds);
             }
+        }
+
+        private static void ApplyRewardChestFrameScale(
+            Transform chest,
+            Vector3 baseScale,
+            Sprite sizeReference,
+            Sprite frame)
+        {
+            if (chest == null || sizeReference == null || frame == null)
+            {
+                return;
+            }
+
+            float referenceHeight = Mathf.Max(0.01f, sizeReference.bounds.size.y);
+            float frameHeight = Mathf.Max(0.01f, frame.bounds.size.y);
+            chest.localScale = new Vector3(
+                baseScale.x,
+                baseScale.y * (referenceHeight / frameHeight),
+                baseScale.z);
         }
 
         private static IEnumerator PlayRewardItemPopup(Vector3 chestPosition, Sprite rewardSprite)

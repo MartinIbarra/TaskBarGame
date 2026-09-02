@@ -367,6 +367,16 @@ namespace TaskbarTactics.Content
             content.MapNodes.Add(Node("mountain_pass", MapNodeType.Treasure, 4, "lost_forest"));
             content.MapNodes.Add(Node("lost_forest", MapNodeType.Combat, 7, "last_bastion"));
             content.MapNodes.Add(Node("last_bastion", MapNodeType.Boss, 10));
+            content.MapNodes.Add(Node("city2", MapNodeType.Event, 0, "corrupt_pass"));
+            content.MapNodes.Add(Node("corrupt_pass", MapNodeType.Combat, 3, "lo_hueso"));
+            content.MapNodes.Add(Node("lo_hueso", MapNodeType.Combat, 4, "mt_secret", "ancient_ruins"));
+            content.MapNodes.Add(Node("mt_secret", MapNodeType.Combat, 5, "ancient_ruins"));
+            content.MapNodes.Add(Node("ancient_ruins", MapNodeType.Combat, 5, "arbol_morto"));
+            content.MapNodes.Add(Node("arbol_morto", MapNodeType.Combat, 6, "mountain_pass_act2"));
+            content.MapNodes.Add(Node("mountain_pass_act2", MapNodeType.Combat, 7, "black_tower", "port"));
+            content.MapNodes.Add(Node("black_tower", MapNodeType.Combat, 8, "port"));
+            content.MapNodes.Add(Node("port", MapNodeType.Combat, 9, "lost_bay"));
+            content.MapNodes.Add(Node("lost_bay", MapNodeType.Boss, 10));
         }
 
         private static MapNodeBlueprint Node(

@@ -10,6 +10,8 @@ namespace TaskbarTactics.Presentation
 {
     public sealed class TownIntroPresenter : MonoBehaviour
     {
+        private const float GateOpenVolume = 0.85f;
+
         [Header("Scene references")]
         [SerializeField] private CanvasGroup rootGroup;
         [SerializeField] private Image background;
@@ -218,7 +220,7 @@ namespace TaskbarTactics.Presentation
             audioSource.playOnAwake = false;
             audioSource.loop = false;
             audioSource.spatialBlend = 0f;
-            audioSource.volume = 1f;
+            audioSource.volume = GateOpenVolume;
             audioSource.mute = false;
         }
 

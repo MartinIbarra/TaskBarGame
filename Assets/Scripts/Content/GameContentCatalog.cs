@@ -254,11 +254,13 @@ namespace TaskbarTactics.Content
             List<EnemyDefinition> pool = encounter != null && encounter.Enemies.Count > 0
                 ? encounter.Enemies.ToList()
                 : enemies.Where(enemy => enemy.IsBoss == (node.Type == MapNodeType.Boss)).ToList();
-            int enemyCount = node.Type == MapNodeType.Boss
-                ? 1
-                : node.Type == MapNodeType.Elite
-                    ? Mathf.Min(3, pool.Count)
-                    : Mathf.Min(2, pool.Count);
+            int enemyCount = IsExpandedEncounter(node.Id) && encounter != null && encounter.Enemies.Count > 0
+                ? encounter.Enemies.Count
+                : node.Type == MapNodeType.Boss
+                    ? 1
+                    : node.Type == MapNodeType.Elite
+                        ? Mathf.Min(3, pool.Count)
+                        : Mathf.Min(2, pool.Count);
             List<CombatantState> enemyUnits = new List<CombatantState>();
             for (int i = 0; i < enemyCount; i++)
             {
@@ -291,6 +293,24 @@ namespace TaskbarTactics.Content
                 Heroes = heroUnits,
                 Enemies = enemyUnits
             };
+        }
+
+        private static bool IsExpandedEncounter(string nodeId)
+        {
+            switch (nodeId)
+            {
+                case "corrupt_pass":
+                case "mt_secret":
+                case "lo_hueso":
+                case "arbol_morto":
+                case "mountain_pass_act2":
+                case "black_tower":
+                case "port":
+                case "lost_bay":
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private StatusEffectCollection RestoreStatusEffects(

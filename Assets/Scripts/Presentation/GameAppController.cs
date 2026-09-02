@@ -45,6 +45,7 @@ namespace TaskbarTactics.Presentation
 
         private JsonSaveStore saveStore;
         private Coroutine expeditionRoutine;
+        private bool pendingCompletionMapFocus;
 
         public GameContentCatalog Catalog => catalog;
         public GameState State { get; private set; }
@@ -106,9 +107,11 @@ namespace TaskbarTactics.Presentation
             else
             {
                 SetStatus("Escuadrón en el campamento");
+                pendingCompletionMapFocus |= State.Expedition.CompletedNodes >= catalog.Map.Nodes.Count;
             }
 
             RaiseStateChanged();
+            FocusCompletionMapIfNeeded();
         }
 
         private void OnApplicationQuit()
@@ -360,6 +363,76 @@ namespace TaskbarTactics.Presentation
             SaveAndRefresh();
         }
 
+        public bool TryEquipInventoryItem(string heroId, string itemInstanceId, EquipmentSlot? preferredSlot = null)
+        {
+            if (State.Party.IsFormationLocked || string.IsNullOrWhiteSpace(itemInstanceId))
+            {
+                return false;
+            }
+
+            HeroState hero = State.Party.GetHero(heroId);
+            HeroDefinition definition = catalog.FindHero(heroId);
+            InventoryItem item = State.Inventory.FirstOrDefault(candidate => candidate.InstanceId == itemInstanceId);
+            if (hero == null || definition == null || item == null || IsEquippedByAnotherHero(heroId, itemInstanceId))
+            {
+                return false;
+            }
+
+            EquipmentDescriptor descriptor = catalog.CreateItemDescriptor(item);
+            if (descriptor == null)
+            {
+                return false;
+            }
+
+            EquipmentLoadout loadout = catalog.CreateLoadout(hero, State.Inventory);
+            foreach (EquipmentSlot slot in CandidateSlotsForDrop(descriptor, preferredSlot))
+            {
+                EquipmentResult result = EquipmentService.TryEquip(
+                    definition.EquipmentProfile,
+                    loadout,
+                    slot,
+                    descriptor);
+                if (!result.Succeeded)
+                {
+                    continue;
+                }
+
+                hero.SetEquippedItem(slot, itemInstanceId);
+                if (slot == EquipmentSlot.MainWeapon &&
+                    descriptor.Handedness == Handedness.TwoHanded)
+                {
+                    hero.SetEquippedItem(EquipmentSlot.SecondaryWeapon, null);
+                }
+
+                ClampHeroResources(hero);
+                SaveAndRefresh();
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool UnequipInventoryItem(string heroId, EquipmentSlot slot)
+        {
+            if (State.Party.IsFormationLocked || string.IsNullOrWhiteSpace(heroId))
+            {
+                return false;
+            }
+
+            HeroState hero = State.Party.GetHero(heroId);
+            string equippedItemId = hero?.GetEquippedItemId(slot);
+            if (string.IsNullOrWhiteSpace(equippedItemId) ||
+                State.Inventory.All(item => item.InstanceId != equippedItemId))
+            {
+                return false;
+            }
+
+            hero.SetEquippedItem(slot, null);
+            ClampHeroResources(hero);
+            SaveAndRefresh();
+            return true;
+        }
+
         public void ToggleLanguage()
         {
             State.LanguageCode = State.LanguageCode == "es" ? "en" : "es";
@@ -569,6 +642,20 @@ namespace TaskbarTactics.Presentation
             RestoreAllHeroResources();
             SetAttention("strip.complete");
             SetStatus(Localize("strip.complete"));
+            pendingCompletionMapFocus = true;
+            FocusCompletionMapIfNeeded();
+        }
+
+        private void FocusCompletionMapIfNeeded()
+        {
+            if (!pendingCompletionMapFocus || managementUi == null || windowMode == null)
+            {
+                return;
+            }
+
+            pendingCompletionMapFocus = false;
+            windowMode.ShowManagement();
+            managementUi.ShowMapAct(2);
         }
 
         private void ResolveOfflineProgress()
@@ -682,6 +769,27 @@ namespace TaskbarTactics.Presentation
                 hero.DefinitionId != heroId &&
                 hero.EquippedItems != null &&
                 hero.EquippedItems.Any(item => item.ItemInstanceId == instanceId));
+        }
+
+        private static IEnumerable<EquipmentSlot> CandidateSlotsForDrop(
+            EquipmentDescriptor descriptor,
+            EquipmentSlot? preferredSlot)
+        {
+            if (preferredSlot.HasValue)
+            {
+                yield return preferredSlot.Value;
+                yield break;
+            }
+
+            yield return descriptor.PrimarySlot;
+            if (descriptor.PrimarySlot == EquipmentSlot.Ring1)
+            {
+                yield return EquipmentSlot.Ring2;
+            }
+            else if (descriptor.PrimarySlot == EquipmentSlot.Earring1)
+            {
+                yield return EquipmentSlot.Earring2;
+            }
         }
 
         private void AddHeroExperience(HeroState hero, long amount)
@@ -820,10 +928,10 @@ namespace TaskbarTactics.Presentation
                 case 1:
                     return new[]
                     {
-                        new FormationPosition(0, 1),
-                        new FormationPosition(1, 0),
+                        new FormationPosition(0, 2),
                         new FormationPosition(1, 1),
-                        new FormationPosition(1, 2)
+                        new FormationPosition(1, 2),
+                        new FormationPosition(1, 3)
                     };
                 case 2:
                     return new[]
