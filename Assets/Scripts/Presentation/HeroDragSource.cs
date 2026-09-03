@@ -13,7 +13,7 @@ namespace TaskbarTactics.Presentation
         IDragHandler,
         IEndDragHandler
     {
-        private const float UiSoundVolume = 0.595f;
+        private const float UiSoundVolume = 0.476f;
         private const float UiSoundPitch = 0.9f;
 
         [SerializeField] private string heroId = string.Empty;

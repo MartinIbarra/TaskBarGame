@@ -32,6 +32,34 @@ namespace TaskbarTactics.Presentation
             SetVisible(hovering);
         }
 
+        public void SetSingleLineLayout(float width = 136f, float height = 18f)
+        {
+            if (label == null)
+            {
+                return;
+            }
+
+            RectTransform labelRect = label.rectTransform;
+            labelRect.anchoredPosition = new Vector2(14f, 3f);
+            labelRect.sizeDelta = new Vector2(width, height);
+            label.textWrappingMode = TextWrappingModes.NoWrap;
+            label.verticalAlignment = VerticalAlignmentOptions.Middle;
+
+            if (background == null)
+            {
+                EnsureBackground();
+            }
+
+            RectTransform backgroundRect = background != null
+                ? background.transform as RectTransform
+                : null;
+            if (backgroundRect != null)
+            {
+                backgroundRect.anchoredPosition = new Vector2(10f, 13f);
+                backgroundRect.sizeDelta = new Vector2(116f, 24f);
+            }
+        }
+
         public void OnPointerEnter(PointerEventData eventData)
         {
             hovering = true;

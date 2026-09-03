@@ -11,6 +11,8 @@ namespace TaskbarTactics.Presentation
     public sealed class TownIntroPresenter : MonoBehaviour
     {
         private const float GateOpenVolume = 0.85f;
+        private const string CityTwoNodeId = "city2";
+        private const string CityTwoBackgroundResource = "Events/City2/city2";
 
         [Header("Scene references")]
         [SerializeField] private CanvasGroup rootGroup;
@@ -38,6 +40,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private float targetHeroHeight = 74f;
 
         private readonly List<Image> heroViews = new List<Image>();
+        private Sprite defaultBackgroundSprite;
 
         public void Configure(
             CanvasGroup group,
@@ -49,6 +52,7 @@ namespace TaskbarTactics.Presentation
         {
             rootGroup = group;
             background = sceneBackground;
+            defaultBackgroundSprite = sceneBackground != null ? sceneBackground.sprite : null;
             gate = gateTransform;
             heroRoot = heroesParent;
             audioSource = source;
@@ -63,37 +67,68 @@ namespace TaskbarTactics.Presentation
             IReadOnlyList<HeroState> selectedHeroes,
             GameContentCatalog catalog)
         {
+            return Play(selectedHeroes, catalog, null);
+        }
+
+        public IEnumerator Play(
+            IReadOnlyList<HeroState> selectedHeroes,
+            GameContentCatalog catalog,
+            string nodeId)
+        {
             if (rootGroup == null || gate == null || heroRoot == null)
             {
                 yield break;
             }
 
+            bool isCityTwo = nodeId == CityTwoNodeId;
+            ApplyBackground(isCityTwo);
             BuildHeroViews(selectedHeroes, catalog);
             gameObject.SetActive(true);
             rootGroup.alpha = 1f;
             rootGroup.blocksRaycasts = true;
             rootGroup.interactable = false;
-            gate.anchoredPosition = closedGatePosition;
-            gate.SetAsLastSibling();
+            gate.gameObject.SetActive(!isCityTwo);
 
-            if (audioSource != null && gateOpenClip != null)
+            if (!isCityTwo)
+            {
+                gate.anchoredPosition = closedGatePosition;
+                gate.SetAsLastSibling();
+            }
+
+            if (!isCityTwo && audioSource != null && gateOpenClip != null)
             {
                 ConfigureAudioSource();
                 audioSource.PlayOneShot(gateOpenClip);
             }
 
-            float elapsed = 0f;
-            while (elapsed < gateOpenSeconds)
+            if (!isCityTwo)
             {
-                elapsed += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(elapsed / gateOpenSeconds);
-                gate.anchoredPosition = Vector2.Lerp(closedGatePosition, openGatePosition, Smooth(t));
-                yield return null;
+                float elapsed = 0f;
+                while (elapsed < gateOpenSeconds)
+                {
+                    elapsed += Time.unscaledDeltaTime;
+                    float t = Mathf.Clamp01(elapsed / gateOpenSeconds);
+                    gate.anchoredPosition = Vector2.Lerp(closedGatePosition, openGatePosition, Smooth(t));
+                    yield return null;
+                }
             }
 
             yield return RunHeroes();
             yield return FadeOut();
             HideImmediate();
+        }
+
+        private void ApplyBackground(bool isCityTwo)
+        {
+            if (background == null)
+            {
+                return;
+            }
+
+            Sprite cityTwoSprite = isCityTwo
+                ? Resources.Load<Sprite>(CityTwoBackgroundResource)
+                : null;
+            background.sprite = cityTwoSprite != null ? cityTwoSprite : defaultBackgroundSprite;
         }
 
         private void BuildHeroViews(
@@ -191,7 +226,10 @@ namespace TaskbarTactics.Presentation
             if (gate != null)
             {
                 gate.anchoredPosition = closedGatePosition;
+                gate.gameObject.SetActive(true);
             }
+
+            ApplyBackground(false);
 
             ClearHeroViews();
             gameObject.SetActive(false);

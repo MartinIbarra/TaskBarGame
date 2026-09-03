@@ -1497,19 +1497,17 @@ namespace TaskbarTactics.Editor
 
             string[] tabNames =
             {
-                "Escuadrón", "Habilidades", "Leyendas",
-                "Inventario", "Mapa"
+                "Party", "Skills", "Inventory", "Map"
             };
             string[] panelNames =
             {
-                "Escuadrón", "Habilidades", "Leyendas",
-                "Inventario", "Mapa", "Ajustes"
+                "Escuadrón", "Habilidades", "Inventario", "Mapa", "Ajustes"
             };
             List<Button> tabs = new List<Button>();
             for (int i = 0; i < tabNames.Length; i++)
             {
                 tabs.Add(CreateButton(background.transform, $"{tabNames[i]} Tab", tabNames[i],
-                    new Vector2(18, 78 + i * 62), new Vector2(188, 68), Color.white));
+                    new Vector2(33, 150 + i * 62), new Vector2(150.4f, 54.4f), Color.white));
                 ApplyUiFrame(tabs[i].GetComponent<Image>(), commandSprite);
                 InsetButtonLabel(tabs[i], new Vector2(34, 16), new Vector2(-34, -16));
             }
@@ -1518,13 +1516,13 @@ namespace TaskbarTactics.Editor
             List<TMP_Text> summaries = new List<TMP_Text>();
             for (int i = 0; i < panelNames.Length; i++)
             {
-                bool panelUsesOnlyMainBackground = i == 0 || i == 1 || i == 2 || i == 5;
+                bool panelUsesOnlyMainBackground = i == 0 || i == 1 || i == 4;
                 Image panel = CreateImage(background.transform, i == 0 ? "Squad Panel" : $"{panelNames[i]} Panel", panelUsesOnlyMainBackground ? Color.clear : Color.white);
                 if (!panelUsesOnlyMainBackground)
                 {
-                    Sprite panelSprite = i == 3
+                    Sprite panelSprite = i == 2
                         ? inventoryVerticalSprite
-                        : i == 4 && mapPanelSprite != null
+                        : i == 3 && mapPanelSprite != null
                             ? mapPanelSprite
                             : hudHorizontalSprite;
                     ApplyUiFrame(panel, panelSprite);
@@ -1534,7 +1532,7 @@ namespace TaskbarTactics.Editor
                 panel.rectTransform.anchorMax = new Vector2(1, 1);
                 panel.rectTransform.offsetMin = new Vector2(200, 24);
                 panel.rectTransform.offsetMax = new Vector2(-24, -76);
-                if (i == 3)
+                if (i == 2)
                 {
                     panel.rectTransform.anchorMin = new Vector2(0, 0);
                     panel.rectTransform.anchorMax = new Vector2(0, 1);
@@ -1548,7 +1546,7 @@ namespace TaskbarTactics.Editor
                 }
                 Vector2 summaryPosition = i == 0
                     ? new Vector2(24, 42)
-                    : i == 4
+                    : i == 3
                         ? new Vector2(58, 72)
                         : new Vector2(24, 72);
                 TMP_Text summary = CreateText(panel.transform, "Summary", string.Empty,
@@ -1560,19 +1558,18 @@ namespace TaskbarTactics.Editor
             }
             AddTorchShadowDim(panels[0].transform);
             AddTorchShadowDim(panels[1].transform);
-            CreateLegendBookRing(panels[2].transform);
+            AddTorchShadowDim(panels[2].transform);
             AddTorchShadowDim(panels[3].transform);
-            AddTorchShadowDim(panels[4].transform);
             AddCandlePair(panels[0].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
             AddCandlePair(panels[1].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
-            AddCandle(panels[3].transform, "Left Candle", candleFrames, new Vector2(0, 1), new Vector2(0, 1), new Vector2(10, 8), torchLightFrames);
-            AddCandlePair(panels[4].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
+            AddCandle(panels[2].transform, "Left Candle", candleFrames, new Vector2(0, 1), new Vector2(0, 1), new Vector2(10, 8), torchLightFrames);
+            AddCandlePair(panels[3].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
             summaries[1].gameObject.SetActive(false);
             CreateSkillTreeView(panels[1].transform, skillTreeTexture, mapFrameSprite);
-            CreateEquipmentPreviewLayout(panels[3].transform, equipLayoutSprite);
-            summaries[3].gameObject.SetActive(false);
-            CreateInventorySlotGrid(panels[3].transform, itemSlotSprite);
-            AddCenteredCandle(panels[3].transform, "Right Candle", candleFrames, new Vector2(560, -56), torchLightFrames);
+            CreateEquipmentPreviewLayout(panels[2].transform, equipLayoutSprite);
+            summaries[2].gameObject.SetActive(false);
+            CreateInventorySlotGrid(panels[2].transform, itemSlotSprite);
+            AddCenteredCandle(panels[2].transform, "Right Candle", candleFrames, new Vector2(560, -56), torchLightFrames);
             List<FormationSlotView> formationSlots = CreateFormationSlotHud(
                 panels[0].transform,
                 formationSlotSprite,
@@ -1586,22 +1583,18 @@ namespace TaskbarTactics.Editor
 
             List<Button> formationButtons = CreateFormationPresetButtons(panels[0].transform);
 
-            Button cycleActive = CreateButton(panels[1].transform, "Cycle Active Skill Button",
-                "Activa", new Vector2(286, 12), new Vector2(130, 42), Accent);
-            Button cyclePassive = CreateButton(panels[1].transform, "Cycle Passive Skill Button",
-                "Pasiva", new Vector2(426, 12), new Vector2(130, 42), Accent);
-            ApplyUiFrame(cycleActive.GetComponent<Image>(), commandSprite);
-            ApplyUiFrame(cyclePassive.GetComponent<Image>(), commandSprite);
+            Button cycleActive = null;
+            Button cyclePassive = null;
 
             List<Button> equipButtons = new List<Button>();
 
             List<Button> routeButtons = new List<Button>
             {
-                CreateButton(panels[4].transform, "Safety Route Button", "Seguridad",
+                CreateButton(panels[3].transform, "Safety Route Button", "Seguridad",
                     new Vector2(54, 200), new Vector2(188, 68), PanelLight),
-                CreateButton(panels[4].transform, "Loot Route Button", "Botín",
+                CreateButton(panels[3].transform, "Loot Route Button", "Botín",
                     new Vector2(54, 262), new Vector2(188, 68), PanelLight),
-                CreateButton(panels[4].transform, "Challenge Route Button", "Desafío",
+                CreateButton(panels[3].transform, "Challenge Route Button", "Desafío",
                     new Vector2(54, 324), new Vector2(188, 68), PanelLight)
             };
             foreach (Button routeButton in routeButtons)
@@ -1609,7 +1602,7 @@ namespace TaskbarTactics.Editor
                 ApplyUiFrame(routeButton.GetComponent<Image>(), commandSprite);
             }
 
-            Button start = CreateButton(panels[4].transform, "Start Expedition Button",
+            Button start = CreateButton(panels[3].transform, "Start Expedition Button",
                 "INICIAR EXPEDICIÓN", new Vector2(54, 378), new Vector2(150, 52), Accent);
             ApplyUiFrame(start.GetComponent<Image>(), commandSprite);
             start.GetComponent<RectTransform>().sizeDelta = new Vector2(188, 68);
@@ -1620,14 +1613,14 @@ namespace TaskbarTactics.Editor
             }
 
             MapUiController mapVisual = BuildMapVisual(
-                panels[4].transform, summaries[4], circleSprite, mapFlagFrames, mapFrameSprite, actParchmentSprite);
+                panels[3].transform, summaries[3], circleSprite, mapFlagFrames, mapFrameSprite, actParchmentSprite);
 
-            Button language = CreateButton(panels[5].transform, "Language Button",
+            Button language = CreateButton(panels[4].transform, "Language Button",
                 "Cambiar ES / EN", new Vector2(24, 300), new Vector2(220, 44), Accent);
-            Button reset = CreateButton(panels[5].transform, "Reset Expedition Button",
+            Button reset = CreateButton(panels[4].transform, "Reset Expedition Button",
                 "RESET", new Vector2(232, 300), new Vector2(188, 68),
                 new Color(0.82f, 0.12f, 0.12f));
-            Button quit = CreateButton(panels[5].transform, "Quit Button",
+            Button quit = CreateButton(panels[4].transform, "Quit Button",
                 "Salir del juego", new Vector2(260, 300), new Vector2(220, 44),
                 new Color(0.62f, 0.18f, 0.22f));
             ApplyUiFrame(language.GetComponent<Image>(), commandSprite);
@@ -1680,10 +1673,10 @@ namespace TaskbarTactics.Editor
                 formationHeroIcons,
                 summaries[0],
                 summaries[1],
+                null,
                 summaries[2],
                 summaries[3],
                 summaries[4],
-                summaries[5],
                 mapVisual,
                 cycleActive,
                 cyclePassive,
@@ -1849,8 +1842,8 @@ namespace TaskbarTactics.Editor
             RectTransform viewport = viewportObject.GetComponent<RectTransform>();
             viewport.anchorMin = new Vector2(0, 0);
             viewport.anchorMax = new Vector2(1, 1);
-            viewport.offsetMin = new Vector2(28, 42);
-            viewport.offsetMax = new Vector2(-28, -64);
+            viewport.offsetMin = new Vector2(18, 24);
+            viewport.offsetMax = new Vector2(-18, -24);
 
             Image maskImage = viewportObject.GetComponent<Image>();
             maskImage.color = new Color(0f, 0f, 0f, 0.02f);
@@ -1994,8 +1987,8 @@ namespace TaskbarTactics.Editor
             RectTransform rect = frame.rectTransform;
             rect.anchorMin = new Vector2(0, 0);
             rect.anchorMax = new Vector2(1, 1);
-            rect.offsetMin = new Vector2(28, 42);
-            rect.offsetMax = new Vector2(-28, -64);
+            rect.offsetMin = new Vector2(18, 24);
+            rect.offsetMax = new Vector2(-18, -24);
             rect.pivot = new Vector2(0.5f, 0.5f);
             frame.transform.SetAsLastSibling();
         }
@@ -2441,6 +2434,7 @@ namespace TaskbarTactics.Editor
             label.gameObject.SetActive(false);
             MapNodeHoverTooltip tooltip = hoverArea.gameObject.AddComponent<MapNodeHoverTooltip>();
             tooltip.Configure(label, labelBackground.gameObject);
+            tooltip.SetSingleLineLayout();
 
             return new MapNodeView
             {
@@ -2731,7 +2725,6 @@ namespace TaskbarTactics.Editor
                     image.name == "Management Background" ||
                     image.name == "Squad Panel" ||
                     image.name == "Habilidades Panel" ||
-                    image.name == "Leyendas Panel" ||
                     image.name == "Sinergias Panel" ||
                     image.name == "Inventario Panel" ||
                     image.name == "Ajustes Panel" ||

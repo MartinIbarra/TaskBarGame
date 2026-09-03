@@ -15,6 +15,7 @@ namespace TaskbarTactics.Core.Models
         public PartyState Party = new PartyState();
         public List<InventoryItem> Inventory = new List<InventoryItem>();
         public ExpeditionState Expedition = new ExpeditionState();
+        public bool ActTwoUnlocked;
         public AppearanceState Appearance = new AppearanceState();
         public string LanguageCode = "es";
 

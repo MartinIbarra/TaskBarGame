@@ -467,6 +467,13 @@ namespace TaskbarTactics.Presentation
                 case "ancient_ruins":
                 case "black_tower":
                     return "last_bastion";
+                case "city2":
+                case "corrupt_pass":
+                case "lo_hueso":
+                case "arbol_morto":
+                case "port":
+                case "lost_bay":
+                    return "corruptland";
                 default:
                     return nodeId;
             }

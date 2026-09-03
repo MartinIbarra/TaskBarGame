@@ -53,6 +53,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private DraggableMapView draggableMap;
 
         private string lastFocusedNodeId;
+        private GameAppController boundApp;
         private Texture originalMapTexture;
         private Texture actTwoMapTexture;
         private Button actOneButton;
@@ -137,6 +138,7 @@ namespace TaskbarTactics.Presentation
                 return;
             }
 
+            boundApp = app;
             EnsureActSelector();
             lastRoutePreferenceName = app.State.Party.RoutePreference.ToString();
             actTwoUnlocked = IsActOneFinalBossComplete(app);
@@ -218,10 +220,8 @@ namespace TaskbarTactics.Presentation
 
                 if (node.Tooltip != null)
                 {
-                    string labelText = definition != null
-                        ? $"{DisplayName(node.NodeId)}\n{definition.Type} - Dif. {definition.Difficulty}"
-                        : DisplayName(node.NodeId);
-                    node.Tooltip.SetContent(labelText, CurrentNode);
+                    node.Tooltip.SetSingleLineLayout();
+                    node.Tooltip.SetContent(DisplayName(node.NodeId), CurrentNode);
                 }
 
                 if (isCurrent && node.Marker != null)
@@ -579,8 +579,10 @@ namespace TaskbarTactics.Presentation
 
         private static bool IsActOneFinalBossComplete(GameAppController app)
         {
-            return app?.State?.Expedition?.CompletedNodeIds != null &&
-                app.State.Expedition.CompletedNodeIds.Contains("last_bastion");
+            return app?.State != null &&
+                (app.State.ActTwoUnlocked ||
+                 (app.State.Expedition?.CompletedNodeIds != null &&
+                  app.State.Expedition.CompletedNodeIds.Contains("last_bastion")));
         }
 
         private Sprite LoadBlockMapSprite()
@@ -635,6 +637,7 @@ namespace TaskbarTactics.Presentation
             }
 
             Sprite markerSprite = nodes.FirstOrDefault(node => node.Marker != null)?.Marker.sprite;
+            Sprite flagSprite = Resources.Load<Sprite>("UI/MapFlag/flag1");
             actTwoRoutesLayer = CreateActTwoLayer(parent, "Act 2 Routes");
             actTwoNodesLayer = CreateActTwoLayer(parent, "Act 2 Nodes");
             actTwoRoutes.Clear();
@@ -645,7 +648,8 @@ namespace TaskbarTactics.Presentation
 
             foreach (KeyValuePair<string, Vector2> node in positions)
             {
-                actTwoNodes.Add(CreateActTwoNode(actTwoNodesLayer, node.Key, node.Value, markerSprite));
+                actTwoNodes.Add(CreateActTwoNode(
+                    actTwoNodesLayer, node.Key, node.Value, markerSprite, flagSprite));
             }
 
             actTwoPreviewLayoutApplied = true;
@@ -815,7 +819,12 @@ namespace TaskbarTactics.Presentation
             };
         }
 
-        private static MapNodeView CreateActTwoNode(Transform parent, string nodeId, Vector2 position, Sprite markerSprite)
+        private static MapNodeView CreateActTwoNode(
+            Transform parent,
+            string nodeId,
+            Vector2 position,
+            Sprite markerSprite,
+            Sprite flagSprite)
         {
             GameObject nodeRoot = new GameObject(nodeId, typeof(RectTransform));
             nodeRoot.transform.SetParent(parent, false);
@@ -833,6 +842,20 @@ namespace TaskbarTactics.Presentation
             marker.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             marker.rectTransform.anchoredPosition = Vector2.zero;
             marker.rectTransform.sizeDelta = new Vector2(10f, 10f);
+
+            Image flag = null;
+            if (flagSprite != null)
+            {
+                flag = CreateRuntimeImage(nodeRoot.transform, "Current Flag");
+                flag.sprite = flagSprite;
+                flag.preserveAspect = true;
+                flag.raycastTarget = false;
+                flag.gameObject.SetActive(false);
+                flag.rectTransform.anchorMin = flag.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+                flag.rectTransform.pivot = new Vector2(0f, 0f);
+                flag.rectTransform.anchoredPosition = Vector2.zero;
+                flag.rectTransform.sizeDelta = new Vector2(22f, 22f);
+            }
 
             Image hoverArea = CreateRuntimeImage(nodeRoot.transform, "Hover Area");
             hoverArea.color = new Color(1f, 1f, 1f, 0f);
@@ -871,6 +894,7 @@ namespace TaskbarTactics.Presentation
             {
                 NodeId = nodeId,
                 Marker = marker,
+                CurrentFlag = flag,
                 Label = label,
                 Tooltip = tooltip
             };
@@ -962,11 +986,18 @@ namespace TaskbarTactics.Presentation
 
             foreach (MapNodeView node in actTwoNodes)
             {
+                bool isCurrent = boundApp != null && boundApp.State.Expedition.IsActive &&
+                    node.NodeId == boundApp.State.Expedition.CurrentNodeId;
                 if (node.Marker != null)
                 {
                     node.Marker.color = IsActTwoNodeOnPreferencePath(node.NodeId, lastRoutePreferenceName)
                         ? AvailableNode
                         : LockedNode;
+                }
+
+                if (node.CurrentFlag != null)
+                {
+                    node.CurrentFlag.gameObject.SetActive(isCurrent);
                 }
 
                 node.Tooltip?.SetContent(ActTwoDisplayName(node.NodeId), CurrentNode);
@@ -996,23 +1027,23 @@ namespace TaskbarTactics.Presentation
             switch (nodeId)
             {
                 case "town":
-                    return "Inicio / Town";
+                    return "City 1";
                 case "narrow_bridge":
-                    return "Puente estrecho";
+                    return "Narrow Bridge";
                 case "cave":
-                    return "Cueva";
+                    return "M. Cave";
                 case "cemetery":
-                    return "Cementerio";
+                    return "Dim Graveyard";
                 case "goblin_village":
-                    return "Aldea goblin";
+                    return "Goblin Village";
                 case "tomb_pass":
-                    return "Paso del Tomuer";
+                    return "Pass-a-Deth";
                 case "mountain_pass":
-                    return "Paso entre montanas";
+                    return "Mountain Pass";
                 case "lost_forest":
                     return "Lost Forest";
                 case "last_bastion":
-                    return "Ultimo bastion";
+                    return "Last Bastion";
                 default:
                     return nodeId;
             }
@@ -1058,13 +1089,13 @@ namespace TaskbarTactics.Presentation
                 case "corrupt_pass":
                     return "Corrupt Pass";
                 case "lo_hueso":
-                    return "Lo'Hueso'";
+                    return "BoneYard";
                 case "mt_secret":
                     return "Mt. Secret";
                 case "ancient_ruins":
                     return "Ancient Ruins";
                 case "arbol_morto":
-                    return "Arbol Morto";
+                    return "Big Dead Tree";
                 case "mountain_pass_act2":
                     return "Mountain Pass";
                 case "black_tower":

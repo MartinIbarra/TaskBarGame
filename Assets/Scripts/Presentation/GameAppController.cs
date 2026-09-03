@@ -119,10 +119,29 @@ namespace TaskbarTactics.Presentation
             Save();
         }
 
-        public void StartExpedition()
+        public void StartExpedition(int selectedAct = 1)
         {
             if (State.Expedition.IsActive ||
                 State.Party.Heroes.Count(hero => hero.IsSelected) != PartySize)
+            {
+                return;
+            }
+
+            bool startingActTwo = selectedAct == 2;
+            bool actTwoUnlocked = State.ActTwoUnlocked ||
+                State.Expedition.CompletedNodeIds.Contains("last_bastion");
+            if (startingActTwo && !actTwoUnlocked)
+            {
+                return;
+            }
+
+            if (startingActTwo)
+            {
+                State.ActTwoUnlocked = true;
+            }
+
+            string startingNodeId = startingActTwo ? "city2" : catalog.Map.Nodes.First().Id;
+            if (catalog.Map.FindNode(startingNodeId) == null)
             {
                 return;
             }
@@ -132,7 +151,7 @@ namespace TaskbarTactics.Presentation
             State.Expedition = new ExpeditionState
             {
                 IsActive = true,
-                CurrentNodeId = catalog.Map.Nodes.First().Id,
+                CurrentNodeId = startingNodeId,
                 Seed = unchecked((int)DateTime.UtcNow.Ticks),
                 CompletedNodes = 0,
                 CompletedNodeIds = new List<string>()
@@ -159,6 +178,7 @@ namespace TaskbarTactics.Presentation
                 CompletedNodes = 0,
                 CompletedNodeIds = new List<string>()
             };
+            State.ActTwoUnlocked = false;
             State.Party.IsFormationLocked = false;
             State.Inventory.Clear();
             ClearSelectedParty();
@@ -517,12 +537,12 @@ namespace TaskbarTactics.Presentation
                 }
                 else
                 {
-                    if (node.Id == "town")
+                    if (node.Id == "town" || node.Id == "city2")
                     {
                         RestoreAllHeroResources();
                         if (townIntroPresenter != null)
                         {
-                            yield return townIntroPresenter.Play(SelectedHeroes(), catalog);
+                            yield return townIntroPresenter.Play(SelectedHeroes(), catalog, node.Id);
                         }
                         else
                         {
@@ -636,6 +656,11 @@ namespace TaskbarTactics.Presentation
 
         private void CompleteExpedition()
         {
+            if (State.Expedition.CurrentNodeId == "last_bastion")
+            {
+                State.ActTwoUnlocked = true;
+            }
+
             State.Expedition.IsActive = false;
             State.Expedition.CurrentNodeId = string.Empty;
             State.Party.IsFormationLocked = false;

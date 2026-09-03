@@ -80,8 +80,12 @@ namespace TaskbarTactics.Presentation
             Button language,
             Button quit)
         {
-            tabButtons = navigation.ToList();
-            panels = panelRoots.ToList();
+            tabButtons = navigation
+                .Where(button => button != null && button.name != "Leyendas Tab")
+                .ToList();
+            panels = panelRoots
+                .Where(panel => panel != null && panel.name != "Leyendas Panel")
+                .ToList();
             closeButton = close;
             settingsShortcutButton = settingsShortcut;
             quitShortcutButton = quitShortcut;
@@ -113,11 +117,28 @@ namespace TaskbarTactics.Presentation
         public void Bind(GameAppController targetApp, WindowModeController window)
         {
             app = targetApp;
+            tabButtons = tabButtons
+                .Where(button => button != null && button.name != "Leyendas Tab")
+                .ToList();
+            panels = panels
+                .Where(panel => panel != null && panel.name != "Leyendas Panel")
+                .ToList();
+            foreach (Transform child in GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name == "Leyendas Tab" || child.name == "Leyendas Panel")
+                {
+                    child.gameObject.SetActive(false);
+                }
+            }
+            ApplyCommandLayout();
+            ApplyCommandLabels();
+            cycleActiveSkillButton?.gameObject.SetActive(false);
+            cyclePassiveSkillButton?.gameObject.SetActive(false);
             LoadCommandSprites();
             ApplyCommandButtonStates();
             app.StateChanged += Refresh;
             closeButton.onClick.AddListener(window.ShowStrip);
-            settingsShortcutButton?.onClick.AddListener(() => ShowPanel(5));
+            settingsShortcutButton?.onClick.AddListener(() => ShowPanel(4));
             quitShortcutButton?.onClick.AddListener(app.Quit);
             quitButton.onClick.AddListener(app.Quit);
             startExpeditionButton.onClick.AddListener(TryStartExpeditionFromSelectedAct);
@@ -127,8 +148,8 @@ namespace TaskbarTactics.Presentation
                 mapUi.ActSelectionChanged += ApplyStartButtonState;
             }
 
-            cycleActiveSkillButton.onClick.AddListener(() => app.CycleSkill(activeHeroId, false));
-            cyclePassiveSkillButton.onClick.AddListener(() => app.CycleSkill(activeHeroId, true));
+            cycleActiveSkillButton?.onClick.AddListener(() => app.CycleSkill(activeHeroId, false));
+            cyclePassiveSkillButton?.onClick.AddListener(() => app.CycleSkill(activeHeroId, true));
             languageButton.onClick.AddListener(app.ToggleLanguage);
 
             for (int i = 0; i < tabButtons.Count; i++)
@@ -242,7 +263,7 @@ namespace TaskbarTactics.Presentation
 
         public void ShowMapAct(int actNumber)
         {
-            ShowPanel(4);
+            ShowPanel(3);
             mapUi?.SelectAct(actNumber);
         }
 
@@ -285,7 +306,7 @@ namespace TaskbarTactics.Presentation
                 return;
             }
 
-            app.StartExpedition();
+            app.StartExpedition(mapUi != null && mapUi.IsActTwoSelected ? 2 : 1);
         }
 
         private void SelectFormationPreset(int index)
@@ -309,8 +330,7 @@ namespace TaskbarTactics.Presentation
 
             skillSummary.text = string.Empty;
 
-            synergySummary.text = string.Empty;
-            EnsureLegendBookRing();
+            synergySummary?.SetText(string.Empty);
 
             inventorySummary.text = string.Empty;
             RefreshInventoryGrid();
@@ -367,10 +387,10 @@ namespace TaskbarTactics.Presentation
 
         private void RefreshInventoryGrid()
         {
-            if (inventoryGrid == null && panels.Count > 3 && panels[3] != null)
+            if (inventoryGrid == null && panels.Count > 2 && panels[2] != null)
             {
-                inventoryGrid = panels[3].GetComponent<InventorySlotGridView>() ??
-                    panels[3].AddComponent<InventorySlotGridView>();
+                inventoryGrid = panels[2].GetComponent<InventorySlotGridView>() ??
+                    panels[2].AddComponent<InventorySlotGridView>();
             }
 
             inventoryGrid?.SetOwner(this);
@@ -379,9 +399,9 @@ namespace TaskbarTactics.Presentation
 
         private void RefreshEquipmentPreview()
         {
-            if (equipmentPreview == null && panels.Count > 3 && panels[3] != null)
+            if (equipmentPreview == null && panels.Count > 2 && panels[2] != null)
             {
-                equipmentPreview = panels[3].GetComponentInChildren<EquipmentPreviewLayoutView>(true);
+                equipmentPreview = panels[2].GetComponentInChildren<EquipmentPreviewLayoutView>(true);
             }
 
             equipmentPreview?.SetOwner(this);
@@ -412,9 +432,7 @@ namespace TaskbarTactics.Presentation
                 if (label != null)
                 {
                     label.text = ShortHeroLabel(definition.Id);
-                    label.color = selected
-                        ? new Color(1f, 0.96f, 0.82f, 1f)
-                        : new Color(0.82f, 0.82f, 0.82f, 0.92f);
+                    label.color = HeroTabTextColor(definition.Id, selected);
                     label.fontStyle = selected ? FontStyles.Bold : FontStyles.Normal;
                 }
             }
@@ -422,7 +440,7 @@ namespace TaskbarTactics.Presentation
 
         private void ApplyInventorySubmenuVisibility()
         {
-            bool showInventoryOnlyViews = activePanelIndex == 3;
+            bool showInventoryOnlyViews = activePanelIndex == 2;
             if (equipmentPreview != null)
             {
                 equipmentPreview.gameObject.SetActive(showInventoryOnlyViews);
@@ -433,6 +451,44 @@ namespace TaskbarTactics.Presentation
                 if (tab != null)
                 {
                     tab.gameObject.SetActive(showInventoryOnlyViews);
+                }
+            }
+        }
+
+        private void ApplyCommandLayout()
+        {
+            const float commandStartY = 150f;
+            const float commandSpacing = 62f;
+            const float commandWidth = 150.4f;
+            const float commandHeight = 54.4f;
+
+            for (int i = 0; i < tabButtons.Count; i++)
+            {
+                Button button = tabButtons[i];
+                RectTransform rect = button != null ? button.transform as RectTransform : null;
+                if (rect != null)
+                {
+                    rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+                    rect.pivot = new Vector2(0f, 1f);
+                    rect.anchoredPosition = new Vector2(33f, -(commandStartY + i * commandSpacing));
+                    rect.sizeDelta = new Vector2(commandWidth, commandHeight);
+                }
+            }
+        }
+
+        private void ApplyCommandLabels()
+        {
+            string[] labels = { "Party", "Skills", "Inventory", "Map" };
+            for (int i = 0; i < tabButtons.Count && i < labels.Length; i++)
+            {
+                TMP_Text label = tabButtons[i]?.GetComponentInChildren<TMP_Text>(true);
+                if (label != null)
+                {
+                    label.text = labels[i];
+                    if (i == 2)
+                    {
+                        label.fontSize = 15f;
+                    }
                 }
             }
         }
@@ -637,6 +693,13 @@ namespace TaskbarTactics.Presentation
             }
 
             EnsureSkillTreeFrame(panels[1].transform);
+            RectTransform viewportRect = panels[1].transform
+                .Find("Skill Tree Viewport") as RectTransform;
+            if (viewportRect != null)
+            {
+                viewportRect.offsetMin = new Vector2(18f, 24f);
+                viewportRect.offsetMax = new Vector2(-18f, -24f);
+            }
             DraggableMapView skillTreeView = panels[1].transform
                 .Find("Skill Tree Viewport")
                 ?.GetComponent<DraggableMapView>();
@@ -677,21 +740,21 @@ namespace TaskbarTactics.Presentation
             RectTransform rect = frame.rectTransform;
             rect.anchorMin = new Vector2(0f, 0f);
             rect.anchorMax = new Vector2(1f, 1f);
-            rect.offsetMin = new Vector2(28f, 42f);
-            rect.offsetMax = new Vector2(-28f, -64f);
+            rect.offsetMin = new Vector2(18f, 24f);
+            rect.offsetMax = new Vector2(-18f, -24f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             frame.transform.SetAsLastSibling();
         }
 
         private void ApplyInventoryTorchPosition()
         {
-            if (panels.Count <= 3 || panels[3] == null)
+            if (panels.Count <= 2 || panels[2] == null)
             {
                 return;
             }
 
-            SetChildRectPosition(panels[3].transform, "Right Candle", new Vector2(560f, -56f));
-            SetChildRectPosition(panels[3].transform, "Right Candle Light", new Vector2(560f, -32f));
+            SetChildRectPosition(panels[2].transform, "Right Candle", new Vector2(560f, -56f));
+            SetChildRectPosition(panels[2].transform, "Right Candle Light", new Vector2(560f, -32f));
         }
 
         private static void SetChildRectPosition(Transform parent, string childName, Vector2 position)
@@ -705,7 +768,7 @@ namespace TaskbarTactics.Presentation
 
         private void EnsureEquipmentHeroTabs()
         {
-            if (equipmentHeroTabs.Count > 0 || panels.Count <= 3 || panels[3] == null || app?.Catalog == null)
+            if (equipmentHeroTabs.Count > 0 || panels.Count <= 2 || panels[2] == null || app?.Catalog == null)
             {
                 return;
             }
@@ -719,7 +782,7 @@ namespace TaskbarTactics.Presentation
                     typeof(CanvasRenderer),
                     typeof(Image),
                     typeof(Button));
-                tabObject.transform.SetParent(panels[3].transform, false);
+                tabObject.transform.SetParent(panels[2].transform, false);
 
                 Image image = tabObject.GetComponent<Image>();
                 image.sprite = commandNormalSprite;
@@ -758,7 +821,7 @@ namespace TaskbarTactics.Presentation
 
         private void ApplyEquipmentHeroTabLayout()
         {
-            const float startX = 412f;
+            const float startX = 417f;
             const float y = -432f;
             const float width = 48.4f;
             const float height = 30.8f;
@@ -812,6 +875,24 @@ namespace TaskbarTactics.Presentation
                 case "magic_warrior": return "SPB";
                 default: return heroId;
             }
+        }
+
+        private static Color HeroTabTextColor(string heroId, bool selected)
+        {
+            Color color;
+            switch (heroId)
+            {
+                case "warrior": color = new Color(0.35f, 0.62f, 0.8f, 1f); break;
+                case "cleric": color = new Color(0.82f, 0.68f, 0.28f, 1f); break;
+                case "mage": color = new Color(0.78f, 0.32f, 0.34f, 1f); break;
+                case "archer": color = new Color(0.38f, 0.7f, 0.42f, 1f); break;
+                case "rogue": color = new Color(0.48f, 0.49f, 0.52f, 1f); break;
+                case "magic_warrior": color = new Color(0.62f, 0.4f, 0.72f, 1f); break;
+                default: color = new Color(0.78f, 0.78f, 0.78f, 1f); break;
+            }
+
+            color.a = selected ? 1f : 0.9f;
+            return color;
         }
 
         private string Marker(string heroId)

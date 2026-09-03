@@ -111,15 +111,16 @@ namespace TaskbarTactics.Presentation
         {
             switch (nodeId)
             {
-                case "town": return "Inicio / Town";
-                case "narrow_bridge": return "Puente estrecho";
-                case "cave": return "Cueva";
-                case "cemetery": return "Cementerio";
-                case "goblin_village": return "Aldea goblin";
-                case "mountain_pass": return "Paso entre montañas";
-                case "barrow_road": return "Paso del Tomuer";
+                case "town": return "City 1";
+                case "narrow_bridge": return "Narrow Bridge";
+                case "cave": return "M. Cave";
+                case "cemetery": return "Dim Graveyard";
+                case "goblin_village": return "Goblin Village";
+                case "mountain_pass": return "Mountain Pass";
+                case "barrow_road":
+                case "tomb_pass": return "Pass-a-Deth";
                 case "lost_forest": return "Lost Forest";
-                case "last_bastion": return "Último Bastión";
+                case "last_bastion": return "Last Bastion";
                 default: return nodeId;
             }
         }

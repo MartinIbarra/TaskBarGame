@@ -213,16 +213,16 @@ namespace TaskbarTactics.Presentation
             {
                 case "rogue":
                     heroPreview.preserveAspect = false;
-                    heroRect.sizeDelta = new Vector2(124f, 196f);
+                    heroRect.sizeDelta = new Vector2(130.2f, 196f);
                     break;
                 case "spellblade":
                     heroPreview.preserveAspect = false;
-                    heroRect.sizeDelta = new Vector2(106f, 176f);
+                    heroRect.sizeDelta = new Vector2(116.6f, 193.6f);
                     heroRect.anchoredPosition = new Vector2(0f, -18f);
                     break;
                 case "cleric":
                     heroPreview.preserveAspect = false;
-                    heroRect.sizeDelta = new Vector2(118f, 185f);
+                    heroRect.sizeDelta = new Vector2(118f, 194.25f);
                     break;
                 case "guardian":
                     heroPreview.preserveAspect = false;
