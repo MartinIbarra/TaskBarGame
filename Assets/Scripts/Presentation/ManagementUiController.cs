@@ -130,6 +130,7 @@ namespace TaskbarTactics.Presentation
                     child.gameObject.SetActive(false);
                 }
             }
+            ApplyInventoryPanelLayout();
             ApplyCommandLayout();
             ApplyCommandLabels();
             cycleActiveSkillButton?.gameObject.SetActive(false);
@@ -324,6 +325,8 @@ namespace TaskbarTactics.Presentation
                 return;
             }
 
+            ApplyCloseButtonState();
+
             List<HeroState> selected = app.State.Party.Heroes.Where(hero => hero.IsSelected).ToList();
             partySummary.text = string.Empty;
             RefreshFormationSlots(selected);
@@ -340,7 +343,7 @@ namespace TaskbarTactics.Presentation
             ApplyInventoryTorchPosition();
 
             mapSummary.text =
-                $"Nodo: {app.State.Expedition.CurrentNodeId}\n" +
+                $"{app.State.Expedition.CurrentNodeId}\n" +
                 $"Completados: {app.State.Expedition.CompletedNodes}/{app.Catalog.Map.Nodes.Count}\n\n" +
                 RouteDescription(app.State.Party.RoutePreference);
             mapUi?.Refresh(app);
@@ -353,6 +356,11 @@ namespace TaskbarTactics.Presentation
                     ? commandSelectedSprite
                     : commandNormalSprite;
                 routeButtons[i].image.color = selectedRoute ? Color.white : new Color(1f, 1f, 1f, 0.88f);
+                TMP_Text label = routeButtons[i].GetComponentInChildren<TMP_Text>(true);
+                if (label != null)
+                {
+                    label.text = i == 0 ? "Safe" : i == 1 ? "Loot" : "Challenge";
+                }
             }
 
             settingsSummary.text =
@@ -405,11 +413,26 @@ namespace TaskbarTactics.Presentation
             }
 
             equipmentPreview?.SetOwner(this);
+            ApplyEquipmentPreviewPosition();
             equipmentPreview?.RefreshHero(activeHeroId);
             equipmentPreview?.RefreshEquippedItems(
                 app.Catalog,
                 app.State.Inventory,
                 app.State.Party.GetHero(activeHeroId));
+        }
+
+        private void ApplyEquipmentPreviewPosition()
+        {
+            if (equipmentPreview == null)
+            {
+                return;
+            }
+
+            RectTransform rect = equipmentPreview.transform as RectTransform;
+            if (rect != null)
+            {
+                rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -230f);
+            }
         }
 
         private void RefreshEquipmentHeroTabs()
@@ -491,6 +514,63 @@ namespace TaskbarTactics.Presentation
                     }
                 }
             }
+        }
+
+        private void ApplyInventoryPanelLayout()
+        {
+            if (panels.Count <= 2 || panels[2] == null)
+            {
+                return;
+            }
+
+            Image panelImage = panels[2].GetComponent<Image>();
+            Sprite equipLayout = Resources.Load<Sprite>("UI/EquipLayout");
+            RectTransform panelRect = panels[2].transform as RectTransform;
+            if (panelImage == null || panelRect == null || equipLayout == null)
+            {
+                return;
+            }
+
+            panelImage.sprite = equipLayout;
+            panelImage.type = Image.Type.Sliced;
+            panelImage.preserveAspect = false;
+            if (panelRect.sizeDelta.y > -150f)
+            {
+                panelRect.sizeDelta += Vector2.up * (-panelRect.rect.height * 0.15f);
+            }
+
+            ApplyInventoryBackgroundScale(panelImage, panelRect);
+        }
+
+        private static void ApplyInventoryBackgroundScale(Image panelImage, RectTransform panelRect)
+        {
+            Transform existing = panelRect.Find("Inventory Layout Visual");
+            Image layout = existing != null
+                ? existing.GetComponent<Image>()
+                : null;
+            if (layout == null)
+            {
+                GameObject layoutObject = new GameObject(
+                    "Inventory Layout Visual",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image));
+                layoutObject.transform.SetParent(panelRect, false);
+                layout = layoutObject.GetComponent<Image>();
+            }
+
+            layout.sprite = panelImage.sprite;
+            layout.type = Image.Type.Sliced;
+            layout.preserveAspect = false;
+            layout.color = panelImage.color;
+            layout.raycastTarget = false;
+            RectTransform layoutRect = layout.rectTransform;
+            layoutRect.anchorMin = layoutRect.anchorMax = new Vector2(0.5f, 0.5f);
+            layoutRect.pivot = new Vector2(0.5f, 0.5f);
+            layoutRect.anchoredPosition = new Vector2(0f, -15f);
+            layoutRect.sizeDelta = panelRect.rect.size * 0.9f;
+            layout.transform.SetAsFirstSibling();
+            panelImage.enabled = false;
         }
 
         private void EnsureLegendBookRing()
@@ -822,7 +902,7 @@ namespace TaskbarTactics.Presentation
         private void ApplyEquipmentHeroTabLayout()
         {
             const float startX = 417f;
-            const float y = -432f;
+            const float y = -404f;
             const float width = 48.4f;
             const float height = 30.8f;
             const float gap = 52.8f;
@@ -1028,10 +1108,28 @@ namespace TaskbarTactics.Presentation
             TMP_Text label = startExpeditionButton.GetComponentInChildren<TMP_Text>();
             if (label != null)
             {
+                label.text = "START CAMPAIGN";
                 label.color = selectedActLocked
                     ? new Color(0.72f, 0.72f, 0.72f, 0.9f)
                     : new Color(1f, 0.92f, 0.08f, 1f);
             }
+        }
+
+        private void ApplyCloseButtonState()
+        {
+            if (closeButton == null || closeButton.image == null || app?.State == null)
+            {
+                return;
+            }
+
+            bool expeditionActive = app.State.Expedition != null && app.State.Expedition.IsActive;
+            ColorBlock colors = closeButton.colors;
+            colors.disabledColor = new Color(0.82f, 0.12f, 0.12f, 1f);
+            closeButton.colors = colors;
+            closeButton.interactable = expeditionActive;
+            closeButton.image.color = expeditionActive
+                ? Color.white
+                : new Color(0.82f, 0.12f, 0.12f, 1f);
         }
 
         private void BringResetButtonForward()

@@ -91,6 +91,17 @@ namespace TaskbarTactics.Presentation
             FocusOn(target);
         }
 
+        public void FocusOnAtZoom(RectTransform target, float targetZoom)
+        {
+            zoom = Mathf.Clamp(targetZoom, minZoom, maxZoom);
+            if (content != null)
+            {
+                content.localScale = new Vector3(zoom, zoom, 1f);
+            }
+
+            FocusOn(target);
+        }
+
         public void ResetView()
         {
             zoom = Mathf.Clamp(initialZoom, minZoom, maxZoom);

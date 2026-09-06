@@ -16,7 +16,7 @@ namespace TaskbarTactics.Presentation
 
         [Header("Timing")]
         [SerializeField, Min(0.05f)] private float enterSeconds = 0.45f;
-        [SerializeField, Min(0.05f)] private float holdSeconds = 0.75f;
+        [SerializeField, Min(0.05f)] private float holdSeconds = 0.9167f;
         [SerializeField, Min(0.05f)] private float exitSeconds = 0.45f;
 
         [Header("Layout")]
@@ -59,7 +59,7 @@ namespace TaskbarTactics.Presentation
 
             if (subtitleLabel != null)
             {
-                subtitleLabel.text = $"Acto I · Nivel {nextNode.Difficulty}";
+                subtitleLabel.text = $"{(IsActTwoNode(nextNode.Id) ? "Acto II" : "Acto I")} · Nivel {nextNode.Difficulty}";
             }
 
             yield return Slide(hiddenLeftX, centerX, enterSeconds);
@@ -121,7 +121,37 @@ namespace TaskbarTactics.Presentation
                 case "tomb_pass": return "Pass-a-Deth";
                 case "lost_forest": return "Lost Forest";
                 case "last_bastion": return "Last Bastion";
+                case "city2": return "City2";
+                case "corrupt_pass": return "Corrupt Pass";
+                case "lo_hueso": return "BoneYard";
+                case "mt_secret": return "Mt. Secret";
+                case "ancient_ruins": return "Ancient Ruins";
+                case "arbol_morto": return "Big Dead Tree";
+                case "mountain_pass_act2": return "Mountain Pass";
+                case "black_tower": return "Black Tower";
+                case "port": return "Port...?";
+                case "lost_bay": return "Lost Bay";
                 default: return nodeId;
+            }
+        }
+
+        private static bool IsActTwoNode(string nodeId)
+        {
+            switch (nodeId)
+            {
+                case "city2":
+                case "corrupt_pass":
+                case "lo_hueso":
+                case "mt_secret":
+                case "ancient_ruins":
+                case "arbol_morto":
+                case "mountain_pass_act2":
+                case "black_tower":
+                case "port":
+                case "lost_bay":
+                    return true;
+                default:
+                    return false;
             }
         }
     }

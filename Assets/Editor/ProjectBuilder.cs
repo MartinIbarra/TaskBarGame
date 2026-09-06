@@ -487,7 +487,7 @@ namespace TaskbarTactics.Editor
                 case "cemetery":
                     return new[] { "skeleton", "wraith", "cultist", "soul_fury" };
                 case "goblin_village":
-                    return new[] { "goblin", "goblin_archer", "shaman" };
+                    return new[] { "goblin", "goblin_archer", "goblin_mage" };
                 case "mountain_pass":
                     return new[] { "wolf", "wraith", "wyvern" };
                 case "tomb_pass":
@@ -497,7 +497,7 @@ namespace TaskbarTactics.Editor
                 case "last_bastion":
                     return new[] { "barrow_king" };
                 case "corrupt_pass":
-                    return new[] { "wolf", "wolf", "goblin_archer" };
+                    return new[] { "wolf", "wolf", "shaman" };
                 case "mt_secret":
                     return new[] { "wyvern", "wyvern", "ogre" };
                 case "lo_hueso":
@@ -507,7 +507,7 @@ namespace TaskbarTactics.Editor
                 case "mountain_pass_act2":
                     return new[] { "wyvern", "ogre", "bog_slime" };
                 case "black_tower":
-                    return new[] { "shaman", "shaman", "wraith", "skeleton" };
+                    return new[] { "goblin_mage", "shaman", "wraith", "skeleton" };
                 case "port":
                     return new[] { "skeleton", "skeleton", "soul_fury", "soul_fury" };
                 case "lost_bay":
@@ -1064,7 +1064,6 @@ namespace TaskbarTactics.Editor
             Sprite actParchmentSprite = LoadUiSprite("Assets/Resources/UI/ActParchment.png", Vector4.zero);
             Sprite titleWideSprite = LoadUiSprite("Assets/Resources/UI/TitleWide.png", new Vector4(32, 32, 32, 32));
             Sprite commandSprite = LoadUiSprite("Assets/Resources/UI/Command.png", new Vector4(42, 42, 42, 42));
-            Sprite inventoryVerticalSprite = LoadUiSprite("Assets/Resources/UI/Vertical.png", new Vector4(34, 34, 34, 34));
             Sprite equipLayoutSprite = LoadUiSprite("Assets/Resources/UI/EquipLayout.png", new Vector4(16, 16, 16, 16));
             Sprite itemSlotSprite = LoadSoftUiSprite("Assets/Resources/UI/itemSlot.png");
             Texture2D skillTreeTexture = LoadTexture("Assets/Resources/UI/SkillTree/SkillTree.png");
@@ -1088,7 +1087,6 @@ namespace TaskbarTactics.Editor
                 actParchmentSprite,
                 titleWideSprite,
                 commandSprite,
-                inventoryVerticalSprite,
                 equipLayoutSprite,
                 itemSlotSprite,
                 skillTreeTexture,
@@ -1232,7 +1230,7 @@ namespace TaskbarTactics.Editor
         private static StripHudController BuildStripUi(Transform root)
         {
             StripHudController controller = root.gameObject.AddComponent<StripHudController>();
-            Sprite closeButtonSprite = LoadUiSprite("Assets/Resources/UI/CloseButton.png", Vector4.zero);
+            Sprite closeButtonSprite = LoadUiSprite("Assets/Resources/UI/MenuButton.png", Vector4.zero);
             Image bar = CreateImage(root, "Status Bar", Panel);
             RectTransform barRect = bar.rectTransform;
             barRect.anchorMin = new Vector2(0, 0);
@@ -1240,6 +1238,7 @@ namespace TaskbarTactics.Editor
             barRect.pivot = new Vector2(0.5f, 0);
             barRect.anchoredPosition = new Vector2(0, 48);
             barRect.sizeDelta = new Vector2(0, 44);
+            bar.gameObject.SetActive(false);
             TMP_Text status = CreateText(bar.transform, "Status Label", "Escuadrón en el campamento",
                 16, TextAlignmentOptions.Left, new Vector2(106, 7), new Vector2(520, 28));
             TMP_Text node = CreateText(bar.transform, "Node Label", "Campamento",
@@ -1454,7 +1453,6 @@ namespace TaskbarTactics.Editor
             Sprite actParchmentSprite,
             Sprite titleWideSprite,
             Sprite commandSprite,
-            Sprite inventoryVerticalSprite,
             Sprite equipLayoutSprite,
             Sprite itemSlotSprite,
             Texture2D skillTreeTexture,
@@ -1521,7 +1519,7 @@ namespace TaskbarTactics.Editor
                 if (!panelUsesOnlyMainBackground)
                 {
                     Sprite panelSprite = i == 2
-                        ? inventoryVerticalSprite
+                        ? equipLayoutSprite
                         : i == 3 && mapPanelSprite != null
                             ? mapPanelSprite
                             : hudHorizontalSprite;
@@ -1536,8 +1534,8 @@ namespace TaskbarTactics.Editor
                 {
                     panel.rectTransform.anchorMin = new Vector2(0, 0);
                     panel.rectTransform.anchorMax = new Vector2(0, 1);
-                    panel.rectTransform.offsetMin = new Vector2(220, 24);
-                    panel.rectTransform.offsetMax = new Vector2(610, -76);
+                    panel.rectTransform.offsetMin = new Vector2(220, 64.5f);
+                    panel.rectTransform.offsetMax = new Vector2(610, -116.5f);
                 }
                 if (i != 0 && i != 1 && i != 2 && i != 3 && i != 4)
                 {
@@ -1590,11 +1588,11 @@ namespace TaskbarTactics.Editor
 
             List<Button> routeButtons = new List<Button>
             {
-                CreateButton(panels[3].transform, "Safety Route Button", "Seguridad",
+                CreateButton(panels[3].transform, "Safety Route Button", "Safe",
                     new Vector2(54, 200), new Vector2(188, 68), PanelLight),
-                CreateButton(panels[3].transform, "Loot Route Button", "Botín",
+                CreateButton(panels[3].transform, "Loot Route Button", "Loot",
                     new Vector2(54, 262), new Vector2(188, 68), PanelLight),
-                CreateButton(panels[3].transform, "Challenge Route Button", "Desafío",
+                CreateButton(panels[3].transform, "Challenge Route Button", "Challenge",
                     new Vector2(54, 324), new Vector2(188, 68), PanelLight)
             };
             foreach (Button routeButton in routeButtons)
@@ -1603,7 +1601,7 @@ namespace TaskbarTactics.Editor
             }
 
             Button start = CreateButton(panels[3].transform, "Start Expedition Button",
-                "INICIAR EXPEDICIÓN", new Vector2(54, 378), new Vector2(150, 52), Accent);
+                "START CAMPAIGN", new Vector2(54, 378), new Vector2(150, 52), Accent);
             ApplyUiFrame(start.GetComponent<Image>(), commandSprite);
             start.GetComponent<RectTransform>().sizeDelta = new Vector2(188, 68);
             TMP_Text startLabel = start.GetComponentInChildren<TMP_Text>();
@@ -1792,7 +1790,7 @@ namespace TaskbarTactics.Editor
             const int rows = 5;
             const float slotSize = 58f;
             const float gap = 66f;
-            Vector2 start = new Vector2(86f, -113f);
+            Vector2 start = new Vector2(90f, -90f);
             List<Image> slots = new List<Image>();
 
             for (int row = 0; row < rows; row++)
@@ -1830,7 +1828,7 @@ namespace TaskbarTactics.Editor
             layout.raycastTarget = false;
             layout.rectTransform.anchorMin = layout.rectTransform.anchorMax = new Vector2(0, 1);
             layout.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            layout.rectTransform.anchoredPosition = new Vector2(560f, -245f);
+            layout.rectTransform.anchoredPosition = new Vector2(560f, -230f);
             layout.rectTransform.sizeDelta = new Vector2(297f, 330f);
             layout.gameObject.AddComponent<EquipmentPreviewLayoutView>();
         }
@@ -2425,7 +2423,7 @@ namespace TaskbarTactics.Editor
             labelBackground.rectTransform.anchorMin = labelBackground.rectTransform.anchorMax = new Vector2(0, 0.5f);
             labelBackground.rectTransform.pivot = new Vector2(0f, 0.5f);
             labelBackground.rectTransform.anchoredPosition = new Vector2(10, -2);
-            labelBackground.rectTransform.sizeDelta = new Vector2(104, 42);
+            labelBackground.rectTransform.sizeDelta = new Vector2(93, 42);
             labelBackground.gameObject.SetActive(false);
 
             TMP_Text label = CreateText(nodeRoot.transform, "Label", nodeId, 10,

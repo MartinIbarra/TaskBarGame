@@ -42,6 +42,7 @@ namespace TaskbarTactics.Presentation
         private readonly OfflineProgressService offlineProgress =
             new OfflineProgressService(TimeSpan.FromHours(8));
         private readonly LocalizationCatalog localization = LocalizationCatalog.CreateBuiltIn();
+        private const int CompletionReturnToCampFrames = 120;
 
         private JsonSaveStore saveStore;
         private Coroutine expeditionRoutine;
@@ -579,8 +580,26 @@ namespace TaskbarTactics.Presentation
                 }
 
                 RewardNode(node, rewardLoot);
+                bool reachedExpeditionEnd = node.NextNodeIds.Count == 0;
                 Advance(node);
                 SaveAndRefresh();
+                if (reachedExpeditionEnd)
+                {
+                    if (node.Id == "last_bastion" && defeatOverlayPresenter != null)
+                    {
+                        yield return defeatOverlayPresenter.PlayActOneCompletion(
+                            CompletionReturnToCampFrames);
+                    }
+                    else
+                    {
+                        yield return WaitForFrames(CompletionReturnToCampFrames);
+                    }
+                    SetStatus("Escuadrón en el campamento");
+                    SaveAndRefresh();
+                    FocusCompletionMapIfNeeded();
+                    yield break;
+                }
+
                 MapNodeDefinition nextNode = catalog.Map.FindNode(State.Expedition.CurrentNodeId);
                 if (State.Expedition.IsActive && nextNode != null && nodeTransitionPresenter != null)
                 {
@@ -668,7 +687,14 @@ namespace TaskbarTactics.Presentation
             SetAttention("strip.complete");
             SetStatus(Localize("strip.complete"));
             pendingCompletionMapFocus = true;
-            FocusCompletionMapIfNeeded();
+        }
+
+        private static IEnumerator WaitForFrames(int frameCount)
+        {
+            for (int frame = 0; frame < frameCount; frame++)
+            {
+                yield return null;
+            }
         }
 
         private void FocusCompletionMapIfNeeded()

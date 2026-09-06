@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.EnemyDefinition
   id: goblin
   displayNameEs: Goblin
-  maxHealth: 70
+  maxHealth: 98
   power: 12
   defense: 1
   range: 2

@@ -81,6 +81,7 @@ namespace TaskbarTactics.Presentation
         private static readonly Color PlannedRoute = new Color(1f, 1f, 1f, 0.82f);
         private static readonly Color ActBadgeText = new Color(0.2f, 0.1f, 0.03f, 1f);
         private const float ActTwoMarkerOffsetX = -75f;
+        private const float ActTwoDefaultZoom = 1.5f;
 
         public event Action ActSelectionChanged;
 
@@ -144,6 +145,7 @@ namespace TaskbarTactics.Presentation
             actTwoUnlocked = IsActOneFinalBossComplete(app);
             if (selectedAct == 2)
             {
+                HideActOneCurrentFlags();
                 ApplyActPreview();
                 return;
             }
@@ -440,6 +442,10 @@ namespace TaskbarTactics.Presentation
             bool showActOneGameplay = selectedAct == 1;
             bool actChanged = lastAppliedAct != selectedAct;
             lastAppliedAct = selectedAct;
+            if (!showActOneGameplay)
+            {
+                HideActOneCurrentFlags();
+            }
             if (mapBackground != null)
             {
                 if (showActOneGameplay)
@@ -637,7 +643,7 @@ namespace TaskbarTactics.Presentation
             }
 
             Sprite markerSprite = nodes.FirstOrDefault(node => node.Marker != null)?.Marker.sprite;
-            Sprite flagSprite = Resources.Load<Sprite>("UI/MapFlag/flag1");
+            Sprite[] flagFrames = LoadMapFlagFrames();
             actTwoRoutesLayer = CreateActTwoLayer(parent, "Act 2 Routes");
             actTwoNodesLayer = CreateActTwoLayer(parent, "Act 2 Nodes");
             actTwoRoutes.Clear();
@@ -649,7 +655,7 @@ namespace TaskbarTactics.Presentation
             foreach (KeyValuePair<string, Vector2> node in positions)
             {
                 actTwoNodes.Add(CreateActTwoNode(
-                    actTwoNodesLayer, node.Key, node.Value, markerSprite, flagSprite));
+                    actTwoNodesLayer, node.Key, node.Value, markerSprite, flagFrames));
             }
 
             actTwoPreviewLayoutApplied = true;
@@ -824,7 +830,7 @@ namespace TaskbarTactics.Presentation
             string nodeId,
             Vector2 position,
             Sprite markerSprite,
-            Sprite flagSprite)
+            Sprite[] flagFrames)
         {
             GameObject nodeRoot = new GameObject(nodeId, typeof(RectTransform));
             nodeRoot.transform.SetParent(parent, false);
@@ -844,10 +850,10 @@ namespace TaskbarTactics.Presentation
             marker.rectTransform.sizeDelta = new Vector2(10f, 10f);
 
             Image flag = null;
-            if (flagSprite != null)
+            if (flagFrames != null && flagFrames.Length > 0)
             {
                 flag = CreateRuntimeImage(nodeRoot.transform, "Current Flag");
-                flag.sprite = flagSprite;
+                flag.sprite = flagFrames[0];
                 flag.preserveAspect = true;
                 flag.raycastTarget = false;
                 flag.gameObject.SetActive(false);
@@ -855,6 +861,8 @@ namespace TaskbarTactics.Presentation
                 flag.rectTransform.pivot = new Vector2(0f, 0f);
                 flag.rectTransform.anchoredPosition = Vector2.zero;
                 flag.rectTransform.sizeDelta = new Vector2(22f, 22f);
+                CandleFlicker flicker = flag.gameObject.AddComponent<CandleFlicker>();
+                flicker.Configure(flag, flagFrames, 5f);
             }
 
             Image hoverArea = CreateRuntimeImage(nodeRoot.transform, "Hover Area");
@@ -870,7 +878,7 @@ namespace TaskbarTactics.Presentation
             labelBackground.rectTransform.anchorMin = labelBackground.rectTransform.anchorMax = new Vector2(0f, 0.5f);
             labelBackground.rectTransform.pivot = new Vector2(0f, 0.5f);
             labelBackground.rectTransform.anchoredPosition = new Vector2(10f, -2f);
-            labelBackground.rectTransform.sizeDelta = new Vector2(116f, 42f);
+            labelBackground.rectTransform.sizeDelta = new Vector2(93f, 42f);
             labelBackground.gameObject.SetActive(false);
 
             GameObject labelObject = new GameObject("Label", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
@@ -964,6 +972,15 @@ namespace TaskbarTactics.Presentation
 
         private void RefreshActTwoPreview()
         {
+            string focusNodeId = "city2";
+            bool activeActTwoExpedition = boundApp != null && boundApp.State.Expedition.IsActive &&
+                actTwoNodes.Any(node => node.NodeId == boundApp.State.Expedition.CurrentNodeId);
+            if (activeActTwoExpedition)
+            {
+                focusNodeId = boundApp.State.Expedition.CurrentNodeId;
+            }
+
+            RectTransform focusNodeTransform = null;
             foreach (MapRouteView route in actTwoRoutes)
             {
                 bool showRoutes = !string.Equals(
@@ -986,8 +1003,11 @@ namespace TaskbarTactics.Presentation
 
             foreach (MapNodeView node in actTwoNodes)
             {
-                bool isCurrent = boundApp != null && boundApp.State.Expedition.IsActive &&
-                    node.NodeId == boundApp.State.Expedition.CurrentNodeId;
+                bool isCurrent = actTwoUnlocked && node.NodeId == focusNodeId;
+                if (node.NodeId == focusNodeId && node.Marker != null)
+                {
+                    focusNodeTransform = node.Marker.transform.parent as RectTransform;
+                }
                 if (node.Marker != null)
                 {
                     node.Marker.color = IsActTwoNodeOnPreferencePath(node.NodeId, lastRoutePreferenceName)
@@ -1002,6 +1022,39 @@ namespace TaskbarTactics.Presentation
 
                 node.Tooltip?.SetContent(ActTwoDisplayName(node.NodeId), CurrentNode);
             }
+
+            if (focusNodeTransform != null && focusNodeId != lastFocusedNodeId)
+            {
+                draggableMap ??= GetComponent<DraggableMapView>();
+                draggableMap?.FocusOnAtZoom(focusNodeTransform, ActTwoDefaultZoom);
+                lastFocusedNodeId = focusNodeId;
+            }
+        }
+
+        private void HideActOneCurrentFlags()
+        {
+            foreach (MapNodeView node in nodes)
+            {
+                if (node?.CurrentFlag != null)
+                {
+                    node.CurrentFlag.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        private static Sprite[] LoadMapFlagFrames()
+        {
+            List<Sprite> frames = new List<Sprite>();
+            for (int index = 1; index <= 3; index++)
+            {
+                Sprite frame = Resources.Load<Sprite>($"UI/MapFlag/flag{index}");
+                if (frame != null)
+                {
+                    frames.Add(frame);
+                }
+            }
+
+            return frames.ToArray();
         }
 
         private void UpdateActButtonState()

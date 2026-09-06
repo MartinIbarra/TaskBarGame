@@ -13,7 +13,7 @@ namespace TaskbarTactics.Presentation
         private const int Columns = 4;
         private const float Gap = 66f;
         private const float SlotSize = 58f;
-        private static readonly Vector2 SlotStart = new Vector2(86f, -113f);
+        private static readonly Vector2 SlotStart = new Vector2(90f, -90f);
         private static readonly Vector2 ItemIconOffset = new Vector2(2f, -2f);
 
         private readonly List<Image> slots = new List<Image>();

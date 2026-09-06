@@ -15,5 +15,5 @@ MonoBehaviour:
   id: ancient_ruins
   difficulty: 5
   enemies:
+  - {fileID: 11400000, guid: 3362f1e3b67aed5429047bdbf9f0673e, type: 2}
   - {fileID: 11400000, guid: 8c13904a5e989ea45bcc28bd9fe8081d, type: 2}
-  - {fileID: 11400000, guid: 6bbab04485f72724c82c947da6da8648, type: 2}

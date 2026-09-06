@@ -220,13 +220,17 @@ namespace TaskbarTactics.Presentation
                     heroRect.sizeDelta = new Vector2(116.6f, 193.6f);
                     heroRect.anchoredPosition = new Vector2(0f, -18f);
                     break;
+                case "pyromancer":
+                    heroPreview.preserveAspect = false;
+                    heroRect.sizeDelta = new Vector2(123.9f, 205.8f);
+                    break;
                 case "cleric":
                     heroPreview.preserveAspect = false;
                     heroRect.sizeDelta = new Vector2(118f, 194.25f);
                     break;
                 case "guardian":
                     heroPreview.preserveAspect = false;
-                    heroRect.sizeDelta = new Vector2(108f, 174f);
+                    heroRect.sizeDelta = new Vector2(118.8f, 191.4f);
                     heroRect.anchoredPosition = new Vector2(0f, -18f);
                     break;
             }

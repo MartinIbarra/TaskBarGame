@@ -166,8 +166,9 @@ namespace TaskbarTactics.Content
 
         private static void AddEnemies(ContentBlueprint content)
         {
-            content.Enemies.Add(new EnemyBlueprint("goblin", "Goblin", 70, 12, 1, 2, false));
-            content.Enemies.Add(new EnemyBlueprint("goblin_archer", "Arquero goblin", 58, 15, 1, 5, false));
+            content.Enemies.Add(new EnemyBlueprint("goblin", "Goblin", 98, 12, 1, 2, false));
+            content.Enemies.Add(new EnemyBlueprint("goblin_archer", "Arquero goblin", 81, 15, 1, 5, false));
+            content.Enemies.Add(new EnemyBlueprint("goblin_mage", "Mago goblin", 94, 15, 1, 5, false));
             content.Enemies.Add(new EnemyBlueprint("wolf", "Lobo", 80, 16, 2, 2, false));
             content.Enemies.Add(new EnemyBlueprint("shaman", "Chamán", 65, 18, 2, 5, false));
             content.Enemies.Add(new EnemyBlueprint("skeleton", "Esqueleto", 90, 14, 4, 2, false));

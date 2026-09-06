@@ -11,6 +11,7 @@ namespace TaskbarTactics.Presentation
     public sealed class CombatPresenter : MonoBehaviour
     {
         private const float FinalBossDeathVolume = 0.7f;
+        private const float HeroArtworkScaleMultiplier = 1.1f;
         private const float BossArtworkScaleMultiplier = 1.5f;
         private const float BossHealthBarScaleMultiplier = 1.5f;
         private const float BossHealthBarYOffset = 0.2f;
@@ -152,7 +153,7 @@ namespace TaskbarTactics.Presentation
             renderer.sprite = sprite;
             renderer.sortingOrder = 30;
             Sprite chestSizeReference = sprite;
-            Vector3 targetScale = new Vector3(0.55f, 0.605f, 1f);
+            Vector3 targetScale = new Vector3(0.55f, 0.6655f, 1f);
             float emergeSeconds = 0.35f;
             float elapsed = 0f;
             while (elapsed < emergeSeconds)
@@ -204,7 +205,7 @@ namespace TaskbarTactics.Presentation
                     definition != null ? definition.Color : Color.cyan,
                     hero.MaxHealth,
                     definition != null ? definition.Artwork : null,
-                    1f,
+                    HeroArtworkScaleMultiplier,
                     false,
                     true,
                     $"Heroes/{LegacyHeroAnimationId(hero.Id)}");

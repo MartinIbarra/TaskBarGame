@@ -24,7 +24,7 @@ namespace TaskbarTactics.Presentation
         public IEnumerator Play(WindowModeController windowMode)
         {
             wasClicked = false;
-            Show();
+            Show("YOU DIED", new Color(0.9f, 0.05f, 0.04f, 1f));
 
             float elapsed = 0f;
             while (elapsed < autoReturnSeconds && !wasClicked)
@@ -40,17 +40,25 @@ namespace TaskbarTactics.Presentation
             }
         }
 
+        public IEnumerator PlayActOneCompletion(int frameCount)
+        {
+            Show("ACT 1 Completed", new Color(0.35f, 0.8f, 1f, 1f));
+            yield return WaitForFrames(frameCount);
+            HideImmediate();
+        }
+
         public void OnPointerClick(PointerEventData eventData)
         {
             wasClicked = true;
             HideImmediate();
         }
 
-        private void Show()
+        private void Show(string text, Color color)
         {
             if (message != null)
             {
-                message.text = "YOU DIED";
+                message.text = text;
+                message.color = color;
             }
 
             if (group == null)
@@ -75,6 +83,14 @@ namespace TaskbarTactics.Presentation
             group.interactable = false;
             group.blocksRaycasts = false;
             group.gameObject.SetActive(false);
+        }
+
+        private static IEnumerator WaitForFrames(int frameCount)
+        {
+            for (int frame = 0; frame < Mathf.Max(0, frameCount); frame++)
+            {
+                yield return null;
+            }
         }
     }
 }

@@ -31,6 +31,14 @@ namespace TaskbarTactics.Presentation
             menuButton = menu;
             menuPanel = menuRoot;
             quitButton = quit;
+            Sprite menuButtonSprite = Resources.Load<Sprite>("UI/MenuButton");
+            if (manageButton != null && manageButton.image != null && menuButtonSprite != null)
+            {
+                manageButton.image.sprite = menuButtonSprite;
+                manageButton.image.type = Image.Type.Simple;
+                manageButton.image.preserveAspect = true;
+            }
+            HideStatusBar();
             labelsGroup = statusLabel != null
                 ? statusLabel.transform.parent.GetComponent<CanvasGroup>()
                 : null;
@@ -40,8 +48,22 @@ namespace TaskbarTactics.Presentation
             }
         }
 
+        private void HideStatusBar()
+        {
+            if (statusLabel == null || statusLabel.transform.parent == null)
+            {
+                return;
+            }
+
+            statusLabel.transform.parent.gameObject.SetActive(false);
+        }
+
         public void Bind(GameAppController app, WindowModeController window)
         {
+            if (manageButton != null)
+            {
+                manageButton.interactable = true;
+            }
             manageButton.onClick.AddListener(window.ShowManagement);
             menuButton.onClick.AddListener(() => menuPanel.SetActive(!menuPanel.activeSelf));
             quitButton.onClick.AddListener(app.Quit);

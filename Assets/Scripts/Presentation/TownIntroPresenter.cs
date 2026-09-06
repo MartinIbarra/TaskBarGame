@@ -10,7 +10,7 @@ namespace TaskbarTactics.Presentation
 {
     public sealed class TownIntroPresenter : MonoBehaviour
     {
-        private const float GateOpenVolume = 0.85f;
+        private const float GateOpenVolume = 0.6375f;
         private const string CityTwoNodeId = "city2";
         private const string CityTwoBackgroundResource = "Events/City2/city2";
 
@@ -33,6 +33,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private float heroStartX = 318f;
         [SerializeField] private float heroEndX = 1002f;
         [SerializeField] private float heroBaseY = -58f;
+        [SerializeField] private float cityTwoHeroYOffset = -20f;
         [SerializeField] private float heroColumnSpacing = 28f;
         [SerializeField] private float heroStartDelay = 0.12f;
         [SerializeField] private float hopHeight = 16f;
@@ -53,6 +54,10 @@ namespace TaskbarTactics.Presentation
             rootGroup = group;
             background = sceneBackground;
             defaultBackgroundSprite = sceneBackground != null ? sceneBackground.sprite : null;
+            if (defaultBackgroundSprite == null)
+            {
+                defaultBackgroundSprite = Resources.Load<Sprite>("Events/Town/town1");
+            }
             gate = gateTransform;
             heroRoot = heroesParent;
             audioSource = source;
@@ -82,7 +87,7 @@ namespace TaskbarTactics.Presentation
 
             bool isCityTwo = nodeId == CityTwoNodeId;
             ApplyBackground(isCityTwo);
-            BuildHeroViews(selectedHeroes, catalog);
+            BuildHeroViews(selectedHeroes, catalog, isCityTwo);
             gameObject.SetActive(true);
             rootGroup.alpha = 1f;
             rootGroup.blocksRaycasts = true;
@@ -113,7 +118,7 @@ namespace TaskbarTactics.Presentation
                 }
             }
 
-            yield return RunHeroes();
+            yield return RunHeroes(isCityTwo);
             yield return FadeOut();
             HideImmediate();
         }
@@ -125,6 +130,11 @@ namespace TaskbarTactics.Presentation
                 return;
             }
 
+            if (defaultBackgroundSprite == null)
+            {
+                defaultBackgroundSprite = Resources.Load<Sprite>("Events/Town/town1");
+            }
+
             Sprite cityTwoSprite = isCityTwo
                 ? Resources.Load<Sprite>(CityTwoBackgroundResource)
                 : null;
@@ -133,7 +143,8 @@ namespace TaskbarTactics.Presentation
 
         private void BuildHeroViews(
             IReadOnlyList<HeroState> selectedHeroes,
-            GameContentCatalog catalog)
+            GameContentCatalog catalog,
+            bool isCityTwo)
         {
             ClearHeroViews();
             List<HeroState> heroes = selectedHeroes?.Take(GameAppController.PartySize).ToList() ?? new List<HeroState>();
@@ -159,13 +170,13 @@ namespace TaskbarTactics.Presentation
                 RectTransform rect = image.rectTransform;
                 rect.anchorMin = rect.anchorMax = new Vector2(0, 0.5f);
                 rect.pivot = new Vector2(0.5f, 0f);
-                rect.anchoredPosition = HeroStartPosition(i);
+                rect.anchoredPosition = HeroStartPosition(i, isCityTwo);
                 rect.sizeDelta = HeroSize(image.sprite);
                 heroViews.Add(image);
             }
         }
 
-        private IEnumerator RunHeroes()
+        private IEnumerator RunHeroes(bool isCityTwo)
         {
             float elapsed = 0f;
             while (elapsed < heroRunSeconds)
@@ -176,7 +187,7 @@ namespace TaskbarTactics.Presentation
                     float heroElapsed = elapsed - i * heroStartDelay;
                     float t = Mathf.Clamp01(heroElapsed / heroRunSeconds);
                     RectTransform rect = heroViews[i].rectTransform;
-                    Vector2 start = HeroStartPosition(i);
+                    Vector2 start = HeroStartPosition(i, isCityTwo);
                     float x = Mathf.Lerp(heroStartX, heroEndX, Smooth(t));
                     float hop = Mathf.Abs(Mathf.Sin((t * 6f + i * 0.4f) * Mathf.PI)) * hopHeight;
                     float zigzag = Mathf.Sin((t * 5f + i) * Mathf.PI) * zigzagWidth;
@@ -198,9 +209,10 @@ namespace TaskbarTactics.Presentation
             }
         }
 
-        private Vector2 HeroStartPosition(int index)
+        private Vector2 HeroStartPosition(int index, bool isCityTwo)
         {
-            return new Vector2(heroStartX - index * heroColumnSpacing, heroBaseY);
+            float y = heroBaseY + (isCityTwo ? cityTwoHeroYOffset : 0f);
+            return new Vector2(heroStartX - index * heroColumnSpacing, y);
         }
 
         private Vector2 HeroSize(Sprite sprite)

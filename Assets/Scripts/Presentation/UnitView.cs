@@ -25,6 +25,7 @@ namespace TaskbarTactics.Presentation
         private float activeArtworkWidthMultiplier = 1f;
         private float activeArtworkReferenceHeight;
         private float activeAttackPoseYOffset;
+        private bool normalizeGuardianCombatPoses;
         private bool activeFaceLeft;
         private bool isDead;
         private bool capturedBodyDefaults;
@@ -67,7 +68,7 @@ namespace TaskbarTactics.Presentation
             originalArtwork = artwork;
             poseSprites = usePoseAnimation ? LoadPoseSprites(poseResourcePath) : null;
             activeArtworkReferenceHeight = ArtworkReferenceHeight(GetPoseSprite(0) ?? artwork);
-            ApplyArtwork(GetPoseSprite(0) ?? artwork, color, artworkHeightMultiplier, faceLeft, 0f);
+            ApplyArtwork(GetPoseSprite(0) ?? artwork, color, activeArtworkHeightMultiplier, faceLeft, 0f);
             ApplyHealthBarPresentation(healthBarScaleMultiplier, healthBarYOffset);
 
             if (label != null)
@@ -273,10 +274,17 @@ namespace TaskbarTactics.Presentation
             if (pose != null)
             {
                 bool isAttackPose = poseIndex == 3 || poseIndex == 4;
+                float poseHeightMultiplier = activeArtworkHeightMultiplier;
+                if (normalizeGuardianCombatPoses && (isAttackPose || poseIndex == 5))
+                {
+                    poseHeightMultiplier *= activeArtworkReferenceHeight /
+                        Mathf.Max(0.01f, pose.bounds.size.y);
+                }
+
                 ApplyArtwork(
                     pose,
                     activeFallbackColor,
-                    activeArtworkHeightMultiplier,
+                    poseHeightMultiplier,
                     activeFaceLeft,
                     isAttackPose ? activeAttackPoseYOffset : 0f);
             }
@@ -286,6 +294,7 @@ namespace TaskbarTactics.Presentation
         {
             activeArtworkWidthMultiplier = 1f;
             activeAttackPoseYOffset = 0f;
+            normalizeGuardianCombatPoses = false;
 
             if (string.IsNullOrWhiteSpace(poseResourcePath))
             {
@@ -297,9 +306,18 @@ namespace TaskbarTactics.Presentation
             {
                 activeArtworkWidthMultiplier = 1.05f;
             }
+            else if (normalizedPath.EndsWith("/pyromancer"))
+            {
+                activeArtworkHeightMultiplier *= 1.05f;
+            }
             else if (normalizedPath.EndsWith("/rogue"))
             {
                 activeAttackPoseYOffset = 0.045f;
+            }
+            else if (normalizedPath.EndsWith("/guardian"))
+            {
+                normalizeGuardianCombatPoses = true;
+                activeArtworkWidthMultiplier = 1.1f;
             }
         }
 

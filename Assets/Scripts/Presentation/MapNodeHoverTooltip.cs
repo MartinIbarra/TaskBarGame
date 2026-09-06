@@ -56,7 +56,7 @@ namespace TaskbarTactics.Presentation
             if (backgroundRect != null)
             {
                 backgroundRect.anchoredPosition = new Vector2(10f, 13f);
-                backgroundRect.sizeDelta = new Vector2(116f, 24f);
+                backgroundRect.sizeDelta = new Vector2(93f, 24f);
             }
         }
 
@@ -108,7 +108,7 @@ namespace TaskbarTactics.Presentation
             backgroundRect.anchorMax = labelRect.anchorMax;
             backgroundRect.pivot = labelRect.pivot;
             backgroundRect.anchoredPosition = labelRect.anchoredPosition + new Vector2(-4f, 0f);
-            backgroundRect.sizeDelta = new Vector2(104f, labelRect.sizeDelta.y + 6f);
+            backgroundRect.sizeDelta = new Vector2(93f, labelRect.sizeDelta.y + 6f);
 
             Image image = backgroundObject.GetComponent<Image>();
             image.color = new Color(0f, 0f, 0f, 0.5f);
