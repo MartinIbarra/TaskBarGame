@@ -84,6 +84,7 @@ namespace TaskbarTactics.Core.Combat
         public CombatOutcome Outcome;
         public int ElapsedMilliseconds;
         public List<CombatEvent> Events = new List<CombatEvent>();
+        public List<string> DefeatedEnemyIds = new List<string>();
         public List<int> SurvivingHeroHealth = new List<int>();
         public List<int> SurvivingHeroMana = new List<int>();
         public List<CombatantResourceResult> HeroResources = new List<CombatantResourceResult>();

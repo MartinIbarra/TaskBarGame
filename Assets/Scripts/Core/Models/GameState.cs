@@ -7,10 +7,11 @@ namespace TaskbarTactics.Core.Models
     [Serializable]
     public sealed class GameState
     {
-        public const int CurrentVersion = 2;
+        public const int CurrentVersion = 3;
 
         public int Version = CurrentVersion;
         public int Gold;
+        public int Silver;
         public long LastSavedUtcTicks;
         public PartyState Party = new PartyState();
         public List<InventoryItem> Inventory = new List<InventoryItem>();

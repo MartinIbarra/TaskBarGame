@@ -67,7 +67,8 @@ namespace TaskbarTactics.Tests
             GameState legacy = TestFixtures.CreateGameState();
             store.Save(legacy);
             string json = File.ReadAllText(store.PrimaryPath);
-            json = Regex.Replace(json, "\\\"Version\\\"\\s*:\\s*2", "\"Version\": 1");
+            json = Regex.Replace(json, "\\\"Version\\\"\\s*:\\s*" + GameState.CurrentVersion,
+                "\"Version\": 1");
             File.WriteAllText(store.PrimaryPath, json);
 
             GameState loaded = store.LoadOrDefault();

@@ -34,6 +34,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private InventorySlotGridView inventoryGrid;
         [SerializeField] private EquipmentPreviewLayoutView equipmentPreview;
         [SerializeField] private List<Button> equipmentHeroTabs = new List<Button>();
+        [SerializeField] private SilverCurrencyHud silverCurrencyHud;
 
         [Header("Actions")]
         [SerializeField] private Button cycleActiveSkillButton;
@@ -53,6 +54,8 @@ namespace TaskbarTactics.Presentation
         private Sprite commandPressedSprite;
         private Sprite commandSelectedSprite;
         private AudioClip formationSelectClip;
+        private static TMP_FontAsset shadowPixelTitleFont;
+        private static Material shadowPixelTitleMaterial;
 
         public void Configure(
             IEnumerable<Button> navigation,
@@ -117,6 +120,8 @@ namespace TaskbarTactics.Presentation
         public void Bind(GameAppController targetApp, WindowModeController window)
         {
             app = targetApp;
+            EnsureSilverCurrencyHud();
+            silverCurrencyHud?.Bind(app);
             tabButtons = tabButtons
                 .Where(button => button != null && button.name != "Leyendas Tab")
                 .ToList();
@@ -131,8 +136,14 @@ namespace TaskbarTactics.Presentation
                 }
             }
             ApplyInventoryPanelLayout();
+            RemoveMapSubLayoutBackground();
+            ApplyMapCommandLayout();
+            ApplyMapCommandLabels();
+            ApplyMapSummaryPosition();
             ApplyCommandLayout();
             ApplyCommandLabels();
+            ApplyTitleFont();
+            ApplyTopRightButtonOffset();
             cycleActiveSkillButton?.gameObject.SetActive(false);
             cyclePassiveSkillButton?.gameObject.SetActive(false);
             LoadCommandSprites();
@@ -186,6 +197,170 @@ namespace TaskbarTactics.Presentation
 
             ShowPanel(0);
             Refresh();
+        }
+
+        private void EnsureSilverCurrencyHud()
+        {
+            if (silverCurrencyHud == null)
+            {
+                silverCurrencyHud = GetComponentInChildren<SilverCurrencyHud>(true);
+            }
+
+            if (silverCurrencyHud == null)
+            {
+                Transform parent = panels.Count > 0 && panels[0] != null &&
+                    panels[0].transform.parent != null
+                    ? panels[0].transform.parent
+                    : transform;
+                GameObject currencyObject = new GameObject(
+                    "Silver Currency HUD",
+                    typeof(RectTransform));
+                currencyObject.transform.SetParent(parent, false);
+                silverCurrencyHud = currencyObject.AddComponent<SilverCurrencyHud>();
+            }
+        }
+
+        private void RemoveMapSubLayoutBackground()
+        {
+            if (panels.Count <= 3 || panels[3] == null)
+            {
+                return;
+            }
+
+            Image mapPanelImage = panels[3].GetComponent<Image>();
+            if (mapPanelImage == null)
+            {
+                return;
+            }
+
+            mapPanelImage.sprite = null;
+            mapPanelImage.color = Color.clear;
+            mapPanelImage.raycastTarget = false;
+        }
+
+        private void ApplyMapCommandLayout()
+        {
+            const float mapCommandWidth = 159.8f;
+            float[] routeYPositions = { -199f, -261f, -323f };
+
+            for (int i = 0; i < routeButtons.Count && i < 3; i++)
+            {
+                RectTransform rect = routeButtons[i] != null
+                    ? routeButtons[i].transform as RectTransform
+                    : null;
+                if (rect != null)
+                {
+                    rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, routeYPositions[i]);
+                    rect.sizeDelta = new Vector2(mapCommandWidth, rect.sizeDelta.y);
+                }
+            }
+
+            if (startExpeditionButton != null)
+            {
+                RectTransform rect = startExpeditionButton.transform as RectTransform;
+                if (rect != null)
+                {
+                    rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -377f);
+                    rect.sizeDelta = new Vector2(mapCommandWidth, rect.sizeDelta.y);
+                }
+            }
+        }
+
+        private void ApplyMapCommandLabels()
+        {
+            const float routeFontSize = 15.84f;
+            const float startFontSize = 20.592f;
+
+            for (int i = 0; i < routeButtons.Count && i < 3; i++)
+            {
+                TMP_Text label = routeButtons[i]?.GetComponentInChildren<TMP_Text>(true);
+                if (label != null)
+                {
+                    label.fontSize = routeFontSize;
+                    label.enableAutoSizing = true;
+                    label.fontSizeMin = 8f;
+                    label.fontSizeMax = routeFontSize;
+                    label.textWrappingMode = TextWrappingModes.NoWrap;
+                }
+            }
+
+            TMP_Text startLabel = startExpeditionButton?.GetComponentInChildren<TMP_Text>(true);
+            if (startLabel != null)
+            {
+                startLabel.fontSize = startFontSize;
+                startLabel.enableAutoSizing = true;
+                startLabel.fontSizeMin = 10f;
+                startLabel.fontSizeMax = startFontSize;
+                startLabel.textWrappingMode = TextWrappingModes.NoWrap;
+            }
+        }
+
+        private void ApplyMapSummaryPosition()
+        {
+            if (mapSummary == null)
+            {
+                return;
+            }
+
+            RectTransform rect = mapSummary.rectTransform;
+            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -62f);
+        }
+
+        private void ApplyTitleFont()
+        {
+            if (shadowPixelTitleFont == null)
+            {
+                Font sourceFont = Resources.Load<Font>("UI/Fonts/ShadowPixel-Regular-v3");
+                if (sourceFont != null)
+                {
+                    shadowPixelTitleFont = TMP_FontAsset.CreateFontAsset(sourceFont);
+                }
+            }
+
+            if (shadowPixelTitleFont == null)
+            {
+                return;
+            }
+
+            TMP_Text[] texts = GetComponentsInChildren<TMP_Text>(true);
+            foreach (TMP_Text text in texts)
+            {
+                if (text != null && text.name == "Title")
+                {
+                    text.font = shadowPixelTitleFont;
+                    text.fontStyle = FontStyles.Bold;
+                    text.color = Color.white;
+                    if (shadowPixelTitleMaterial == null)
+                    {
+                        shadowPixelTitleMaterial = new Material(shadowPixelTitleFont.material)
+                        {
+                            name = "ShadowPixel Title Material"
+                        };
+                        shadowPixelTitleMaterial.SetColor("_FaceColor", new Color(0.82f, 0.96f, 0.16f, 1f));
+                        shadowPixelTitleMaterial.SetColor("_OutlineColor", new Color(0.48f, 0.04f, 0.08f, 1f));
+                        shadowPixelTitleMaterial.SetFloat("_OutlineWidth", 0.08f);
+                    }
+
+                    text.fontMaterial = shadowPixelTitleMaterial;
+                    text.enableAutoSizing = false;
+                    text.textWrappingMode = TextWrappingModes.NoWrap;
+                }
+            }
+        }
+
+        private void ApplyTopRightButtonOffset()
+        {
+            Button[] buttons = { closeButton, settingsShortcutButton, quitShortcutButton };
+            float[] xPositions = { 863f, 916f, 968f };
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                Button button = buttons[i];
+                RectTransform rect = button != null ? button.transform as RectTransform : null;
+                if (rect != null)
+                {
+                    rect.anchoredPosition = new Vector2(xPositions[i], rect.anchoredPosition.y);
+                }
+            }
         }
 
         public bool AssignHeroToSlot(string heroId, FormationPosition position)
@@ -344,7 +519,7 @@ namespace TaskbarTactics.Presentation
 
             mapSummary.text =
                 $"{app.State.Expedition.CurrentNodeId}\n" +
-                $"Completados: {app.State.Expedition.CompletedNodes}/{app.Catalog.Map.Nodes.Count}\n\n" +
+                $"Explored {app.State.Expedition.CompletedNodes}/{app.Catalog.Map.Nodes.Count}\n\n" +
                 RouteDescription(app.State.Party.RoutePreference);
             mapUi?.Refresh(app);
             ApplyStartButtonState();
@@ -985,11 +1160,11 @@ namespace TaskbarTactics.Presentation
             switch (preference)
             {
                 case RoutePreference.Loot:
-                    return "Campaña que prioriza la obtención de botín";
+                    return "Priority: Loot & Profit";
                 case RoutePreference.Challenge:
-                    return "Ultra-violento: Desafío 100%";
+                    return "Ultra-Violence 100% Completion";
                 default:
-                    return "El camino más seguro posible";
+                    return "Safest way possible";
             }
         }
 

@@ -1,5 +1,7 @@
 using System.Collections;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using TaskbarTactics.Content;
 using TaskbarTactics.Core.Combat;
 using TaskbarTactics.Core.Models;
@@ -19,6 +21,10 @@ namespace TaskbarTactics.Presentation
         private const float SpawnIntroStaggerSeconds = 0.08f;
         private const float HeroSpawnIntroOffsetX = -1.25f;
         private const float EnemySpawnIntroOffsetX = 1.25f;
+        private const int SilverDropAnimationFrames = 22;
+        private const float SilverDropJumpHeight = 0.42f;
+        private const float SilverDropScaleMultiplier = 0.85f;
+        private const float ChestOpenEffectYOffset = 0.16f;
 
         [Header("Reusable presentation")]
         [SerializeField] private UnitView unitPrefab;
@@ -37,6 +43,9 @@ namespace TaskbarTactics.Presentation
         private readonly HashSet<string> enemyViewIds = new HashSet<string>();
         private Sprite rewardChestSprite;
         private Sprite[] rewardChestOpeningFrames;
+        private Sprite[] chestOpenEffectFrames;
+        private Sprite[] silverCoinFrames;
+        private Sprite[] silverCoinShineFrames;
 
         public void Configure(
             UnitView prefab,
@@ -68,7 +77,9 @@ namespace TaskbarTactics.Presentation
             CombatResult result,
             GameContentCatalog catalog,
             float durationSeconds,
-            string nodeId = null)
+            string nodeId = null,
+            IReadOnlyCollection<string> silverDropEnemyIds = null,
+            Action onSilverCollected = null)
         {
             SetBattleback(nodeId);
             List<SpawnIntroEntry> spawnIntro = SpawnUnits(request, catalog);
@@ -87,7 +98,7 @@ namespace TaskbarTactics.Presentation
 
                 foreach (CombatEvent combatEvent in frame.Events)
                 {
-                    PlayEvent(combatEvent);
+                    PlayEvent(combatEvent, silverDropEnemyIds, onSilverCollected);
                 }
             }
 
@@ -102,7 +113,10 @@ namespace TaskbarTactics.Presentation
             }
         }
 
-        private void PlayEvent(CombatEvent combatEvent)
+        private void PlayEvent(
+            CombatEvent combatEvent,
+            IReadOnlyCollection<string> silverDropEnemyIds,
+            Action onSilverCollected)
         {
             if (unitViews.TryGetValue(combatEvent.ActorId, out UnitView actor))
             {
@@ -112,7 +126,113 @@ namespace TaskbarTactics.Presentation
             if (unitViews.TryGetValue(combatEvent.TargetId, out UnitView target))
             {
                 target.ReceiveDamage(combatEvent.Amount);
+                if (target.IsDead &&
+                    silverDropEnemyIds != null &&
+                    silverDropEnemyIds.Contains(combatEvent.TargetId))
+                {
+                    StartCoroutine(PlaySilverDrop(target.transform.position, onSilverCollected));
+                }
             }
+        }
+
+        private IEnumerator PlaySilverDrop(Vector3 startPosition, Action onCollected)
+        {
+            LoadSilverDropFrames();
+            if (silverCoinFrames == null || silverCoinFrames.Length == 0)
+            {
+                onCollected?.Invoke();
+                yield break;
+            }
+
+            GameObject coinObject = new GameObject("Silver Coin Drop");
+            coinObject.transform.position = startPosition + new Vector3(0f, 0.08f, -0.4f);
+            coinObject.transform.localScale = Vector3.one * SilverDropScaleMultiplier;
+            SpriteRenderer coinRenderer = coinObject.AddComponent<SpriteRenderer>();
+            coinRenderer.sprite = silverCoinFrames[0];
+            coinRenderer.sortingOrder = 40;
+            SpriteRenderer shineRenderer = null;
+            if (silverCoinShineFrames != null && silverCoinShineFrames.Length > 0)
+            {
+                GameObject shineObject = new GameObject("Silver Coin Shine");
+                shineObject.transform.SetParent(coinObject.transform, false);
+                shineRenderer = shineObject.AddComponent<SpriteRenderer>();
+                shineRenderer.sprite = silverCoinShineFrames[0];
+                shineRenderer.sortingOrder = 41;
+            }
+
+            const int midpointFrame = SilverDropAnimationFrames / 2;
+            for (int frame = 0; frame <= midpointFrame; frame++)
+            {
+                float normalized = frame / (float)midpointFrame;
+                float jump = normalized * (2f - normalized);
+                coinObject.transform.position = startPosition + new Vector3(
+                    0f,
+                    0.08f + SilverDropJumpHeight * jump,
+                    -0.4f);
+                coinRenderer.sprite = silverCoinFrames[frame % silverCoinFrames.Length];
+                if (shineRenderer != null)
+                {
+                    shineRenderer.sprite = silverCoinShineFrames[frame % silverCoinShineFrames.Length];
+                }
+
+                if (frame == midpointFrame)
+                {
+                    onCollected?.Invoke();
+                    Destroy(coinObject);
+                    yield break;
+                }
+
+                yield return null;
+            }
+        }
+
+        private void LoadSilverDropFrames()
+        {
+            if (silverCoinFrames == null)
+            {
+                silverCoinFrames = CreateHorizontalFrames(
+                    Resources.Load<Texture2D>("UI/SilverCoinFrames"), 8);
+            }
+
+            if (silverCoinShineFrames == null)
+            {
+                silverCoinShineFrames = CreateVerticalFrames(
+                    Resources.Load<Texture2D>("UI/SilverCoinDropFrames"), 4);
+            }
+        }
+
+        private static Sprite[] CreateHorizontalFrames(Texture2D texture, int frameCount)
+        {
+            return CreateFrames(texture, frameCount, false);
+        }
+
+        private static Sprite[] CreateVerticalFrames(Texture2D texture, int frameCount)
+        {
+            return CreateFrames(texture, frameCount, true);
+        }
+
+        private static Sprite[] CreateFrames(Texture2D texture, int frameCount, bool vertical)
+        {
+            if (texture == null || frameCount <= 0)
+            {
+                return Array.Empty<Sprite>();
+            }
+
+            List<Sprite> frames = new List<Sprite>(frameCount);
+            float frameWidth = vertical ? texture.width : texture.width / (float)frameCount;
+            float frameHeight = vertical ? texture.height / (float)frameCount : texture.height;
+            for (int i = 0; i < frameCount; i++)
+            {
+                float x = vertical ? 0f : i * frameWidth;
+                float y = vertical ? texture.height - (i + 1) * frameHeight : 0f;
+                frames.Add(Sprite.Create(
+                    texture,
+                    new Rect(x, y, frameWidth, frameHeight),
+                    new Vector2(0.5f, 0.5f),
+                    100f));
+            }
+
+            return frames.ToArray();
         }
 
         public void Clear()
@@ -180,7 +300,22 @@ namespace TaskbarTactics.Presentation
 
             if (openingFrames.Length > 1)
             {
-                yield return PlayRewardChestOpening(renderer, openingFrames, chest.transform, targetScale, chestSizeReference);
+                Sprite[] effectFrames = LoadChestOpenEffectFrames();
+                SpriteRenderer effectRenderer = CreateChestOpenEffect(
+                    chest.transform.position,
+                    effectFrames);
+                yield return PlayRewardChestOpening(
+                    renderer,
+                    openingFrames,
+                    chest.transform,
+                    targetScale,
+                    chestSizeReference,
+                    effectRenderer,
+                    effectFrames);
+                if (effectRenderer != null)
+                {
+                    Destroy(effectRenderer.gameObject);
+                }
             }
 
             if (rewardSprite != null)
@@ -553,19 +688,56 @@ namespace TaskbarTactics.Presentation
             IReadOnlyList<Sprite> frames,
             Transform chest,
             Vector3 baseScale,
-            Sprite sizeReference)
+            Sprite sizeReference,
+            SpriteRenderer effectRenderer,
+            IReadOnlyList<Sprite> effectFrames)
         {
             const float frameSeconds = 0.12f;
-            foreach (Sprite frame in frames)
+            for (int i = 0; i < frames.Count; i++)
             {
+                Sprite frame = frames[i];
                 if (frame != null)
                 {
                     renderer.sprite = frame;
                     ApplyRewardChestFrameScale(chest, baseScale, sizeReference, frame);
                 }
 
+                if (effectRenderer != null && effectFrames != null && effectFrames.Count > 0)
+                {
+                    effectRenderer.sprite = effectFrames[Mathf.Min(i, effectFrames.Count - 1)];
+                }
+
                 yield return new WaitForSecondsRealtime(frameSeconds);
             }
+        }
+
+        private Sprite[] LoadChestOpenEffectFrames()
+        {
+            if (chestOpenEffectFrames == null)
+            {
+                chestOpenEffectFrames = CreateHorizontalFrames(
+                    Resources.Load<Texture2D>("Events/Chest/chestopen"), 5);
+            }
+
+            return chestOpenEffectFrames;
+        }
+
+        private static SpriteRenderer CreateChestOpenEffect(
+            Vector3 position,
+            IReadOnlyList<Sprite> frames)
+        {
+            if (frames == null || frames.Count == 0 || frames[0] == null)
+            {
+                return null;
+            }
+
+            GameObject effect = new GameObject("Chest Open Effect");
+            effect.transform.position = position + new Vector3(0f, ChestOpenEffectYOffset, 0.1f);
+            effect.transform.localScale = new Vector3(0.55f, 0.55f, 1f);
+            SpriteRenderer renderer = effect.AddComponent<SpriteRenderer>();
+            renderer.sprite = frames[0];
+            renderer.sortingOrder = 29;
+            return renderer;
         }
 
         private static void ApplyRewardChestFrameScale(

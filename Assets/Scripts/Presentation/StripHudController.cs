@@ -31,6 +31,7 @@ namespace TaskbarTactics.Presentation
             menuButton = menu;
             menuPanel = menuRoot;
             quitButton = quit;
+            HideLegacyAttentionIndicator();
             Sprite menuButtonSprite = Resources.Load<Sprite>("UI/MenuButton");
             if (manageButton != null && manageButton.image != null && menuButtonSprite != null)
             {
@@ -88,7 +89,15 @@ namespace TaskbarTactics.Presentation
 
         private void SetAttention(bool active)
         {
-            attentionIndicator.SetActive(active);
+            HideLegacyAttentionIndicator();
+        }
+
+        private void HideLegacyAttentionIndicator()
+        {
+            if (attentionIndicator != null)
+            {
+                attentionIndicator.SetActive(false);
+            }
         }
 
         public void SetCompactLabelsVisible(bool visible)

@@ -1059,7 +1059,7 @@ namespace TaskbarTactics.Editor
             DefeatOverlayPresenter defeatOverlay = BuildDefeatOverlay(stripUi.transform);
             Sprite hudVerticalSprite = LoadUiSprite("Assets/Resources/UI/Square.png", new Vector4(54, 54, 54, 54));
             Sprite hudHorizontalSprite = LoadUiSprite("Assets/Resources/UI/Square.png", new Vector4(54, 54, 54, 54));
-            Sprite mapPanelSprite = LoadUiSprite("Assets/Resources/UI/MapSquare.png", new Vector4(54, 54, 54, 54));
+            Sprite mapPanelSprite = LoadUiSprite("Assets/Art/UI/Source/Square.png", new Vector4(54, 54, 54, 54));
             Sprite mapFrameSprite = LoadUiSprite("Assets/Resources/UI/MapFrame.png", new Vector4(16, 16, 16, 16));
             Sprite actParchmentSprite = LoadUiSprite("Assets/Resources/UI/ActParchment.png", Vector4.zero);
             Sprite titleWideSprite = LoadUiSprite("Assets/Resources/UI/TitleWide.png", new Vector4(32, 32, 32, 32));
@@ -1483,14 +1483,19 @@ namespace TaskbarTactics.Editor
                 26, TextAlignmentOptions.Center, new Vector2(362, 24), new Vector2(292, 32));
             title.fontStyle = FontStyles.Bold;
             title.textWrappingMode = TextWrappingModes.NoWrap;
+            GameObject silverCurrencyObject = new GameObject(
+                "Silver Currency HUD",
+                typeof(RectTransform));
+            silverCurrencyObject.transform.SetParent(background.transform, false);
+            silverCurrencyObject.AddComponent<SilverCurrencyHud>();
             Button close = CreateButton(background.transform, "Close Button", string.Empty,
-                new Vector2(857, 12), new Vector2(48.3f, 48.3f), Color.white);
+                new Vector2(863, 12), new Vector2(48.3f, 48.3f), Color.white);
             ApplyIconButton(close, barButtonSprite);
             Button settingsShortcut = CreateButton(background.transform, "Settings Shortcut Button", string.Empty,
-                new Vector2(910, 12), new Vector2(46, 46), Color.white);
+                new Vector2(916, 12), new Vector2(46, 46), Color.white);
             ApplyIconButton(settingsShortcut, settingsButtonSprite);
             Button quitShortcut = CreateButton(background.transform, "Quit Shortcut Button", string.Empty,
-                new Vector2(962, 12), new Vector2(46, 46), Color.white);
+                new Vector2(968, 12), new Vector2(46, 46), Color.white);
             ApplyIconButton(quitShortcut, closeButtonSprite);
 
             string[] tabNames =
@@ -1514,7 +1519,7 @@ namespace TaskbarTactics.Editor
             List<TMP_Text> summaries = new List<TMP_Text>();
             for (int i = 0; i < panelNames.Length; i++)
             {
-                bool panelUsesOnlyMainBackground = i == 0 || i == 1 || i == 4;
+                bool panelUsesOnlyMainBackground = i == 0 || i == 1 || i == 3 || i == 4;
                 Image panel = CreateImage(background.transform, i == 0 ? "Squad Panel" : $"{panelNames[i]} Panel", panelUsesOnlyMainBackground ? Color.clear : Color.white);
                 if (!panelUsesOnlyMainBackground)
                 {
@@ -1545,7 +1550,7 @@ namespace TaskbarTactics.Editor
                 Vector2 summaryPosition = i == 0
                     ? new Vector2(24, 42)
                     : i == 3
-                        ? new Vector2(58, 72)
+                        ? new Vector2(58, 62)
                         : new Vector2(24, 72);
                 TMP_Text summary = CreateText(panel.transform, "Summary", string.Empty,
                     18, TextAlignmentOptions.TopLeft, summaryPosition, new Vector2(690, 360));
@@ -1589,11 +1594,11 @@ namespace TaskbarTactics.Editor
             List<Button> routeButtons = new List<Button>
             {
                 CreateButton(panels[3].transform, "Safety Route Button", "Safe",
-                    new Vector2(54, 200), new Vector2(188, 68), PanelLight),
+                    new Vector2(54, 200), new Vector2(159.8f, 68), PanelLight),
                 CreateButton(panels[3].transform, "Loot Route Button", "Loot",
-                    new Vector2(54, 262), new Vector2(188, 68), PanelLight),
+                    new Vector2(54, 262), new Vector2(159.8f, 68), PanelLight),
                 CreateButton(panels[3].transform, "Challenge Route Button", "Challenge",
-                    new Vector2(54, 324), new Vector2(188, 68), PanelLight)
+                    new Vector2(54, 324), new Vector2(159.8f, 68), PanelLight)
             };
             foreach (Button routeButton in routeButtons)
             {
@@ -1603,7 +1608,7 @@ namespace TaskbarTactics.Editor
             Button start = CreateButton(panels[3].transform, "Start Expedition Button",
                 "START CAMPAIGN", new Vector2(54, 378), new Vector2(150, 52), Accent);
             ApplyUiFrame(start.GetComponent<Image>(), commandSprite);
-            start.GetComponent<RectTransform>().sizeDelta = new Vector2(188, 68);
+            start.GetComponent<RectTransform>().sizeDelta = new Vector2(159.8f, 68);
             TMP_Text startLabel = start.GetComponentInChildren<TMP_Text>();
             if (startLabel != null)
             {

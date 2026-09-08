@@ -43,6 +43,7 @@ namespace TaskbarTactics.Presentation
             new OfflineProgressService(TimeSpan.FromHours(8));
         private readonly LocalizationCatalog localization = LocalizationCatalog.CreateBuiltIn();
         private const int CompletionReturnToCampFrames = 120;
+        private const double SilverDropChance = 0.5d;
 
         private JsonSaveStore saveStore;
         private Coroutine expeditionRoutine;
@@ -517,22 +518,27 @@ namespace TaskbarTactics.Presentation
                 combatPresenter?.ShowBattleback(node.Id);
                 SetStatus(NodeStatus(node));
                 CombatOutcome outcome = CombatOutcome.Victory;
+                CombatRequest combatRequest = null;
+                List<string> silverDropEnemyIds = new List<string>();
                 if (RunsCombat(node))
                 {
                     State.Party.IsFormationLocked = true;
-                    CombatRequest request = catalog.CreateCombatRequest(
+                    combatRequest = catalog.CreateCombatRequest(
                         SelectedHeroes(),
                         State.Inventory,
                         node,
                         State.Expedition.Seed + State.Expedition.CompletedNodes);
-                    CombatResult result = combatSimulator.Simulate(request);
+                    CombatResult result = combatSimulator.Simulate(combatRequest);
                     ApplyCombatResult(result);
+                    silverDropEnemyIds = RollSilverDrops(combatRequest, result);
                     yield return combatPresenter.Play(
-                        request,
+                        combatRequest,
                         result,
                         catalog,
                         combatPresentationSeconds,
-                        node.Id);
+                        node.Id,
+                        silverDropEnemyIds,
+                        CollectSilver);
                     outcome = result.Outcome;
                     State.Party.IsFormationLocked = false;
                 }
@@ -654,6 +660,47 @@ namespace TaskbarTactics.Presentation
             {
                 SetAttention("strip.rare_loot");
             }
+        }
+
+        private List<string> RollSilverDrops(CombatRequest request, CombatResult result)
+        {
+            List<string> drops = new List<string>();
+            if (request?.Enemies == null ||
+                request.Enemies.Count == 0 ||
+                result?.DefeatedEnemyIds == null ||
+                result.DefeatedEnemyIds.Count == 0)
+            {
+                return drops;
+            }
+
+            System.Random random = new System.Random(
+                State.Expedition.Seed + (State.Expedition.CompletedNodes + 1) * 97 + 13);
+            foreach (CombatantState enemy in request.Enemies)
+            {
+                if (!result.DefeatedEnemyIds.Contains(enemy.Id))
+                {
+                    continue;
+                }
+
+                string enemyId = enemy?.Id?.Split('-')[0];
+                EnemyDefinition definition = catalog.FindEnemy(enemyId);
+                bool isEligible = enemyId == "skeleton" ||
+                    enemyId == "soul_fury" ||
+                    (definition != null && definition.IsBoss);
+                if (isEligible && random.NextDouble() < SilverDropChance)
+                {
+                    drops.Add(enemy.Id);
+                }
+            }
+
+            return drops;
+        }
+
+        private void CollectSilver()
+        {
+            State.Silver++;
+            Save();
+            StateChanged?.Invoke();
         }
 
         private void Advance(MapNodeDefinition node)

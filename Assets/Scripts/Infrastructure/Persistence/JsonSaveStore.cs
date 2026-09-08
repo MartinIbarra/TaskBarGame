@@ -60,11 +60,22 @@ namespace TaskbarTactics.Infrastructure.Persistence
             try
             {
                 GameState state = JsonUtility.FromJson<GameState>(File.ReadAllText(path));
-                if (state == null || state.Version != GameState.CurrentVersion ||
+                if (state == null || state.Version > GameState.CurrentVersion ||
                     state.Party == null ||
                     state.Inventory == null || state.Expedition == null)
                 {
                     return null;
+                }
+
+                if (state.Version < 2)
+                {
+                    return GameState.CreateDefault();
+                }
+
+                if (state.Version < GameState.CurrentVersion)
+                {
+                    state.Silver = 0;
+                    state.Version = GameState.CurrentVersion;
                 }
 
                 return state;

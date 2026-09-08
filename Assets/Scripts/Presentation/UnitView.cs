@@ -25,7 +25,7 @@ namespace TaskbarTactics.Presentation
         private float activeArtworkWidthMultiplier = 1f;
         private float activeArtworkReferenceHeight;
         private float activeAttackPoseYOffset;
-        private bool normalizeGuardianCombatPoses;
+        private bool normalizeCombatPoses;
         private bool activeFaceLeft;
         private bool isDead;
         private bool capturedBodyDefaults;
@@ -33,6 +33,8 @@ namespace TaskbarTactics.Presentation
         private bool capturedHealthBarDefaults;
         private Vector3 defaultHealthBarPosition;
         private Vector3 defaultHealthBarScale;
+
+        public bool IsDead => isDead;
 
         public void ConfigureReferences(
             SpriteRenderer bodyRenderer,
@@ -140,7 +142,8 @@ namespace TaskbarTactics.Presentation
             Color fallbackColor,
             float artworkHeightMultiplier,
             bool faceLeft,
-            float yOffset)
+            float yOffset,
+            bool useExactSourceHeight = false)
         {
             if (body == null)
             {
@@ -162,11 +165,13 @@ namespace TaskbarTactics.Presentation
 
             body.sprite = artwork;
             body.color = Color.white;
-            float sourceHeight = Mathf.Max(
-                0.01f,
-                activeArtworkReferenceHeight > 0f
-                    ? Mathf.Max(activeArtworkReferenceHeight, artwork.bounds.size.y)
-                    : artwork.bounds.size.y);
+            float sourceHeight = useExactSourceHeight
+                ? artwork.bounds.size.y
+                : Mathf.Max(
+                    0.01f,
+                    activeArtworkReferenceHeight > 0f
+                        ? Mathf.Max(activeArtworkReferenceHeight, artwork.bounds.size.y)
+                        : artwork.bounds.size.y);
             float targetHeight = targetArtworkHeight * Mathf.Max(0.1f, artworkHeightMultiplier);
             float scale = targetHeight / sourceHeight;
             float widthScale = scale * activeArtworkWidthMultiplier;
@@ -275,18 +280,15 @@ namespace TaskbarTactics.Presentation
             {
                 bool isAttackPose = poseIndex == 3 || poseIndex == 4;
                 float poseHeightMultiplier = activeArtworkHeightMultiplier;
-                if (normalizeGuardianCombatPoses && (isAttackPose || poseIndex == 5))
-                {
-                    poseHeightMultiplier *= activeArtworkReferenceHeight /
-                        Mathf.Max(0.01f, pose.bounds.size.y);
-                }
+                bool normalizePose = normalizeCombatPoses && (isAttackPose || poseIndex == 5);
 
                 ApplyArtwork(
                     pose,
                     activeFallbackColor,
                     poseHeightMultiplier,
                     activeFaceLeft,
-                    isAttackPose ? activeAttackPoseYOffset : 0f);
+                    isAttackPose ? activeAttackPoseYOffset : 0f,
+                    normalizePose);
             }
         }
 
@@ -294,7 +296,7 @@ namespace TaskbarTactics.Presentation
         {
             activeArtworkWidthMultiplier = 1f;
             activeAttackPoseYOffset = 0f;
-            normalizeGuardianCombatPoses = false;
+            normalizeCombatPoses = false;
 
             if (string.IsNullOrWhiteSpace(poseResourcePath))
             {
@@ -312,12 +314,21 @@ namespace TaskbarTactics.Presentation
             }
             else if (normalizedPath.EndsWith("/rogue"))
             {
+                activeArtworkHeightMultiplier *= 0.95f;
                 activeAttackPoseYOffset = 0.045f;
             }
             else if (normalizedPath.EndsWith("/guardian"))
             {
-                normalizeGuardianCombatPoses = true;
+                normalizeCombatPoses = true;
                 activeArtworkWidthMultiplier = 1.1f;
+            }
+            else if (normalizedPath.EndsWith("/spellblade"))
+            {
+                normalizeCombatPoses = true;
+            }
+            else if (normalizedPath.EndsWith("/wraith"))
+            {
+                normalizeCombatPoses = true;
             }
         }
 

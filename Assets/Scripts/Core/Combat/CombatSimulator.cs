@@ -143,6 +143,10 @@ namespace TaskbarTactics.Core.Combat
                 : !enemiesAlive
                     ? CombatOutcome.Victory
                     : CombatOutcome.Timeout;
+            result.DefeatedEnemyIds = enemies
+                .Where(enemy => !enemy.IsAlive)
+                .Select(enemy => enemy.Id)
+                .ToList();
             List<CombatantState> orderedHeroes = heroes
                 .OrderBy(hero => hero.Id, StringComparer.Ordinal)
                 .ToList();
