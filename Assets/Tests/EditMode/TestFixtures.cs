@@ -98,6 +98,7 @@ namespace TaskbarTactics.Tests
                 CurrentHealth = 180,
                 CurrentMana = 60,
                 ResourcesInitialized = true,
+                UnlockedSkillIds = new List<string> { "healing_light" },
                 Position = new FormationPosition(1, 0),
                 EquippedItems = new List<EquippedItemState>
                 {

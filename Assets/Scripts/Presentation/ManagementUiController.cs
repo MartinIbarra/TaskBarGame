@@ -11,6 +11,14 @@ namespace TaskbarTactics.Presentation
     public sealed class ManagementUiController : MonoBehaviour
     {
         private const float UiSoundVolume = 0.65f;
+        private static readonly Vector2 SkillTreePreviewCenter = new Vector2(320f, -320f);
+
+        private enum SkillTreePreviewNodeKind
+        {
+            Square,
+            Small,
+            Circle
+        }
 
         [Header("Navigation")]
         [SerializeField] private List<Button> tabButtons = new List<Button>();
@@ -144,6 +152,10 @@ namespace TaskbarTactics.Presentation
             ApplyCommandLabels();
             ApplyTitleFont();
             ApplyTopRightButtonOffset();
+            ApplyUniformHudShadowDim();
+            HideOuterHudTorches();
+            ApplyPartyTorchPosition();
+            ApplySkillTreeTorchLayout();
             cycleActiveSkillButton?.gameObject.SetActive(false);
             cyclePassiveSkillButton?.gameObject.SetActive(false);
             LoadCommandSprites();
@@ -241,6 +253,7 @@ namespace TaskbarTactics.Presentation
         private void ApplyMapCommandLayout()
         {
             const float mapCommandWidth = 159.8f;
+            const float mapCommandX = 64f;
             float[] routeYPositions = { -199f, -261f, -323f };
 
             for (int i = 0; i < routeButtons.Count && i < 3; i++)
@@ -250,7 +263,7 @@ namespace TaskbarTactics.Presentation
                     : null;
                 if (rect != null)
                 {
-                    rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, routeYPositions[i]);
+                    rect.anchoredPosition = new Vector2(mapCommandX, routeYPositions[i]);
                     rect.sizeDelta = new Vector2(mapCommandWidth, rect.sizeDelta.y);
                 }
             }
@@ -260,7 +273,7 @@ namespace TaskbarTactics.Presentation
                 RectTransform rect = startExpeditionButton.transform as RectTransform;
                 if (rect != null)
                 {
-                    rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -377f);
+                    rect.anchoredPosition = new Vector2(mapCommandX, -377f);
                     rect.sizeDelta = new Vector2(mapCommandWidth, rect.sizeDelta.y);
                 }
             }
@@ -281,6 +294,7 @@ namespace TaskbarTactics.Presentation
                     label.fontSizeMin = 8f;
                     label.fontSizeMax = routeFontSize;
                     label.textWrappingMode = TextWrappingModes.NoWrap;
+                    label.rectTransform.anchoredPosition = new Vector2(0f, 4f);
                 }
             }
 
@@ -292,6 +306,7 @@ namespace TaskbarTactics.Presentation
                 startLabel.fontSizeMin = 10f;
                 startLabel.fontSizeMax = startFontSize;
                 startLabel.textWrappingMode = TextWrappingModes.NoWrap;
+                startLabel.rectTransform.anchoredPosition = new Vector2(0f, 4f);
             }
         }
 
@@ -709,6 +724,7 @@ namespace TaskbarTactics.Presentation
             panelImage.sprite = equipLayout;
             panelImage.type = Image.Type.Sliced;
             panelImage.preserveAspect = false;
+            panelRect.anchoredPosition = new Vector2(panelRect.anchoredPosition.x, -18f);
             if (panelRect.sizeDelta.y > -150f)
             {
                 panelRect.sizeDelta += Vector2.up * (-panelRect.rect.height * 0.15f);
@@ -962,9 +978,344 @@ namespace TaskbarTactics.Presentation
                 .Find("Skill Tree Viewport/Skill Tree Content") as RectTransform;
             skillTreeView?.ConfigureCentered(
                 content,
-                2.4f,
-                0.65f,
-                2.4f);
+                0.6f,
+                0.5f,
+                1.2f);
+            EnsureInitialSkillTreeNodes(content);
+        }
+
+        private void EnsureInitialSkillTreeNodes(RectTransform content)
+        {
+            if (content == null || content.Find("Interactive Skill Tree Nodes") != null)
+            {
+                return;
+            }
+
+            Transform image = content.Find("Skill Tree Image");
+            if (image != null)
+            {
+                image.gameObject.SetActive(false);
+            }
+
+            GameObject nodeLayer = new GameObject("Interactive Skill Tree Nodes", typeof(RectTransform));
+            nodeLayer.transform.SetParent(content, false);
+            RectTransform layerRect = nodeLayer.GetComponent<RectTransform>();
+            layerRect.anchorMin = layerRect.anchorMax = new Vector2(0f, 1f);
+            layerRect.pivot = new Vector2(0f, 1f);
+            layerRect.anchoredPosition = new Vector2(-30f, 0f);
+            layerRect.sizeDelta = content.sizeDelta;
+
+            CreateSkillTreeNode(layerRect, "HUD/User", LoadSkillTreeSprite("UI/SkillTree/Skill1"), new Vector2(320f, -238f), true);
+            CreateSkillTreeNode(layerRect, "Mage", Resources.Load<Sprite>("HeroClasses/pyromancer"), new Vector2(268f, -274f), false);
+            CreateSkillTreeNode(layerRect, "Cleric", Resources.Load<Sprite>("HeroClasses/cleric"), new Vector2(372f, -274f), false);
+            CreateSkillTreeNode(layerRect, "Spellblade", Resources.Load<Sprite>("HeroClasses/spellblade"), new Vector2(216f, -320f), false);
+            CreateSkillTreeNode(layerRect, "Archer", Resources.Load<Sprite>("HeroClasses/ranger"), new Vector2(424f, -320f), false);
+            CreateSkillTreeNode(layerRect, "Warrior", Resources.Load<Sprite>("HeroClasses/guardian"), new Vector2(268f, -366f), false);
+            CreateSkillTreeNode(layerRect, "Rogue", Resources.Load<Sprite>("HeroClasses/rogue"), new Vector2(372f, -366f), false);
+        }
+
+        private void CreateSkillTreeNode(
+            RectTransform parent,
+            string displayName,
+            Sprite icon,
+            Vector2 position,
+            bool isHudNode)
+        {
+            GameObject node = new GameObject(
+                $"Skill Node {displayName}",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image),
+                typeof(Button),
+                typeof(SkillTreeNodeView));
+            node.transform.SetParent(parent, false);
+            RectTransform rect = node.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = new Vector2(58f, 58f);
+
+            SkillTreeNodeView view = node.GetComponent<SkillTreeNodeView>();
+            view.Configure(icon, displayName);
+
+            Vector2 direction = position - SkillTreePreviewCenter;
+            if (direction.sqrMagnitude < 0.01f)
+            {
+                direction = Vector2.up;
+            }
+
+            direction.Normalize();
+            SkillTreePreviewNodeKind firstNodeKind = isHudNode
+                ? SkillTreePreviewNodeKind.Small
+                : SkillTreePreviewNodeKind.Square;
+            string pathId = displayName.Replace("/", "-");
+            node.GetComponent<Button>().onClick.AddListener(() =>
+                CreateSkillTreePreviewNode(parent, rect, pathId, direction, firstNodeKind, 0));
+
+            if (!isHudNode)
+            {
+                CreateSkillTreePreviewNode(
+                    parent,
+                    rect,
+                    pathId,
+                    direction,
+                    SkillTreePreviewNodeKind.Square,
+                    0);
+            }
+        }
+
+        private RectTransform CreateSkillTreePreviewNode(
+            RectTransform parent,
+            RectTransform sourceNode,
+            string pathId,
+            Vector2 direction,
+            SkillTreePreviewNodeKind nodeKind,
+            int depth)
+        {
+            string nodeName = $"Skill Preview {pathId} {depth} {nodeKind}";
+            Transform existingNode = parent.Find(nodeName);
+            if (existingNode != null)
+            {
+                return existingNode as RectTransform;
+            }
+
+            float spacing = GetSkillTreePreviewSpacing(nodeKind);
+            Vector2 nodePosition = sourceNode.anchoredPosition + direction * spacing;
+            CreateSkillTreeConnector(
+                parent,
+                sourceNode.anchoredPosition,
+                nodePosition,
+                pathId,
+                depth,
+                nodeKind == SkillTreePreviewNodeKind.Small);
+
+            GameObject previewNode = new GameObject(
+                nodeName,
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image),
+                typeof(Button),
+                typeof(SkillTreeNodeView));
+            previewNode.transform.SetParent(parent, false);
+            RectTransform previewRect = previewNode.GetComponent<RectTransform>();
+            previewRect.anchorMin = previewRect.anchorMax = new Vector2(0f, 1f);
+            previewRect.pivot = new Vector2(0.5f, 0.5f);
+            previewRect.anchoredPosition = nodePosition;
+            previewRect.sizeDelta = GetSkillTreePreviewSize(nodeKind);
+
+            bool isClericHealNode = pathId == "Cleric" &&
+                                    depth == 0 &&
+                                    nodeKind == SkillTreePreviewNodeKind.Square;
+            bool isClericHealUnlocked = isClericHealNode &&
+                                        app != null &&
+                                        app.IsSkillUnlocked("cleric", "healing_light");
+            string spritePath = isClericHealNode
+                ? "UI/SkillTree/heal1"
+                : GetSkillTreePreviewSpritePath(nodeKind, false);
+            string tooltip = isClericHealNode ? "Heal Ally" : pathId;
+
+            Image previewImage = previewNode.GetComponent<Image>();
+            previewImage.sprite = LoadSkillTreeSprite(spritePath);
+            previewImage.preserveAspect = true;
+            previewImage.color = nodeKind == SkillTreePreviewNodeKind.Small ||
+                                 (isClericHealNode && !isClericHealUnlocked)
+                ? new Color(0.42f, 0.42f, 0.42f, 1f)
+                : Color.white;
+            previewImage.raycastTarget = true;
+            previewNode.GetComponent<SkillTreeNodeView>().Configure(previewImage.sprite, tooltip);
+
+            previewNode.GetComponent<Button>().onClick.AddListener(() =>
+            {
+                if (isClericHealNode &&
+                    app != null &&
+                    app.UnlockSkill("cleric", "healing_light"))
+                {
+                    previewImage.color = Color.white;
+                }
+
+                if (nodeKind == SkillTreePreviewNodeKind.Small)
+                {
+                    previewImage.sprite = LoadSkillTreeSprite(GetSkillTreePreviewSpritePath(nodeKind, true));
+                    previewImage.color = Color.white;
+                }
+
+                SkillTreePreviewNodeKind nextNodeKind = nodeKind == SkillTreePreviewNodeKind.Square
+                    ? SkillTreePreviewNodeKind.Small
+                    : nodeKind == SkillTreePreviewNodeKind.Small
+                        ? SkillTreePreviewNodeKind.Circle
+                        : SkillTreePreviewNodeKind.Small;
+
+                if (nodeKind == SkillTreePreviewNodeKind.Square && depth == 0)
+                {
+                    CreateSkillTreePreviewFork(
+                        parent,
+                        previewRect,
+                        pathId,
+                        direction,
+                        nextNodeKind,
+                        depth + 1);
+                    return;
+                }
+
+                if (depth == 3)
+                {
+                    CreateSkillTreePreviewFork(
+                        parent,
+                        previewRect,
+                        pathId,
+                        direction,
+                        nextNodeKind,
+                        depth + 1);
+                    return;
+                }
+
+                CreateSkillTreePreviewNode(
+                    parent,
+                    previewRect,
+                    pathId,
+                    direction,
+                    nextNodeKind,
+                    depth + 1);
+            });
+
+            return previewRect;
+        }
+
+        private void CreateSkillTreePreviewFork(
+            RectTransform parent,
+            RectTransform sourceNode,
+            string pathId,
+            Vector2 direction,
+            SkillTreePreviewNodeKind nodeKind,
+            int depth)
+        {
+            Vector2 leftDirection = RotateSkillTreeDirection(direction, 28f);
+            Vector2 rightDirection = direction;
+            RectTransform leftNode = CreateSkillTreePreviewNode(
+                parent,
+                sourceNode,
+                $"{pathId}-Left",
+                leftDirection,
+                nodeKind,
+                depth);
+            RectTransform rightNode = CreateSkillTreePreviewNode(
+                parent,
+                sourceNode,
+                $"{pathId}-Right",
+                rightDirection,
+                nodeKind,
+                depth);
+
+            if (leftNode == null || rightNode == null)
+            {
+                return;
+            }
+
+            CreateSkillTreeConnector(
+                parent,
+                leftNode.anchoredPosition,
+                rightNode.anchoredPosition,
+                $"{pathId}-ForkBridge",
+                depth,
+                false);
+        }
+
+        private static Vector2 RotateSkillTreeDirection(Vector2 direction, float degrees)
+        {
+            float radians = degrees * Mathf.Deg2Rad;
+            float cosine = Mathf.Cos(radians);
+            float sine = Mathf.Sin(radians);
+            return new Vector2(
+                direction.x * cosine - direction.y * sine,
+                direction.x * sine + direction.y * cosine).normalized;
+        }
+
+        private static float GetSkillTreePreviewSpacing(SkillTreePreviewNodeKind nodeKind)
+        {
+            return nodeKind == SkillTreePreviewNodeKind.Small ? 64f : 70f;
+        }
+
+        private static Vector2 GetSkillTreePreviewSize(SkillTreePreviewNodeKind nodeKind)
+        {
+            switch (nodeKind)
+            {
+                case SkillTreePreviewNodeKind.Square:
+                    return new Vector2(46f, 46f);
+                case SkillTreePreviewNodeKind.Small:
+                    return new Vector2(32f, 32f);
+                default:
+                    return new Vector2(55f, 55f);
+            }
+        }
+
+        private static string GetSkillTreePreviewSpritePath(
+            SkillTreePreviewNodeKind nodeKind,
+            bool isActivated)
+        {
+            switch (nodeKind)
+            {
+                case SkillTreePreviewNodeKind.Square:
+                    return "UI/SkillTree/Skill2";
+                case SkillTreePreviewNodeKind.Small:
+                    return "UI/SkillTree/ss0";
+                default:
+                    return "UI/SkillTree/Skill1";
+            }
+        }
+
+        private static void CreateSkillTreeConnector(
+            RectTransform parent,
+            Vector2 sourcePosition,
+            Vector2 targetPosition,
+            string pathId,
+            int depth,
+            bool connectsToSmallNode)
+        {
+            string connectorName = $"Skill Preview Connector {pathId} {depth}";
+            if (parent.Find(connectorName) != null)
+            {
+                return;
+            }
+
+            GameObject connector = new GameObject(
+                connectorName,
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
+            connector.transform.SetParent(parent, false);
+            connector.transform.SetAsFirstSibling();
+            RectTransform connectorRect = connector.GetComponent<RectTransform>();
+            connectorRect.anchorMin = connectorRect.anchorMax = new Vector2(0f, 1f);
+            connectorRect.pivot = new Vector2(0.5f, 0.5f);
+            Vector2 delta = targetPosition - sourcePosition;
+            connectorRect.anchoredPosition = sourcePosition + delta * 0.5f;
+            connectorRect.sizeDelta = new Vector2(connectsToSmallNode ? 3f : 4f, delta.magnitude);
+            float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg - 90f;
+            connectorRect.localRotation = Quaternion.Euler(0f, 0f, angle);
+            Image connectorImage = connector.GetComponent<Image>();
+            connectorImage.color = new Color(0.72f, 0.65f, 0.35f, 0.9f);
+            connectorImage.raycastTarget = false;
+        }
+
+        private static Sprite LoadSkillTreeSprite(string resourcePath)
+        {
+            Sprite sprite = Resources.Load<Sprite>(resourcePath);
+            if (sprite != null)
+            {
+                return sprite;
+            }
+
+            Texture2D texture = Resources.Load<Texture2D>(resourcePath);
+            if (texture == null)
+            {
+                return null;
+            }
+
+            return Sprite.Create(
+                texture,
+                new Rect(0f, 0f, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f),
+                100f);
         }
 
         private static void EnsureSkillTreeFrame(Transform skillPanel)
@@ -1008,13 +1359,104 @@ namespace TaskbarTactics.Presentation
                 return;
             }
 
-            SetChildRectPosition(panels[2].transform, "Right Candle", new Vector2(560f, -56f));
-            SetChildRectPosition(panels[2].transform, "Right Candle Light", new Vector2(560f, -32f));
+            SetChildRectPosition(panels[2].transform, "Right Candle", new Vector2(560f, -41f));
+            SetChildRectPosition(panels[2].transform, "Right Candle Light", new Vector2(560f, -17f));
+        }
+
+        private void ApplyPartyTorchPosition()
+        {
+            if (panels.Count == 0 || panels[0] == null)
+            {
+                return;
+            }
+
+            SetChildRectPosition(panels[0].transform, "Left Candle", new Vector2(-98f, 8f));
+            SetChildRectPosition(panels[0].transform, "Left Candle Light", new Vector2(-176f, 32f));
+            SetChildRectPosition(panels[0].transform, "Right Candle", new Vector2(-38f, 8f));
+            SetChildRectPosition(panels[0].transform, "Right Candle Light", new Vector2(40f, 32f));
+        }
+
+        private void HideOuterHudTorches()
+        {
+            Transform background = transform.Find("Management Background") ?? transform;
+
+            SetChildActive(background, "Left Candle", false);
+            SetChildActive(background, "Left Candle Light", false);
+            SetChildActive(background, "Right Candle", false);
+            SetChildActive(background, "Right Candle Light", false);
+        }
+
+        private void ApplyUniformHudShadowDim()
+        {
+            Transform background = transform.Find("Management Background") ?? transform;
+            RectTransform globalDim = background.Find("Torch Shadow Dim") as RectTransform;
+            if (globalDim != null)
+            {
+                globalDim.gameObject.SetActive(true);
+                globalDim.anchorMin = Vector2.zero;
+                globalDim.anchorMax = Vector2.one;
+                globalDim.offsetMin = Vector2.zero;
+                globalDim.offsetMax = Vector2.zero;
+                globalDim.SetAsFirstSibling();
+            }
+
+            foreach (GameObject panel in panels)
+            {
+                if (panel != null)
+                {
+                    SetChildActive(panel.transform, "Torch Shadow Dim", false);
+                }
+            }
+        }
+
+        private static void SetChildActive(Transform parent, string childName, bool isActive)
+        {
+            Transform child = parent.Find(childName);
+            if (child != null)
+            {
+                child.gameObject.SetActive(isActive);
+            }
+        }
+
+        private void ApplySkillTreeTorchLayout()
+        {
+            if (panels.Count <= 1 || panels[1] == null)
+            {
+                return;
+            }
+
+            Transform panel = panels[1].transform;
+            Transform candle = panel.Find("Skill Tree Candle") ?? panel.Find("Left Candle");
+            Transform candleLight = panel.Find("Skill Tree Candle Light") ?? panel.Find("Left Candle Light");
+            Transform extraCandle = panel.Find("Right Candle");
+            Transform extraLight = panel.Find("Right Candle Light");
+
+            if (extraCandle != null)
+            {
+                extraCandle.gameObject.SetActive(false);
+            }
+
+            if (extraLight != null)
+            {
+                extraLight.gameObject.SetActive(false);
+            }
+
+            SetRectPosition(candle, new Vector2(-92f, 8f));
+            SetRectPosition(candleLight, new Vector2(-92f, 32f));
         }
 
         private static void SetChildRectPosition(Transform parent, string childName, Vector2 position)
         {
             RectTransform rect = parent.Find(childName) as RectTransform;
+            if (rect != null)
+            {
+                rect.anchoredPosition = position;
+            }
+        }
+
+        private static void SetRectPosition(Transform target, Vector2 position)
+        {
+            RectTransform rect = target as RectTransform;
             if (rect != null)
             {
                 rect.anchoredPosition = position;
@@ -1077,9 +1519,9 @@ namespace TaskbarTactics.Presentation
         private void ApplyEquipmentHeroTabLayout()
         {
             const float startX = 417f;
-            const float y = -404f;
-            const float width = 48.4f;
-            const float height = 30.8f;
+            const float y = -416f;
+            const float width = 54f;
+            const float height = 35f;
             const float gap = 52.8f;
 
             for (int i = 0; i < equipmentHeroTabs.Count; i++)

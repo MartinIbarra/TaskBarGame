@@ -1472,7 +1472,6 @@ namespace TaskbarTactics.Editor
             background.color = new Color(0.85f, 0.85f, 0.85f, 1f);
             SetStretch(background.rectTransform, 0, 0, 0, 0);
             AddTorchShadowDim(background.transform);
-            AddCandlePair(background.transform, candleFrames, new Vector2(12, 18), new Vector2(-12, 18));
             Image titleFrame = CreateImage(background.transform, "Title Frame", Color.white);
             ApplySimpleWideFrame(titleFrame, titleWideSprite);
             titleFrame.rectTransform.anchorMin = titleFrame.rectTransform.anchorMax = new Vector2(0, 1);
@@ -1539,8 +1538,8 @@ namespace TaskbarTactics.Editor
                 {
                     panel.rectTransform.anchorMin = new Vector2(0, 0);
                     panel.rectTransform.anchorMax = new Vector2(0, 1);
-                    panel.rectTransform.offsetMin = new Vector2(220, 64.5f);
-                    panel.rectTransform.offsetMax = new Vector2(610, -116.5f);
+                    panel.rectTransform.offsetMin = new Vector2(220, 72.5f);
+                    panel.rectTransform.offsetMax = new Vector2(610, -108.5f);
                 }
                 if (i != 0 && i != 1 && i != 2 && i != 3 && i != 4)
                 {
@@ -1559,12 +1558,8 @@ namespace TaskbarTactics.Editor
                 summaries.Add(summary);
                 panel.gameObject.SetActive(i == 0);
             }
-            AddTorchShadowDim(panels[0].transform);
-            AddTorchShadowDim(panels[1].transform);
-            AddTorchShadowDim(panels[2].transform);
-            AddTorchShadowDim(panels[3].transform);
-            AddCandlePair(panels[0].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
-            AddCandlePair(panels[1].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
+            AddCandlePair(panels[0].transform, candleFrames, new Vector2(-98, 8), new Vector2(-38, 8), torchLightFrames);
+            AddCenteredCandle(panels[1].transform, "Skill Tree Candle", candleFrames, new Vector2(-92, 8), torchLightFrames);
             AddCandle(panels[2].transform, "Left Candle", candleFrames, new Vector2(0, 1), new Vector2(0, 1), new Vector2(10, 8), torchLightFrames);
             AddCandlePair(panels[3].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
             summaries[1].gameObject.SetActive(false);
@@ -1572,7 +1567,7 @@ namespace TaskbarTactics.Editor
             CreateEquipmentPreviewLayout(panels[2].transform, equipLayoutSprite);
             summaries[2].gameObject.SetActive(false);
             CreateInventorySlotGrid(panels[2].transform, itemSlotSprite);
-            AddCenteredCandle(panels[2].transform, "Right Candle", candleFrames, new Vector2(560, -56), torchLightFrames);
+            AddCenteredCandle(panels[2].transform, "Right Candle", candleFrames, new Vector2(560, -41), torchLightFrames);
             List<FormationSlotView> formationSlots = CreateFormationSlotHud(
                 panels[0].transform,
                 formationSlotSprite,
@@ -1594,11 +1589,11 @@ namespace TaskbarTactics.Editor
             List<Button> routeButtons = new List<Button>
             {
                 CreateButton(panels[3].transform, "Safety Route Button", "Safe",
-                    new Vector2(54, 200), new Vector2(159.8f, 68), PanelLight),
+                    new Vector2(64, 200), new Vector2(159.8f, 68), PanelLight),
                 CreateButton(panels[3].transform, "Loot Route Button", "Loot",
-                    new Vector2(54, 262), new Vector2(159.8f, 68), PanelLight),
+                    new Vector2(64, 262), new Vector2(159.8f, 68), PanelLight),
                 CreateButton(panels[3].transform, "Challenge Route Button", "Challenge",
-                    new Vector2(54, 324), new Vector2(159.8f, 68), PanelLight)
+                    new Vector2(64, 324), new Vector2(159.8f, 68), PanelLight)
             };
             foreach (Button routeButton in routeButtons)
             {
@@ -1606,7 +1601,7 @@ namespace TaskbarTactics.Editor
             }
 
             Button start = CreateButton(panels[3].transform, "Start Expedition Button",
-                "START CAMPAIGN", new Vector2(54, 378), new Vector2(150, 52), Accent);
+                "START CAMPAIGN", new Vector2(64, 378), new Vector2(150, 52), Accent);
             ApplyUiFrame(start.GetComponent<Image>(), commandSprite);
             start.GetComponent<RectTransform>().sizeDelta = new Vector2(159.8f, 68);
             TMP_Text startLabel = start.GetComponentInChildren<TMP_Text>();

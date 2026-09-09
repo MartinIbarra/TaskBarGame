@@ -7,7 +7,7 @@ namespace TaskbarTactics.Core.Models
     [Serializable]
     public sealed class GameState
     {
-        public const int CurrentVersion = 3;
+        public const int CurrentVersion = 4;
 
         public int Version = CurrentVersion;
         public int Gold;
@@ -77,6 +77,7 @@ namespace TaskbarTactics.Core.Models
         public FormationPosition Position;
         public string ActiveSkillId = string.Empty;
         public string PassiveSkillId = string.Empty;
+        public List<string> UnlockedSkillIds = new List<string>();
         public List<EquippedItemState> EquippedItems = new List<EquippedItemState>();
         public List<ActiveStatusEffectState> ActiveStatusEffects =
             new List<ActiveStatusEffectState>();

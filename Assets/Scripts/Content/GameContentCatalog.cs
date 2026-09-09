@@ -216,6 +216,8 @@ namespace TaskbarTactics.Content
                 HeroStats stats = ResolveHeroStats(state, inventory);
                 EquipmentLoadout loadout = CreateLoadout(state, inventory);
                 StatusEffectCollection effects = RestoreStatusEffects(state.ActiveStatusEffects);
+                SkillDefinition activeSkill = definition.ActiveSkills.FirstOrDefault(skill =>
+                    skill != null && skill.Id == state.ActiveSkillId);
                 bool resourcesInitialized = state.ResourcesInitialized;
                 return new CombatantState
                 {
@@ -246,6 +248,11 @@ namespace TaskbarTactics.Content
                     CooldownReduction = stats.CooldownReduction,
                     IsDualWielding = EquipmentService.IsDualWielding(loadout),
                     HasTaunt = definition.HeroClass == HeroClass.Warrior,
+                    ActiveSkillId = activeSkill != null ? activeSkill.Id : string.Empty,
+                    ActiveSkillMagnitude = activeSkill != null ? activeSkill.Magnitude : 0f,
+                    UnlockedSkillIds = state.UnlockedSkillIds != null
+                        ? new List<string>(state.UnlockedSkillIds)
+                        : new List<string>(),
                     StatusEffects = effects
                 };
             }).ToList();

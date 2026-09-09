@@ -31,6 +31,9 @@ namespace TaskbarTactics.Core.Combat
         public float CooldownReduction;
         public bool HasTaunt;
         public bool IsDualWielding;
+        public string ActiveSkillId = string.Empty;
+        public float ActiveSkillMagnitude;
+        public List<string> UnlockedSkillIds = new List<string>();
         public AttackHand NextAttackHand = AttackHand.Main;
         public StatusEffectCollection StatusEffects = new StatusEffectCollection();
 
@@ -67,6 +70,9 @@ namespace TaskbarTactics.Core.Combat
         {
             CombatantState clone = (CombatantState)MemberwiseClone();
             clone.StatusEffects = StatusEffects?.Clone() ?? new StatusEffectCollection();
+            clone.UnlockedSkillIds = UnlockedSkillIds != null
+                ? new List<string>(UnlockedSkillIds)
+                : new List<string>();
             return clone;
         }
     }
@@ -100,8 +106,15 @@ namespace TaskbarTactics.Core.Combat
             new List<ActiveStatusEffectState>();
     }
 
+    public enum CombatEventKind
+    {
+        Damage,
+        Healing
+    }
+
     public sealed class CombatEvent : IEquatable<CombatEvent>
     {
+        public CombatEventKind Kind;
         public int TimeMilliseconds;
         public CombatSide ActorSide;
         public string ActorId = string.Empty;
@@ -115,6 +128,7 @@ namespace TaskbarTactics.Core.Combat
         public bool Equals(CombatEvent other)
         {
             return other != null &&
+                   Kind == other.Kind &&
                    TimeMilliseconds == other.TimeMilliseconds &&
                    ActorSide == other.ActorSide &&
                    ActorId == other.ActorId &&
@@ -135,7 +149,8 @@ namespace TaskbarTactics.Core.Combat
         {
             unchecked
             {
-                int hashCode = TimeMilliseconds;
+                int hashCode = (int)Kind;
+                hashCode = (hashCode * 397) ^ TimeMilliseconds;
                 hashCode = (hashCode * 397) ^ (int)ActorSide;
                 hashCode = (hashCode * 397) ^ (ActorId != null ? ActorId.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (TargetId != null ? TargetId.GetHashCode() : 0);
@@ -145,7 +160,7 @@ namespace TaskbarTactics.Core.Combat
 
         public override string ToString()
         {
-            return $"{TimeMilliseconds}ms:{ActorId}>{TargetId}:{Amount}:" +
+            return $"{TimeMilliseconds}ms:{Kind}:{ActorId}>{TargetId}:{Amount}:" +
                    $"{WasCritical}:{WasMiss}:{AttackHand}";
         }
     }

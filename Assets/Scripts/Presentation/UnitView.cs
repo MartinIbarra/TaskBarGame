@@ -23,6 +23,7 @@ namespace TaskbarTactics.Presentation
         private Color activeFallbackColor;
         private float activeArtworkHeightMultiplier = 1f;
         private float activeArtworkWidthMultiplier = 1f;
+        private float activeCombatPoseScaleMultiplier = 1f;
         private float activeArtworkReferenceHeight;
         private float activeAttackPoseYOffset;
         private bool normalizeCombatPoses;
@@ -91,6 +92,11 @@ namespace TaskbarTactics.Presentation
             PlayTemporaryPoses(new[] { 3, 4 }, 0.12f);
         }
 
+        public void PlaySkill()
+        {
+            PlayTemporaryPoses(new[] { 7, 8 }, 0.16f);
+        }
+
         public void ReceiveDamage(int amount)
         {
             currentHealth = Mathf.Max(0, currentHealth - amount);
@@ -107,6 +113,25 @@ namespace TaskbarTactics.Presentation
                 animationBridge?.PlayHit();
                 PlayTemporaryPose(5, 0.18f);
             }
+        }
+
+        public void ReceiveHealing(int amount)
+        {
+            if (isDead || amount <= 0)
+            {
+                return;
+            }
+
+            currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
+            SetHealth(currentHealth);
+        }
+
+        public void SetCurrentHealth(int health)
+        {
+            currentHealth = Mathf.Clamp(health, 0, maxHealth);
+            isDead = currentHealth <= 0;
+            SetHealth(currentHealth);
+            animationBridge?.SetDead(isDead);
         }
 
         public void SetMovement(float normalizedSpeed)
@@ -279,8 +304,13 @@ namespace TaskbarTactics.Presentation
             if (pose != null)
             {
                 bool isAttackPose = poseIndex == 3 || poseIndex == 4;
-                float poseHeightMultiplier = activeArtworkHeightMultiplier;
-                bool normalizePose = normalizeCombatPoses && (isAttackPose || poseIndex == 5);
+                bool isSkillPose = poseIndex == 7 || poseIndex == 8;
+                float poseHeightMultiplier = activeArtworkHeightMultiplier *
+                                             ((isAttackPose || isSkillPose || poseIndex == 5)
+                                                 ? activeCombatPoseScaleMultiplier
+                                                 : 1f);
+                bool normalizePose = normalizeCombatPoses &&
+                                     (isAttackPose || isSkillPose || poseIndex == 5);
 
                 ApplyArtwork(
                     pose,
@@ -295,6 +325,7 @@ namespace TaskbarTactics.Presentation
         private void ApplyHeroCombatPresentationProfile(string poseResourcePath)
         {
             activeArtworkWidthMultiplier = 1f;
+            activeCombatPoseScaleMultiplier = 1f;
             activeAttackPoseYOffset = 0f;
             normalizeCombatPoses = false;
 
@@ -325,6 +356,7 @@ namespace TaskbarTactics.Presentation
             else if (normalizedPath.EndsWith("/spellblade"))
             {
                 normalizeCombatPoses = true;
+                activeCombatPoseScaleMultiplier = 0.9f;
             }
             else if (normalizedPath.EndsWith("/wraith"))
             {
@@ -365,7 +397,9 @@ namespace TaskbarTactics.Presentation
                 "attack_1",
                 "attack_2",
                 "hit",
-                "defense"
+                "defense",
+                "skill_1",
+                "skill_2"
             };
             string[][] fallbackNames =
             {
@@ -375,7 +409,9 @@ namespace TaskbarTactics.Presentation
                 new[] { "attack_1", "attack" },
                 new[] { "attack_2" },
                 new[] { "hit", "death" },
-                new[] { "defense" }
+                new[] { "defense" },
+                new[] { "skill_1", "heal_1" },
+                new[] { "skill_2", "heal_2" }
             };
             Sprite[] sprites = new Sprite[poseNames.Length];
             for (int i = 0; i < poseNames.Length; i++)

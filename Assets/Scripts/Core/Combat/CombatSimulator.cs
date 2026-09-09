@@ -13,6 +13,9 @@ namespace TaskbarTactics.Core.Combat
 
     public sealed class CombatSimulator : ICombatSimulator
     {
+        private const string HealingLightSkillId = "healing_light";
+        private const double HealingLightActivationChance = 0.30d;
+
         public CombatResult Simulate(CombatRequest request)
         {
             if (request == null)
@@ -63,6 +66,17 @@ namespace TaskbarTactics.Core.Combat
                         currentTime,
                         AttackIntervalMilliseconds(actorStats.AttackSpeed));
                     if (actor.StatusEffects != null && actor.StatusEffects.PreventsBasicAttacks)
+                    {
+                        continue;
+                    }
+
+                    if (TryPerformHealingLight(
+                            actor,
+                            actorStats,
+                            heroes,
+                            random,
+                            currentTime,
+                            result))
                     {
                         continue;
                     }
@@ -168,6 +182,54 @@ namespace TaskbarTactics.Core.Combat
                 })
                 .ToList();
             return result;
+        }
+
+        private static bool TryPerformHealingLight(
+            CombatantState actor,
+            HeroStats actorStats,
+            IReadOnlyList<CombatantState> heroes,
+            Random random,
+            int currentTime,
+            CombatResult result)
+        {
+            if (actor.Side != CombatSide.Hero ||
+                actor.ActiveSkillId != HealingLightSkillId ||
+                actor.UnlockedSkillIds == null ||
+                !actor.UnlockedSkillIds.Contains(HealingLightSkillId))
+            {
+                return false;
+            }
+
+            CombatantState target = heroes
+                .Where(hero => hero.IsAlive && hero.CurrentHealth * 2 <= hero.MaxHealth)
+                .OrderBy(hero => hero.CurrentHealth / (float)Math.Max(1, hero.MaxHealth))
+                .ThenBy(hero => hero.Id, StringComparer.Ordinal)
+                .FirstOrDefault();
+            if (target == null || random.NextDouble() >= HealingLightActivationChance)
+            {
+                return false;
+            }
+
+            int healingPower = Math.Max(
+                1,
+                Round(actorStats.SpellPower * Math.Max(0.1f, actor.ActiveSkillMagnitude)));
+            int healing = Math.Min(healingPower, target.MaxHealth - target.CurrentHealth);
+            if (healing <= 0)
+            {
+                return false;
+            }
+
+            target.CurrentHealth += healing;
+            result.Events.Add(new CombatEvent
+            {
+                Kind = CombatEventKind.Healing,
+                TimeMilliseconds = currentTime,
+                ActorSide = actor.Side,
+                ActorId = actor.Id,
+                TargetId = target.Id,
+                Amount = healing
+            });
+            return true;
         }
 
         private static List<CombatantState> CloneAndInitialize(

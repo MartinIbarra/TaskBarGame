@@ -10,7 +10,7 @@ namespace TaskbarTactics.Presentation
     {
         private const int CoinFrameCount = 8;
         private const float CoinFrameSeconds = 0.12f;
-        private const float HudWidth = 125.715f;
+        private const float HudWidth = 138.2865f;
         private const float HudHeight = 42f;
         private const float CoinPositionX = 36f;
 
@@ -52,7 +52,7 @@ namespace TaskbarTactics.Presentation
             {
                 root.anchorMin = root.anchorMax = new Vector2(0f, 1f);
                 root.pivot = new Vector2(0f, 1f);
-                root.anchoredPosition = new Vector2(78f, -8f);
+                root.anchoredPosition = new Vector2(83f, -8f);
                 root.sizeDelta = new Vector2(HudWidth, HudHeight);
             }
 

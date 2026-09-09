@@ -21,10 +21,14 @@ namespace TaskbarTactics.Presentation
         private const float SpawnIntroStaggerSeconds = 0.08f;
         private const float HeroSpawnIntroOffsetX = -1.25f;
         private const float EnemySpawnIntroOffsetX = 1.25f;
-        private const int SilverDropAnimationFrames = 22;
-        private const float SilverDropJumpHeight = 0.42f;
-        private const float SilverDropScaleMultiplier = 0.85f;
+        private const int SilverDropAnimationFrames = 26;
+        private const float SilverDropJumpHeight = 0.52f;
+        private const float SilverDropScaleMultiplier = 0.765f;
+        private const float SilverDropApexScaleMultiplier = 0.55f;
+        private const float SilverDropSoundVolume = 0.56f;
         private const float ChestOpenEffectYOffset = 0.16f;
+        private const float ChestOpenEffectFrameSeconds = 0.12f;
+        private const float RewardItemPopupDurationSeconds = 1.15f;
 
         [Header("Reusable presentation")]
         [SerializeField] private UnitView unitPrefab;
@@ -46,6 +50,7 @@ namespace TaskbarTactics.Presentation
         private Sprite[] chestOpenEffectFrames;
         private Sprite[] silverCoinFrames;
         private Sprite[] silverCoinShineFrames;
+        private AudioClip silverDropClip;
 
         public void Configure(
             UnitView prefab,
@@ -118,6 +123,22 @@ namespace TaskbarTactics.Presentation
             IReadOnlyCollection<string> silverDropEnemyIds,
             Action onSilverCollected)
         {
+            if (combatEvent.Kind == CombatEventKind.Healing)
+            {
+                if (unitViews.TryGetValue(combatEvent.ActorId, out UnitView healer))
+                {
+                    healer.PlaySkill();
+                }
+
+                if (unitViews.TryGetValue(combatEvent.TargetId, out UnitView healedTarget))
+                {
+                    healedTarget.ReceiveHealing(combatEvent.Amount);
+                    StartCoroutine(PlayHealingEffect(healedTarget.transform));
+                }
+
+                return;
+            }
+
             if (unitViews.TryGetValue(combatEvent.ActorId, out UnitView actor))
             {
                 actor.PlayAttack();
@@ -133,6 +154,31 @@ namespace TaskbarTactics.Presentation
                     StartCoroutine(PlaySilverDrop(target.transform.position, onSilverCollected));
                 }
             }
+        }
+
+        private IEnumerator PlayHealingEffect(Transform target)
+        {
+            LoadSilverDropFrames();
+            if (target == null || silverCoinShineFrames == null || silverCoinShineFrames.Length == 0)
+            {
+                yield break;
+            }
+
+            GameObject effectObject = new GameObject("Healing Effect");
+            effectObject.transform.SetParent(target, false);
+            effectObject.transform.localPosition = new Vector3(0f, 0.18f, -0.45f);
+            effectObject.transform.localScale = Vector3.one * 0.85f;
+            SpriteRenderer effectRenderer = effectObject.AddComponent<SpriteRenderer>();
+            effectRenderer.sortingOrder = 42;
+
+            const float frameSeconds = 0.08f;
+            for (int frame = 0; frame < silverCoinShineFrames.Length * 2; frame++)
+            {
+                effectRenderer.sprite = silverCoinShineFrames[frame % silverCoinShineFrames.Length];
+                yield return new WaitForSecondsRealtime(frameSeconds);
+            }
+
+            Destroy(effectObject);
         }
 
         private IEnumerator PlaySilverDrop(Vector3 startPosition, Action onCollected)
@@ -161,18 +207,30 @@ namespace TaskbarTactics.Presentation
             }
 
             const int midpointFrame = SilverDropAnimationFrames / 2;
+            int soundFrame = Mathf.Max(1, midpointFrame / 2);
             for (int frame = 0; frame <= midpointFrame; frame++)
             {
                 float normalized = frame / (float)midpointFrame;
                 float jump = normalized * (2f - normalized);
+                float shrink = Mathf.SmoothStep(0f, 1f, normalized * normalized);
                 coinObject.transform.position = startPosition + new Vector3(
                     0f,
                     0.08f + SilverDropJumpHeight * jump,
                     -0.4f);
+                float scale = Mathf.Lerp(
+                    SilverDropScaleMultiplier,
+                    SilverDropScaleMultiplier * SilverDropApexScaleMultiplier,
+                    shrink);
+                coinObject.transform.localScale = Vector3.one * scale;
                 coinRenderer.sprite = silverCoinFrames[frame % silverCoinFrames.Length];
                 if (shineRenderer != null)
                 {
                     shineRenderer.sprite = silverCoinShineFrames[frame % silverCoinShineFrames.Length];
+                }
+
+                if (frame == soundFrame)
+                {
+                    PlaySilverDropSound();
                 }
 
                 if (frame == midpointFrame)
@@ -184,6 +242,29 @@ namespace TaskbarTactics.Presentation
 
                 yield return null;
             }
+        }
+
+        private void PlaySilverDropSound()
+        {
+            silverDropClip = silverDropClip != null
+                ? silverDropClip
+                : Resources.Load<AudioClip>("Audio/Events/coin");
+            if (silverDropClip == null)
+            {
+                return;
+            }
+
+            AudioSource source = FindFirstObjectByType<AudioSource>();
+            if (source == null)
+            {
+                GameObject audioObject = new GameObject("Silver Coin Audio");
+                source = audioObject.AddComponent<AudioSource>();
+                source.playOnAwake = false;
+                source.spatialBlend = 0f;
+                Destroy(audioObject, silverDropClip.length + 0.1f);
+            }
+
+            source.PlayOneShot(silverDropClip, SilverDropSoundVolume);
         }
 
         private void LoadSilverDropFrames()
@@ -311,14 +392,14 @@ namespace TaskbarTactics.Presentation
                     targetScale,
                     chestSizeReference,
                     effectRenderer,
-                    effectFrames);
+                    effectFrames,
+                    rewardSprite);
                 if (effectRenderer != null)
                 {
                     Destroy(effectRenderer.gameObject);
                 }
             }
-
-            if (rewardSprite != null)
+            else if (rewardSprite != null)
             {
                 yield return PlayRewardItemPopup(chest.transform.position, rewardSprite);
             }
@@ -344,6 +425,7 @@ namespace TaskbarTactics.Presentation
                     false,
                     true,
                     $"Heroes/{LegacyHeroAnimationId(hero.Id)}");
+                view.SetCurrentHealth(hero.CurrentHealth);
             }
 
             int bossOrdinal = 0;
@@ -683,16 +765,21 @@ namespace TaskbarTactics.Presentation
                 100f);
         }
 
-        private static IEnumerator PlayRewardChestOpening(
+        private IEnumerator PlayRewardChestOpening(
             SpriteRenderer renderer,
             IReadOnlyList<Sprite> frames,
             Transform chest,
             Vector3 baseScale,
             Sprite sizeReference,
             SpriteRenderer effectRenderer,
-            IReadOnlyList<Sprite> effectFrames)
+            IReadOnlyList<Sprite> effectFrames,
+            Sprite rewardSprite)
         {
-            const float frameSeconds = 0.12f;
+            if (effectRenderer != null)
+            {
+                effectRenderer.gameObject.SetActive(false);
+            }
+
             for (int i = 0; i < frames.Count; i++)
             {
                 Sprite frame = frames[i];
@@ -702,12 +789,38 @@ namespace TaskbarTactics.Presentation
                     ApplyRewardChestFrameScale(chest, baseScale, sizeReference, frame);
                 }
 
-                if (effectRenderer != null && effectFrames != null && effectFrames.Count > 0)
+                yield return new WaitForSecondsRealtime(ChestOpenEffectFrameSeconds);
+            }
+
+            yield return new WaitForSecondsRealtime(ChestOpenEffectFrameSeconds * 2f);
+
+            if (effectRenderer == null || effectFrames == null || effectFrames.Count == 0)
+            {
+                if (rewardSprite != null)
                 {
-                    effectRenderer.sprite = effectFrames[Mathf.Min(i, effectFrames.Count - 1)];
+                    yield return PlayRewardItemPopup(chest.position, rewardSprite);
                 }
 
-                yield return new WaitForSecondsRealtime(frameSeconds);
+                yield break;
+            }
+
+            effectRenderer.gameObject.SetActive(true);
+            if (rewardSprite != null)
+            {
+                StartCoroutine(PlayRewardItemPopup(chest.position, rewardSprite));
+            }
+
+            for (int i = 0; i < effectFrames.Count; i++)
+            {
+                effectRenderer.sprite = effectFrames[i];
+                yield return new WaitForSecondsRealtime(ChestOpenEffectFrameSeconds);
+            }
+
+            float effectDuration = effectFrames.Count * ChestOpenEffectFrameSeconds;
+            float remainingPopupDuration = RewardItemPopupDurationSeconds - effectDuration;
+            if (rewardSprite != null && remainingPopupDuration > 0f)
+            {
+                yield return new WaitForSecondsRealtime(remainingPopupDuration);
             }
         }
 
@@ -769,8 +882,10 @@ namespace TaskbarTactics.Presentation
             Vector3 start = chestPosition + new Vector3(0f, 0.12f, -0.08f);
             Vector3 floatPosition = chestPosition + new Vector3(0f, 0.48f, -0.08f);
             Vector3 targetScale = new Vector3(0.78f, 0.78f, 1f);
+            Vector3 expandedScale = new Vector3(0.9f, 0.9f, 1f);
+            Vector3 fadeScale = new Vector3(0.945f, 0.945f, 1f);
             const float riseSeconds = 0.35f;
-            const float holdSeconds = 0.35f;
+            const float holdSeconds = 0.55f;
             const float fadeSeconds = 0.25f;
 
             float elapsed = 0f;
@@ -790,10 +905,16 @@ namespace TaskbarTactics.Presentation
             while (elapsed < holdSeconds)
             {
                 elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / holdSeconds);
                 popup.transform.position = floatPosition + new Vector3(0f, Mathf.Sin(elapsed * 16f) * 0.015f, 0f);
+                popup.transform.localScale = Vector3.Lerp(
+                    targetScale,
+                    expandedScale,
+                    Mathf.SmoothStep(0f, 1f, t));
                 yield return null;
             }
 
+            popup.transform.localScale = expandedScale;
             elapsed = 0f;
             Color color = renderer.color;
             while (elapsed < fadeSeconds)
@@ -802,6 +923,10 @@ namespace TaskbarTactics.Presentation
                 float t = Mathf.Clamp01(elapsed / fadeSeconds);
                 color.a = 1f - t;
                 renderer.color = color;
+                popup.transform.localScale = Vector3.Lerp(
+                    expandedScale,
+                    fadeScale,
+                    t);
                 popup.transform.position += new Vector3(0f, Time.unscaledDeltaTime * 0.12f, 0f);
                 yield return null;
             }

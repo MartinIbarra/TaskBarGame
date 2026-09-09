@@ -332,6 +332,45 @@ namespace TaskbarTactics.Presentation
             SaveAndRefresh();
         }
 
+        public bool IsSkillUnlocked(string heroId, string skillId)
+        {
+            HeroState hero = State?.Party?.GetHero(heroId);
+            return hero?.UnlockedSkillIds != null && hero.UnlockedSkillIds.Contains(skillId);
+        }
+
+        public bool UnlockSkill(string heroId, string skillId)
+        {
+            HeroState hero = State?.Party?.GetHero(heroId);
+            HeroDefinition definition = catalog?.FindHero(heroId);
+            if (hero == null || definition == null || string.IsNullOrWhiteSpace(skillId))
+            {
+                return false;
+            }
+
+            SkillDefinition skill = definition.ActiveSkills
+                .Concat(definition.PassiveSkills)
+                .FirstOrDefault(item => item != null && item.Id == skillId);
+            if (skill == null)
+            {
+                return false;
+            }
+
+            hero.UnlockedSkillIds ??= new List<string>();
+            if (hero.UnlockedSkillIds.Contains(skillId))
+            {
+                return true;
+            }
+
+            hero.UnlockedSkillIds.Add(skillId);
+            if (!skill.IsPassive)
+            {
+                hero.ActiveSkillId = skillId;
+            }
+
+            SaveAndRefresh();
+            return true;
+        }
+
         public void CycleEquipment(string heroId, EquipmentSlot slot)
         {
             if (State.Party.IsFormationLocked)
@@ -628,7 +667,7 @@ namespace TaskbarTactics.Presentation
                 itemCount = 1;
             }
 
-            LootTable lootTable = ShowsChestReward(node)
+            LootTable lootTable = UsesStarterWeaponChest(node)
                 ? catalog.CreateStarterWeaponLootTable()
                 : catalog.CreateLootTable();
             return lootGenerator.Generate(
@@ -822,6 +861,15 @@ namespace TaskbarTactics.Presentation
 
         private static bool ShowsChestReward(MapNodeDefinition node)
         {
+            return node != null &&
+                   (node.Id == "cave" ||
+                    node.Id == "last_bastion" ||
+                    node.Id == "mt_secret" ||
+                    node.Id == "lost_bay");
+        }
+
+        private static bool UsesStarterWeaponChest(MapNodeDefinition node)
+        {
             return node != null && (node.Id == "cave" || node.Id == "last_bastion");
         }
 
@@ -848,10 +896,16 @@ namespace TaskbarTactics.Presentation
                         Position = starterPositions[i],
                         ActiveSkillId = definition.ActiveSkills[0].Id,
                         PassiveSkillId = definition.PassiveSkills[0].Id,
+                        UnlockedSkillIds = new List<string>(),
                         EquippedItems = new List<EquippedItemState>(),
                         ActiveStatusEffects = new List<ActiveStatusEffectState>()
                     });
                 }
+            }
+
+            foreach (HeroState hero in State.Party.Heroes)
+            {
+                hero.UnlockedSkillIds ??= new List<string>();
             }
 
             foreach (HeroState hero in State.Party.Heroes.Where(item =>

@@ -72,11 +72,20 @@ namespace TaskbarTactics.Infrastructure.Persistence
                     return GameState.CreateDefault();
                 }
 
-                if (state.Version < GameState.CurrentVersion)
+                if (state.Version < 3)
                 {
                     state.Silver = 0;
-                    state.Version = GameState.CurrentVersion;
                 }
+
+                if (state.Version < 4 && state.Party.Heroes != null)
+                {
+                    foreach (HeroState hero in state.Party.Heroes)
+                    {
+                        hero.UnlockedSkillIds ??= new System.Collections.Generic.List<string>();
+                    }
+                }
+
+                state.Version = GameState.CurrentVersion;
 
                 return state;
             }
