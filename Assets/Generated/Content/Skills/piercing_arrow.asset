@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: piercing_arrow
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.SkillDefinition
   id: piercing_arrow
-  ownerHeroId: ranger
+  ownerHeroId: archer
   isPassive: 0
   cooldownTicks: 8
   magnitude: 1.5

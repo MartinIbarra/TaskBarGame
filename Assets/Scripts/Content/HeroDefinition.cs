@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
+using TaskbarTactics.Core.Equipment;
+using TaskbarTactics.Core.Models;
+using TaskbarTactics.Core.Stats;
 using UnityEngine;
 
 namespace TaskbarTactics.Content
@@ -12,10 +15,16 @@ namespace TaskbarTactics.Content
         [SerializeField] private Color color = Color.white;
         [SerializeField, Tooltip("Character artwork used by roster and presentation views.")]
         private Sprite artwork;
-        [SerializeField] private int maxHealth;
-        [SerializeField] private int power;
-        [SerializeField] private int defense;
-        [SerializeField] private int range;
+
+        [Header("Hero rules")]
+        [SerializeField] private HeroClass heroClass;
+        [SerializeField, Tooltip("Level-one values before equipment, skills and status effects.")]
+        private HeroStats baseStats = HeroStats.CreateDefault();
+        [SerializeField, Tooltip("Flat amount added for every level after level one.")]
+        private HeroStats growthPerLevel = new HeroStats();
+        [SerializeField, Tooltip("Editable weapon, off-hand and armor permissions.")]
+        private HeroEquipmentProfile equipmentProfile = new HeroEquipmentProfile();
+
         [SerializeField] private List<string> tagIds = new List<string>();
         [SerializeField] private List<SkillDefinition> activeSkills = new List<SkillDefinition>();
         [SerializeField] private List<SkillDefinition> passiveSkills = new List<SkillDefinition>();
@@ -24,10 +33,10 @@ namespace TaskbarTactics.Content
         public string DisplayNameEn => displayNameEn;
         public Color Color => color;
         public Sprite Artwork => artwork;
-        public int MaxHealth => maxHealth;
-        public int Power => power;
-        public int Defense => defense;
-        public int Range => range;
+        public HeroClass HeroClass => heroClass;
+        public HeroStats BaseStats => baseStats;
+        public HeroStats GrowthPerLevel => growthPerLevel;
+        public HeroEquipmentProfile EquipmentProfile => equipmentProfile;
         public IReadOnlyList<string> TagIds => tagIds;
         public IReadOnlyList<SkillDefinition> ActiveSkills => activeSkills;
         public IReadOnlyList<SkillDefinition> PassiveSkills => passiveSkills;
@@ -41,10 +50,10 @@ namespace TaskbarTactics.Content
             displayNameEs = data.NameEs;
             displayNameEn = data.NameEn;
             ColorUtility.TryParseHtmlString(data.ColorHex, out color);
-            maxHealth = data.MaxHealth;
-            power = data.Power;
-            defense = data.Defense;
-            range = data.Range;
+            heroClass = data.HeroClass;
+            baseStats = data.BaseStats.Clone();
+            growthPerLevel = data.GrowthPerLevel.Clone();
+            equipmentProfile = data.EquipmentProfile;
             tagIds = new List<string>(data.TagIds);
             activeSkills = actives.ToList();
             passiveSkills = passives.ToList();

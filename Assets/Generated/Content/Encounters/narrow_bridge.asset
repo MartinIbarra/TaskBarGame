@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: narrow_bridge
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.EncounterDefinition
   id: narrow_bridge
-  difficulty: 1
+  difficulty: 3
   enemies:
   - {fileID: 11400000, guid: 086fcc259f1a00d458815dc006346da4, type: 2}
   - {fileID: 11400000, guid: ef95cbd95156ccf43ab3147e7cdb72d1, type: 2}

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a784c58f09215140b8f61913c1b2ed0, type: 3}
+  m_Name: stun
+  m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.StatusEffectDefinition
+  id: stun
+  data:
+    Id: stun
+    Kind: 1
+    DurationMilliseconds: 1500
+    MaxStacks: 1
+    StackPolicy: 0
+    CanBeDispelled: 1
+    PersistsBetweenCombats: 0
+    PreventsBasicAttacks: 1
+    PreventsCasting: 1
+    PeriodicEffect: 0
+    PeriodicAmount: 0
+    PeriodMilliseconds: 0
+    Tags:
+    - control
+    - stun
+    Modifiers: []

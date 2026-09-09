@@ -13,6 +13,19 @@ MonoBehaviour:
   m_Name: venom_leathers
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.ItemDefinition
   id: venom_leathers
-  slot: 1
+  descriptor:
+    InstanceId: venom_leathers
+    DefinitionId: venom_leathers
+    PrimarySlot: 3
+    Category: 0
+    WeaponType: 0
+    Handedness: 0
+    OffHandType: 0
+    ArmorType: 2
+    Modifiers:
+    - Stat: 12
+      Operation: 0
+      Value: 4
+      SourceId: item_base
   tagId: poison
-  basePower: 2
+  icon: {fileID: 0}

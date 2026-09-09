@@ -11,6 +11,7 @@ namespace TaskbarTactics.Editor
         {
             "goblin",
             "goblin_archer",
+            "goblin_mage",
             "wolf",
             "shaman",
             "skeleton",

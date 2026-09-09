@@ -1,19 +1,22 @@
 using System;
 using System.Collections.Generic;
+using TaskbarTactics.Core.Combat;
 
 namespace TaskbarTactics.Core.Models
 {
     [Serializable]
     public sealed class GameState
     {
-        public const int CurrentVersion = 1;
+        public const int CurrentVersion = 4;
 
         public int Version = CurrentVersion;
         public int Gold;
+        public int Silver;
         public long LastSavedUtcTicks;
         public PartyState Party = new PartyState();
         public List<InventoryItem> Inventory = new List<InventoryItem>();
         public ExpeditionState Expedition = new ExpeditionState();
+        public bool ActTwoUnlocked;
         public AppearanceState Appearance = new AppearanceState();
         public string LanguageCode = "es";
 
@@ -67,11 +70,46 @@ namespace TaskbarTactics.Core.Models
         public string DefinitionId = string.Empty;
         public bool IsSelected;
         public int Level = 1;
-        public int Experience;
+        public long Experience;
+        public int CurrentHealth;
+        public int CurrentMana;
+        public bool ResourcesInitialized;
         public FormationPosition Position;
         public string ActiveSkillId = string.Empty;
         public string PassiveSkillId = string.Empty;
-        public List<string> EquippedItemIds = new List<string>();
+        public List<string> UnlockedSkillIds = new List<string>();
+        public List<EquippedItemState> EquippedItems = new List<EquippedItemState>();
+        public List<ActiveStatusEffectState> ActiveStatusEffects =
+            new List<ActiveStatusEffectState>();
+
+        public string GetEquippedItemId(EquipmentSlot slot)
+        {
+            return EquippedItems?.Find(item => item.Slot == slot)?.ItemInstanceId;
+        }
+
+        public void SetEquippedItem(EquipmentSlot slot, string instanceId)
+        {
+            EquippedItems ??= new List<EquippedItemState>();
+            EquippedItems.RemoveAll(item =>
+                item.Slot == slot ||
+                (!string.IsNullOrWhiteSpace(instanceId) &&
+                 item.ItemInstanceId == instanceId));
+            if (!string.IsNullOrWhiteSpace(instanceId))
+            {
+                EquippedItems.Add(new EquippedItemState
+                {
+                    Slot = slot,
+                    ItemInstanceId = instanceId
+                });
+            }
+        }
+    }
+
+    [Serializable]
+    public sealed class EquippedItemState
+    {
+        public EquipmentSlot Slot;
+        public string ItemInstanceId = string.Empty;
     }
 
     [Serializable]
@@ -81,7 +119,7 @@ namespace TaskbarTactics.Core.Models
         public string DefinitionId = string.Empty;
         public EquipmentSlot Slot;
         public ItemRarity Rarity;
-        public List<string> AffixIds = new List<string>();
+        public List<string> ItemBonusIds = new List<string>();
 
         public bool Equals(InventoryItem other)
         {
@@ -90,14 +128,14 @@ namespace TaskbarTactics.Core.Models
                 DefinitionId != other.DefinitionId ||
                 Slot != other.Slot ||
                 Rarity != other.Rarity ||
-                AffixIds.Count != other.AffixIds.Count)
+                ItemBonusIds.Count != other.ItemBonusIds.Count)
             {
                 return false;
             }
 
-            for (int i = 0; i < AffixIds.Count; i++)
+            for (int i = 0; i < ItemBonusIds.Count; i++)
             {
-                if (AffixIds[i] != other.AffixIds[i])
+                if (ItemBonusIds[i] != other.ItemBonusIds[i])
                 {
                     return false;
                 }

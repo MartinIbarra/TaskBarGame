@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using TaskbarTactics.Core.Loot;
 using TaskbarTactics.Core.Models;
@@ -15,7 +16,7 @@ namespace TaskbarTactics.Tests
             SynergyResolver resolver = new SynergyResolver();
             List<TagSource> sources = new List<TagSource>
             {
-                new TagSource("guardian", new[] { "guard", "steel" }),
+                new TagSource("warrior", new[] { "guard", "steel" }),
                 new TagSource("cleric", new[] { "guard", "sacred" }),
                 new TagSource("shield", new[] { "guard" })
             };
@@ -37,6 +38,22 @@ namespace TaskbarTactics.Tests
             IReadOnlyList<InventoryItem> second = generator.Generate(table, 9191, 4);
 
             Assert.That(second, Is.EqualTo(first));
+        }
+
+        [Test]
+        public void ItemBonusCountFollowsRarityRules()
+        {
+            LootTable table = TestFixtures.CreateLootTable();
+            LootGenerator generator = new LootGenerator();
+
+            IReadOnlyList<InventoryItem> items = generator.Generate(table, 9191, 100);
+
+            Assert.That(items.Where(item => item.Rarity == ItemRarity.Common)
+                .All(item => item.ItemBonusIds.Count == 0), Is.True);
+            Assert.That(items.Where(item => item.Rarity == ItemRarity.Rare)
+                .All(item => item.ItemBonusIds.Count == 1), Is.True);
+            Assert.That(items.Where(item => item.Rarity == ItemRarity.Epic)
+                .All(item => item.ItemBonusIds.Count == 2), Is.True);
         }
 
         [TestCase(RoutePreference.Safety, "safe")]

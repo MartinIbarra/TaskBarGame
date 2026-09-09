@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: retaliation
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.SkillDefinition
   id: retaliation
-  ownerHeroId: guardian
+  ownerHeroId: warrior
   isPassive: 1
   cooldownTicks: 0
   magnitude: 0.22

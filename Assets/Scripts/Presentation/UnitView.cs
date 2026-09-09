@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -11,7 +12,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private TMP_Text label;
         [SerializeField] private UnitAnimationBridge animationBridge;
         [SerializeField, Min(0.1f), Tooltip("World-space height used for imported hero artwork.")]
-        private float targetArtworkHeight = 1.35f;
+        private float targetArtworkHeight = 0.4f;
 
         private int maxHealth;
         private int currentHealth;
@@ -21,8 +22,20 @@ namespace TaskbarTactics.Presentation
         private Coroutine temporaryPoseRoutine;
         private Color activeFallbackColor;
         private float activeArtworkHeightMultiplier = 1f;
+        private float activeArtworkWidthMultiplier = 1f;
+        private float activeCombatPoseScaleMultiplier = 1f;
+        private float activeArtworkReferenceHeight;
+        private float activeAttackPoseYOffset;
+        private bool normalizeCombatPoses;
         private bool activeFaceLeft;
         private bool isDead;
+        private bool capturedBodyDefaults;
+        private Vector3 defaultBodyLocalPosition;
+        private bool capturedHealthBarDefaults;
+        private Vector3 defaultHealthBarPosition;
+        private Vector3 defaultHealthBarScale;
+
+        public bool IsDead => isDead;
 
         public void ConfigureReferences(
             SpriteRenderer bodyRenderer,
@@ -44,21 +57,27 @@ namespace TaskbarTactics.Presentation
             float artworkHeightMultiplier = 1f,
             bool faceLeft = false,
             bool usePoseAnimation = false,
-            string poseResourcePath = null)
+            string poseResourcePath = null,
+            float healthBarScaleMultiplier = 1f,
+            float healthBarYOffset = 0f)
         {
             maxHealth = Mathf.Max(1, health);
             currentHealth = maxHealth;
             isDead = false;
             activeFallbackColor = color;
             activeArtworkHeightMultiplier = artworkHeightMultiplier;
+            ApplyHeroCombatPresentationProfile(poseResourcePath);
             activeFaceLeft = faceLeft;
             originalArtwork = artwork;
             poseSprites = usePoseAnimation ? LoadPoseSprites(poseResourcePath) : null;
-            ApplyArtwork(GetPoseSprite(0) ?? artwork, color, artworkHeightMultiplier, faceLeft);
+            activeArtworkReferenceHeight = ArtworkReferenceHeight(GetPoseSprite(0) ?? artwork);
+            ApplyArtwork(GetPoseSprite(0) ?? artwork, color, activeArtworkHeightMultiplier, faceLeft, 0f);
+            ApplyHealthBarPresentation(healthBarScaleMultiplier, healthBarYOffset);
 
             if (label != null)
             {
                 label.text = unitName;
+                label.gameObject.SetActive(false);
             }
 
             SetHealth(maxHealth);
@@ -70,7 +89,12 @@ namespace TaskbarTactics.Presentation
         public void PlayAttack()
         {
             animationBridge?.PlayAttack();
-            PlayTemporaryPose(3, 0.24f);
+            PlayTemporaryPoses(new[] { 3, 4 }, 0.12f);
+        }
+
+        public void PlaySkill()
+        {
+            PlayTemporaryPoses(new[] { 7, 8 }, 0.16f);
         }
 
         public void ReceiveDamage(int amount)
@@ -81,14 +105,33 @@ namespace TaskbarTactics.Presentation
             {
                 isDead = true;
                 StopPoseRoutines();
-                ApplyPose(4);
+                ApplyPose(5);
                 animationBridge?.SetDead(true);
             }
             else
             {
                 animationBridge?.PlayHit();
-                PlayTemporaryPose(4, 0.18f);
+                PlayTemporaryPose(5, 0.18f);
             }
+        }
+
+        public void ReceiveHealing(int amount)
+        {
+            if (isDead || amount <= 0)
+            {
+                return;
+            }
+
+            currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
+            SetHealth(currentHealth);
+        }
+
+        public void SetCurrentHealth(int health)
+        {
+            currentHealth = Mathf.Clamp(health, 0, maxHealth);
+            isDead = currentHealth <= 0;
+            SetHealth(currentHealth);
+            animationBridge?.SetDead(isDead);
         }
 
         public void SetMovement(float normalizedSpeed)
@@ -96,30 +139,68 @@ namespace TaskbarTactics.Presentation
             animationBridge?.SetMovement(normalizedSpeed);
         }
 
+        private void ApplyHealthBarPresentation(float scaleMultiplier, float yOffset)
+        {
+            if (healthFill == null || healthFill.transform.parent == null)
+            {
+                return;
+            }
+
+            Transform healthBar = healthFill.transform.parent;
+            if (!capturedHealthBarDefaults)
+            {
+                defaultHealthBarPosition = healthBar.localPosition;
+                defaultHealthBarScale = healthBar.localScale;
+                capturedHealthBarDefaults = true;
+            }
+
+            float safeScale = Mathf.Max(0.1f, scaleMultiplier);
+            healthBar.localPosition = defaultHealthBarPosition + new Vector3(0f, yOffset, 0f);
+            healthBar.localScale = new Vector3(
+                defaultHealthBarScale.x * safeScale,
+                defaultHealthBarScale.y * safeScale,
+                defaultHealthBarScale.z);
+        }
+
         private void ApplyArtwork(
             Sprite artwork,
             Color fallbackColor,
             float artworkHeightMultiplier,
-            bool faceLeft)
+            bool faceLeft,
+            float yOffset,
+            bool useExactSourceHeight = false)
         {
             if (body == null)
             {
                 return;
             }
 
+            CaptureBodyDefaults();
+            body.transform.localPosition = defaultBodyLocalPosition + new Vector3(0f, yOffset, 0f);
+
             if (artwork == null)
             {
                 body.color = fallbackColor;
-                body.transform.localScale = new Vector3(faceLeft ? -1f : 1f, 1f, 1f);
+                body.transform.localScale = new Vector3(
+                    faceLeft ? -activeArtworkWidthMultiplier : activeArtworkWidthMultiplier,
+                    1f,
+                    1f);
                 return;
             }
 
             body.sprite = artwork;
             body.color = Color.white;
-            float sourceHeight = Mathf.Max(0.01f, artwork.bounds.size.y);
+            float sourceHeight = useExactSourceHeight
+                ? artwork.bounds.size.y
+                : Mathf.Max(
+                    0.01f,
+                    activeArtworkReferenceHeight > 0f
+                        ? Mathf.Max(activeArtworkReferenceHeight, artwork.bounds.size.y)
+                        : artwork.bounds.size.y);
             float targetHeight = targetArtworkHeight * Mathf.Max(0.1f, artworkHeightMultiplier);
             float scale = targetHeight / sourceHeight;
-            body.transform.localScale = new Vector3(faceLeft ? -scale : scale, scale, 1f);
+            float widthScale = scale * activeArtworkWidthMultiplier;
+            body.transform.localScale = new Vector3(faceLeft ? -widthScale : widthScale, scale, 1f);
         }
 
         private void SetHealth(int value)
@@ -130,9 +211,22 @@ namespace TaskbarTactics.Presentation
             }
 
             float ratio = Mathf.Clamp01(value / (float)maxHealth);
+            if (healthFill.transform.parent != null)
+            {
+                healthFill.transform.parent.gameObject.SetActive(ratio > 0f);
+            }
+
             Vector3 scale = healthFill.transform.localScale;
             scale.x = ratio;
             healthFill.transform.localScale = scale;
+
+            Sprite fillSprite = healthFill.sprite;
+            if (fillSprite != null)
+            {
+                Vector3 position = healthFill.transform.localPosition;
+                position.x = -fillSprite.bounds.size.x * (1f - ratio) * 0.5f;
+                healthFill.transform.localPosition = position;
+            }
         }
 
         private void StartIdleAnimation()
@@ -163,7 +257,12 @@ namespace TaskbarTactics.Presentation
 
         private void PlayTemporaryPose(int poseIndex, float seconds)
         {
-            if (poseSprites == null || poseSprites.Length <= poseIndex || isDead)
+            PlayTemporaryPoses(new[] { poseIndex }, seconds);
+        }
+
+        private void PlayTemporaryPoses(int[] poseIndexes, float secondsPerPose)
+        {
+            if (poseSprites == null || poseIndexes == null || poseIndexes.Length == 0 || isDead)
             {
                 return;
             }
@@ -173,10 +272,10 @@ namespace TaskbarTactics.Presentation
                 StopCoroutine(temporaryPoseRoutine);
             }
 
-            temporaryPoseRoutine = StartCoroutine(PlayTemporaryPoseRoutine(poseIndex, seconds));
+            temporaryPoseRoutine = StartCoroutine(PlayTemporaryPoseRoutine(poseIndexes, secondsPerPose));
         }
 
-        private IEnumerator PlayTemporaryPoseRoutine(int poseIndex, float seconds)
+        private IEnumerator PlayTemporaryPoseRoutine(int[] poseIndexes, float secondsPerPose)
         {
             if (idleRoutine != null)
             {
@@ -184,8 +283,17 @@ namespace TaskbarTactics.Presentation
                 idleRoutine = null;
             }
 
-            ApplyPose(poseIndex);
-            yield return new WaitForSecondsRealtime(seconds);
+            foreach (int poseIndex in poseIndexes)
+            {
+                if (GetPoseSprite(poseIndex) == null)
+                {
+                    continue;
+                }
+
+                ApplyPose(poseIndex);
+                yield return new WaitForSecondsRealtime(secondsPerPose);
+            }
+
             temporaryPoseRoutine = null;
             StartIdleAnimation();
         }
@@ -195,12 +303,76 @@ namespace TaskbarTactics.Presentation
             Sprite pose = GetPoseSprite(poseIndex);
             if (pose != null)
             {
+                bool isAttackPose = poseIndex == 3 || poseIndex == 4;
+                bool isSkillPose = poseIndex == 7 || poseIndex == 8;
+                float poseHeightMultiplier = activeArtworkHeightMultiplier *
+                                             ((isAttackPose || isSkillPose || poseIndex == 5)
+                                                 ? activeCombatPoseScaleMultiplier
+                                                 : 1f);
+                bool normalizePose = normalizeCombatPoses &&
+                                     (isAttackPose || isSkillPose || poseIndex == 5);
+
                 ApplyArtwork(
                     pose,
                     activeFallbackColor,
-                    activeArtworkHeightMultiplier,
-                    activeFaceLeft);
+                    poseHeightMultiplier,
+                    activeFaceLeft,
+                    isAttackPose ? activeAttackPoseYOffset : 0f,
+                    normalizePose);
             }
+        }
+
+        private void ApplyHeroCombatPresentationProfile(string poseResourcePath)
+        {
+            activeArtworkWidthMultiplier = 1f;
+            activeCombatPoseScaleMultiplier = 1f;
+            activeAttackPoseYOffset = 0f;
+            normalizeCombatPoses = false;
+
+            if (string.IsNullOrWhiteSpace(poseResourcePath))
+            {
+                return;
+            }
+
+            string normalizedPath = poseResourcePath.Replace('\\', '/').ToLowerInvariant();
+            if (normalizedPath.EndsWith("/cleric"))
+            {
+                activeArtworkWidthMultiplier = 1.05f;
+            }
+            else if (normalizedPath.EndsWith("/pyromancer"))
+            {
+                activeArtworkHeightMultiplier *= 1.05f;
+            }
+            else if (normalizedPath.EndsWith("/rogue"))
+            {
+                activeArtworkHeightMultiplier *= 0.95f;
+                activeAttackPoseYOffset = 0.045f;
+            }
+            else if (normalizedPath.EndsWith("/guardian"))
+            {
+                normalizeCombatPoses = true;
+                activeArtworkWidthMultiplier = 1.1f;
+            }
+            else if (normalizedPath.EndsWith("/spellblade"))
+            {
+                normalizeCombatPoses = true;
+                activeCombatPoseScaleMultiplier = 0.9f;
+            }
+            else if (normalizedPath.EndsWith("/wraith"))
+            {
+                normalizeCombatPoses = true;
+            }
+        }
+
+        private void CaptureBodyDefaults()
+        {
+            if (capturedBodyDefaults || body == null)
+            {
+                return;
+            }
+
+            defaultBodyLocalPosition = body.transform.localPosition;
+            capturedBodyDefaults = true;
         }
 
         private Sprite GetPoseSprite(int poseIndex)
@@ -222,16 +394,37 @@ namespace TaskbarTactics.Presentation
                 "idle_1",
                 "idle_2",
                 "idle_3",
-                "attack",
-                "hit"
+                "attack_1",
+                "attack_2",
+                "hit",
+                "defense",
+                "skill_1",
+                "skill_2"
+            };
+            string[][] fallbackNames =
+            {
+                new[] { "idle_1" },
+                new[] { "idle_2" },
+                new[] { "idle_3" },
+                new[] { "attack_1", "attack" },
+                new[] { "attack_2" },
+                new[] { "hit", "death" },
+                new[] { "defense" },
+                new[] { "skill_1", "heal_1" },
+                new[] { "skill_2", "heal_2" }
             };
             Sprite[] sprites = new Sprite[poseNames.Length];
             for (int i = 0; i < poseNames.Length; i++)
             {
-                Texture2D texture = Resources.Load<Texture2D>($"{resourcePath}/{poseNames[i]}");
-                if (texture == null)
+                Texture2D texture = LoadFirstTexture(resourcePath, fallbackNames[i]);
+                if (texture == null && i < 3)
                 {
                     return null;
+                }
+
+                if (texture == null)
+                {
+                    continue;
                 }
 
                 sprites[i] = Sprite.Create(
@@ -242,6 +435,25 @@ namespace TaskbarTactics.Presentation
             }
 
             return sprites;
+        }
+
+        private static float ArtworkReferenceHeight(Sprite artwork)
+        {
+            return artwork != null ? artwork.bounds.size.y : 0f;
+        }
+
+        private static Texture2D LoadFirstTexture(string resourcePath, IEnumerable<string> names)
+        {
+            foreach (string name in names)
+            {
+                Texture2D texture = Resources.Load<Texture2D>($"{resourcePath}/{name}");
+                if (texture != null)
+                {
+                    return texture;
+                }
+            }
+
+            return null;
         }
 
         private void StopPoseRoutines()

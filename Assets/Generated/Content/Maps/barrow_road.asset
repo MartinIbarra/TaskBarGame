@@ -21,18 +21,18 @@ MonoBehaviour:
     - narrow_bridge
   - Id: narrow_bridge
     Type: 0
-    Difficulty: 1
+    Difficulty: 3
     NextNodeIds:
     - cave
     - cemetery
   - Id: cave
     Type: 1
-    Difficulty: 3
+    Difficulty: 4
     NextNodeIds:
     - goblin_village
   - Id: cemetery
     Type: 0
-    Difficulty: 2
+    Difficulty: 4
     NextNodeIds:
     - goblin_village
   - Id: goblin_village
@@ -57,6 +57,57 @@ MonoBehaviour:
     NextNodeIds:
     - last_bastion
   - Id: last_bastion
+    Type: 4
+    Difficulty: 10
+    NextNodeIds: []
+  - Id: city2
+    Type: 2
+    Difficulty: 0
+    NextNodeIds:
+    - corrupt_pass
+  - Id: corrupt_pass
+    Type: 0
+    Difficulty: 3
+    NextNodeIds:
+    - lo_hueso
+  - Id: lo_hueso
+    Type: 0
+    Difficulty: 4
+    NextNodeIds:
+    - mt_secret
+    - ancient_ruins
+  - Id: mt_secret
+    Type: 0
+    Difficulty: 5
+    NextNodeIds:
+    - ancient_ruins
+  - Id: ancient_ruins
+    Type: 0
+    Difficulty: 5
+    NextNodeIds:
+    - arbol_morto
+  - Id: arbol_morto
+    Type: 0
+    Difficulty: 6
+    NextNodeIds:
+    - mountain_pass_act2
+  - Id: mountain_pass_act2
+    Type: 0
+    Difficulty: 7
+    NextNodeIds:
+    - black_tower
+    - port
+  - Id: black_tower
+    Type: 0
+    Difficulty: 8
+    NextNodeIds:
+    - port
+  - Id: port
+    Type: 0
+    Difficulty: 9
+    NextNodeIds:
+    - lost_bay
+  - Id: lost_bay
     Type: 4
     Difficulty: 10
     NextNodeIds: []

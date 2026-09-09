@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 730fd2fd224422f4794cd9c75f3733bd, type: 3}
+  m_Name: magic_warrior
+  m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.HeroDefinition
+  id: magic_warrior
+  displayNameEs: Magic Warrior
+  displayNameEn: Magic Warrior
+  color: {r: 0.3372549, g: 0.72156864, b: 0.7764706, a: 1}
+  artwork: {fileID: 21300000, guid: 3a1c29d21227ea74882228a7096f985b, type: 3}
+  heroClass: 5
+  baseStats:
+    MaxHealth: 175
+    MaxMana: 110
+    AttackPower: 21
+    SpellPower: 20
+    Defense: 40
+    MagicResistance: 35
+    AttackSpeed: 1.05
+    CastSpeed: 1.1
+    AttackRange: 3
+    CriticalChance: 10
+    CriticalDamage: 1.75
+    Accuracy: 100
+    Evasion: 8
+    HealthRegeneration: 0.7
+    ManaRegeneration: 1.5
+    CooldownReduction: 3
+  growthPerLevel:
+    MaxHealth: 9
+    MaxMana: 5
+    AttackPower: 1
+    SpellPower: 1
+    Defense: 1.1
+    MagicResistance: 1
+    AttackSpeed: 0.003
+    CastSpeed: 0.004
+    AttackRange: 0
+    CriticalChance: 0
+    CriticalDamage: 0
+    Accuracy: 0
+    Evasion: 0
+    HealthRegeneration: 0
+    ManaRegeneration: 0
+    CooldownReduction: 0
+  equipmentProfile:
+    HeroClass: 5
+    CanDualWieldWeapons: 1
+    AllowedWeapons:
+    - WeaponType: 1
+      Handedness: 1
+    - WeaponType: 1
+      Handedness: 2
+    AllowedOffHands: 
+    AllowedArmorTypes: 03000000
+  tagIds:
+  - steel
+  - arcane
+  activeSkills:
+  - {fileID: 11400000, guid: 73196a8f78df1c448a24ac1e23b472cc, type: 2}
+  - {fileID: 11400000, guid: d91cea902876145409a07835a907cb8d, type: 2}
+  passiveSkills:
+  - {fileID: 11400000, guid: 2d680bc7cf08c6d438be2f2f57f54cc3, type: 2}
+  - {fileID: 11400000, guid: 1a090d2f5f6b3a141b9ad8196a13c345, type: 2}

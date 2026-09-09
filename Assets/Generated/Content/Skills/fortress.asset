@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: fortress
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.SkillDefinition
   id: fortress
-  ownerHeroId: guardian
+  ownerHeroId: warrior
   isPassive: 0
   cooldownTicks: 12
   magnitude: 1.9

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: toxic_tips
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.SkillDefinition
   id: toxic_tips
-  ownerHeroId: ranger
+  ownerHeroId: archer
   isPassive: 1
   cooldownTicks: 0
   magnitude: 0.22

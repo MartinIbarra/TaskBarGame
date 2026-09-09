@@ -60,11 +60,32 @@ namespace TaskbarTactics.Infrastructure.Persistence
             try
             {
                 GameState state = JsonUtility.FromJson<GameState>(File.ReadAllText(path));
-                if (state == null || state.Version <= 0 || state.Party == null ||
+                if (state == null || state.Version > GameState.CurrentVersion ||
+                    state.Party == null ||
                     state.Inventory == null || state.Expedition == null)
                 {
                     return null;
                 }
+
+                if (state.Version < 2)
+                {
+                    return GameState.CreateDefault();
+                }
+
+                if (state.Version < 3)
+                {
+                    state.Silver = 0;
+                }
+
+                if (state.Version < 4 && state.Party.Heroes != null)
+                {
+                    foreach (HeroState hero in state.Party.Heroes)
+                    {
+                        hero.UnlockedSkillIds ??= new System.Collections.Generic.List<string>();
+                    }
+                }
+
+                state.Version = GameState.CurrentVersion;
 
                 return state;
             }

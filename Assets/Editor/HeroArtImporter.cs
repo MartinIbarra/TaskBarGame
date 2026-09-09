@@ -7,22 +7,24 @@ namespace TaskbarTactics.Editor
 {
     public static class HeroArtImporter
     {
-        private static readonly string[] HeroIds =
+        private static readonly string[,] HeroArtMappings =
         {
-            "guardian",
-            "cleric",
-            "ranger",
-            "rogue",
-            "pyromancer",
-            "spellblade"
+            { "warrior", "guardian" },
+            { "cleric", "cleric" },
+            { "mage", "pyromancer" },
+            { "archer", "ranger" },
+            { "rogue", "rogue" },
+            { "magic_warrior", "spellblade" }
         };
 
         [MenuItem("Taskbar Tactics/Art/Import and Assign Hero Artwork")]
         public static void ImportAndAssign()
         {
-            foreach (string heroId in HeroIds)
+            for (int i = 0; i < HeroArtMappings.GetLength(0); i++)
             {
-                string spritePath = $"Assets/Art/Heroes/Concepts/{heroId}.png";
+                string heroId = HeroArtMappings[i, 0];
+                string artId = HeroArtMappings[i, 1];
+                string spritePath = $"Assets/Art/Heroes/Concepts/{artId}.png";
                 string definitionPath = $"Assets/Generated/Content/Heroes/{heroId}.asset";
                 ConfigureSprite(spritePath);
                 AssignArtwork(definitionPath, spritePath, heroId);

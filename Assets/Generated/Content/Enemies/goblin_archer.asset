@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.EnemyDefinition
   id: goblin_archer
   displayNameEs: Arquero goblin
-  maxHealth: 58
+  maxHealth: 81
   power: 15
   defense: 1
   range: 5

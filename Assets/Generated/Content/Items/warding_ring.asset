@@ -13,6 +13,19 @@ MonoBehaviour:
   m_Name: warding_ring
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.ItemDefinition
   id: warding_ring
-  slot: 2
+  descriptor:
+    InstanceId: warding_ring
+    DefinitionId: warding_ring
+    PrimarySlot: 12
+    Category: 3
+    WeaponType: 0
+    Handedness: 0
+    OffHandType: 0
+    ArmorType: 0
+    Modifiers:
+    - Stat: 5
+      Operation: 0
+      Value: 5
+      SourceId: item_base
   tagId: guard
-  basePower: 2
+  icon: {fileID: 0}

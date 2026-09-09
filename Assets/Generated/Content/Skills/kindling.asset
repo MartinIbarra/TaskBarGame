@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: kindling
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.SkillDefinition
   id: kindling
-  ownerHeroId: pyromancer
+  ownerHeroId: mage
   isPassive: 1
   cooldownTicks: 0
   magnitude: 0.15

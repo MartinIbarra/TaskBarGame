@@ -13,6 +13,19 @@ MonoBehaviour:
   m_Name: tower_mail
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.ItemDefinition
   id: tower_mail
-  slot: 1
+  descriptor:
+    InstanceId: tower_mail
+    DefinitionId: tower_mail
+    PrimarySlot: 3
+    Category: 0
+    WeaponType: 0
+    Handedness: 0
+    OffHandType: 0
+    ArmorType: 4
+    Modifiers:
+    - Stat: 4
+      Operation: 0
+      Value: 10
+      SourceId: item_base
   tagId: guard
-  basePower: 2
+  icon: {fileID: 0}

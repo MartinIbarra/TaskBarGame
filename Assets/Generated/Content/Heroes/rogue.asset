@@ -13,14 +13,53 @@ MonoBehaviour:
   m_Name: rogue
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.HeroDefinition
   id: rogue
-  displayNameEs: "P\xEDcara"
+  displayNameEs: Rogue
   displayNameEn: Rogue
   color: {r: 0.6509804, g: 0.47058824, b: 0.70980394, a: 1}
   artwork: {fileID: 21300000, guid: e241f41f4b06e374f81cf703a1e5c3f1, type: 3}
-  maxHealth: 115
-  power: 27
-  defense: 3
-  range: 2
+  heroClass: 4
+  baseStats:
+    MaxHealth: 115
+    MaxMana: 70
+    AttackPower: 24
+    SpellPower: 8
+    Defense: 20
+    MagicResistance: 20
+    AttackSpeed: 1.4
+    CastSpeed: 1
+    AttackRange: 2
+    CriticalChance: 20
+    CriticalDamage: 2
+    Accuracy: 105
+    Evasion: 20
+    HealthRegeneration: 0.4
+    ManaRegeneration: 1
+    CooldownReduction: 0
+  growthPerLevel:
+    MaxHealth: 5
+    MaxMana: 3
+    AttackPower: 1.4
+    SpellPower: 0.2
+    Defense: 0.6
+    MagicResistance: 0.6
+    AttackSpeed: 0.005
+    CastSpeed: 0.002
+    AttackRange: 0
+    CriticalChance: 0
+    CriticalDamage: 0
+    Accuracy: 0
+    Evasion: 0
+    HealthRegeneration: 0
+    ManaRegeneration: 0
+    CooldownReduction: 0
+  equipmentProfile:
+    HeroClass: 4
+    CanDualWieldWeapons: 1
+    AllowedWeapons:
+    - WeaponType: 8
+      Handedness: 1
+    AllowedOffHands: 
+    AllowedArmorTypes: 02000000
   tagIds:
   - bleed
   - poison

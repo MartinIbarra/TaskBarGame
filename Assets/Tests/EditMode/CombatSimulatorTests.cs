@@ -17,7 +17,7 @@ namespace TaskbarTactics.Tests
             CombatResult second = simulator.Simulate(request);
 
             Assert.That(second.Outcome, Is.EqualTo(first.Outcome));
-            Assert.That(second.ElapsedTicks, Is.EqualTo(first.ElapsedTicks));
+            Assert.That(second.ElapsedMilliseconds, Is.EqualTo(first.ElapsedMilliseconds));
             Assert.That(second.Events, Is.EqualTo(first.Events));
             Assert.That(second.SurvivingHeroHealth, Is.EqualTo(first.SurvivingHeroHealth));
         }
@@ -59,10 +59,47 @@ namespace TaskbarTactics.Tests
             PartyState party = TestFixtures.CreateParty();
             party.IsFormationLocked = true;
 
-            bool changed = party.TrySetFormation("guardian", new FormationPosition(2, 2));
+            bool changed = party.TrySetFormation("warrior", new FormationPosition(2, 2));
 
             Assert.That(changed, Is.False);
-            Assert.That(party.GetHero("guardian").Position, Is.EqualTo(new FormationPosition(1, 0)));
+            Assert.That(party.GetHero("warrior").Position, Is.EqualTo(new FormationPosition(1, 0)));
+        }
+
+        [Test]
+        public void UnlockedHealingLightReplacesClericAttackForWoundedAlly()
+        {
+            CombatantState cleric = TestFixtures.Combatant(
+                "cleric", CombatSide.Hero, 1, 1, 100, 10, 3);
+            cleric.AttackSpeed = 5f;
+            cleric.SpellPower = 20f;
+            cleric.ActiveSkillId = "healing_light";
+            cleric.ActiveSkillMagnitude = 1.5f;
+            cleric.UnlockedSkillIds.Add("healing_light");
+
+            CombatantState woundedAlly = TestFixtures.Combatant(
+                "ally", CombatSide.Hero, 1, 0, 100, 1, 3);
+            woundedAlly.CurrentHealth = 40;
+            woundedAlly.AttackSpeed = 0.1f;
+            CombatantState enemy = TestFixtures.Combatant(
+                "enemy", CombatSide.Enemy, 1, 0, 1000, 1, 3);
+            enemy.AttackSpeed = 0.1f;
+
+            CombatResult result = new CombatSimulator().Simulate(new CombatRequest
+            {
+                Seed = 1,
+                MaxDurationMilliseconds = 200,
+                Heroes = new List<CombatantState> { cleric, woundedAlly },
+                Enemies = new List<CombatantState> { enemy }
+            });
+
+            CombatEvent healing = result.Events.Find(item =>
+                item.Kind == CombatEventKind.Healing);
+            Assert.That(healing, Is.Not.Null);
+            Assert.That(healing.ActorId, Is.EqualTo("cleric"));
+            Assert.That(healing.TargetId, Is.EqualTo("ally"));
+            Assert.That(healing.Amount, Is.EqualTo(30));
+            Assert.That(result.HeroResources.Find(item => item.Id == "ally").CurrentHealth,
+                Is.EqualTo(70));
         }
     }
 }

@@ -16,6 +16,14 @@ namespace TaskbarTactics.Tests
             Assert.That(blueprint.Heroes.All(hero => hero.ActiveSkillIds.Count == 2), Is.True);
             Assert.That(blueprint.Heroes.All(hero => hero.PassiveSkillIds.Count == 2), Is.True);
             Assert.That(blueprint.Heroes.All(hero => hero.TagIds.Count == 2), Is.True);
+            Assert.That(
+                blueprint.Heroes.Select(hero => hero.Id),
+                Is.EqualTo(new[]
+                {
+                    "warrior", "cleric", "mage", "archer", "rogue", "magic_warrior"
+                }));
+            Assert.That(blueprint.Heroes.All(hero => hero.BaseStats.AttackSpeed > 0f), Is.True);
+            Assert.That(blueprint.Heroes.All(hero => hero.EquipmentProfile != null), Is.True);
         }
 
         [Test]
@@ -34,12 +42,32 @@ namespace TaskbarTactics.Tests
         }
 
         [Test]
-        public void BestiaryHasEightNormalEnemiesAndOneBoss()
+        public void BestiaryHasNineNormalEnemiesAndOneBoss()
         {
             ContentBlueprint blueprint = ContentBlueprint.CreateVerticalSlice();
 
-            Assert.That(blueprint.Enemies.Count(enemy => !enemy.IsBoss), Is.EqualTo(8));
+            Assert.That(blueprint.Enemies.Count(enemy => !enemy.IsBoss), Is.EqualTo(9));
             Assert.That(blueprint.Enemies.Count(enemy => enemy.IsBoss), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void VerticalSliceContainsStarterWeaponLootSet()
+        {
+            ContentBlueprint blueprint = ContentBlueprint.CreateVerticalSlice();
+            string[] starterWeaponIds =
+            {
+                "wooden_sword",
+                "wooden_mace",
+                "wooden_staff",
+                "wooden_bow",
+                "wooden_dagger"
+            };
+
+            Assert.That(
+                starterWeaponIds.All(id => blueprint.Items.Any(item =>
+                    item.Id == id &&
+                    item.Descriptor.PrimarySlot == EquipmentSlot.MainWeapon)),
+                Is.True);
         }
 
         [Test]

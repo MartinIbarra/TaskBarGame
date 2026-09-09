@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: overheat
   m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.SkillDefinition
   id: overheat
-  ownerHeroId: pyromancer
+  ownerHeroId: mage
   isPassive: 1
   cooldownTicks: 0
   magnitude: 0.22
