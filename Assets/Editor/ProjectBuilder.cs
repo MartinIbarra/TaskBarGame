@@ -1476,10 +1476,11 @@ namespace TaskbarTactics.Editor
             ApplySimpleWideFrame(titleFrame, titleWideSprite);
             titleFrame.rectTransform.anchorMin = titleFrame.rectTransform.anchorMax = new Vector2(0, 1);
             titleFrame.rectTransform.pivot = new Vector2(0, 1);
-            titleFrame.rectTransform.anchoredPosition = new Vector2(337, -10);
-            titleFrame.rectTransform.sizeDelta = new Vector2(342, 60);
+            titleFrame.rectTransform.anchoredPosition = new Vector2(364, -7);
+            titleFrame.rectTransform.sizeDelta = new Vector2(302.4f, 43.74f);
+            titleFrame.preserveAspect = false;
             TMP_Text title = CreateText(background.transform, "Title", "TASKBAR TACTICS",
-                26, TextAlignmentOptions.Center, new Vector2(362, 24), new Vector2(292, 32));
+                26, TextAlignmentOptions.Center, new Vector2(347, 14), new Vector2(342, 32));
             title.fontStyle = FontStyles.Bold;
             title.textWrappingMode = TextWrappingModes.NoWrap;
             GameObject silverCurrencyObject = new GameObject(
@@ -1487,14 +1488,29 @@ namespace TaskbarTactics.Editor
                 typeof(RectTransform));
             silverCurrencyObject.transform.SetParent(background.transform, false);
             silverCurrencyObject.AddComponent<SilverCurrencyHud>();
+            Image topRightControlsLayout = CreateImage(
+                background.transform,
+                "Top Right Controls Layout",
+                Color.white);
+            topRightControlsLayout.sprite = LoadUiSprite(
+                "Assets/Resources/UI/TopRightControlsLayout.png",
+                Vector4.zero);
+            topRightControlsLayout.type = Image.Type.Simple;
+            topRightControlsLayout.preserveAspect = false;
+            topRightControlsLayout.raycastTarget = false;
+            topRightControlsLayout.rectTransform.anchorMin = topRightControlsLayout.rectTransform.anchorMax = new Vector2(0, 1);
+            topRightControlsLayout.rectTransform.pivot = new Vector2(0, 1);
+            topRightControlsLayout.rectTransform.anchoredPosition = new Vector2(830, -8);
+            topRightControlsLayout.rectTransform.sizeDelta = new Vector2(115.967f, 41.584f);
+            topRightControlsLayout.gameObject.SetActive(false);
             Button close = CreateButton(background.transform, "Close Button", string.Empty,
-                new Vector2(863, 12), new Vector2(48.3f, 48.3f), Color.white);
+                new Vector2(831, 12), new Vector2(48.3f, 48.3f), Color.white);
             ApplyIconButton(close, barButtonSprite);
             Button settingsShortcut = CreateButton(background.transform, "Settings Shortcut Button", string.Empty,
-                new Vector2(916, 12), new Vector2(46, 46), Color.white);
+                new Vector2(870, 12), new Vector2(46, 46), Color.white);
             ApplyIconButton(settingsShortcut, settingsButtonSprite);
             Button quitShortcut = CreateButton(background.transform, "Quit Shortcut Button", string.Empty,
-                new Vector2(968, 12), new Vector2(46, 46), Color.white);
+                new Vector2(909, 12), new Vector2(46, 46), Color.white);
             ApplyIconButton(quitShortcut, closeButtonSprite);
 
             string[] tabNames =
@@ -1513,6 +1529,7 @@ namespace TaskbarTactics.Editor
                 ApplyUiFrame(tabs[i].GetComponent<Image>(), commandSprite);
                 InsetButtonLabel(tabs[i], new Vector2(34, 16), new Vector2(-34, -16));
             }
+            CreateNavigationChains(background.transform, tabs);
 
             List<GameObject> panels = new List<GameObject>();
             List<TMP_Text> summaries = new List<TMP_Text>();
@@ -1784,13 +1801,43 @@ namespace TaskbarTactics.Editor
             return new Vector2(startX + position.Column * gap, startY - position.Row * gap);
         }
 
+        private static void CreateNavigationChains(
+            Transform parent,
+            IReadOnlyList<Button> tabs)
+        {
+            Sprite chainSprite = LoadPixelUiSprite("Assets/Resources/UI/FormationChain.png");
+            if (chainSprite == null || tabs == null || tabs.Count < 4)
+            {
+                return;
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                Image chain = CreateImage(parent, $"Navigation Chain {i + 1}", Color.white);
+                chain.sprite = chainSprite;
+                chain.type = Image.Type.Simple;
+                chain.preserveAspect = true;
+                chain.raycastTarget = false;
+                chain.rectTransform.anchorMin = chain.rectTransform.anchorMax = new Vector2(0f, 1f);
+                chain.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                RectTransform from = tabs[i].transform as RectTransform;
+                RectTransform to = tabs[i + 1].transform as RectTransform;
+                Vector2 fromPosition = from != null ? from.anchoredPosition : new Vector2(33f, -150f - i * 62f);
+                Vector2 toPosition = to != null ? to.anchoredPosition : new Vector2(33f, -212f - i * 62f);
+                chain.rectTransform.anchoredPosition = (fromPosition + toPosition) * 0.5f + new Vector2(75.2f, -27.2f);
+                chain.rectTransform.sizeDelta = new Vector2(18f, 24f);
+                chain.transform.SetAsFirstSibling();
+            }
+        }
+
         private static void CreateInventorySlotGrid(Transform parent, Sprite itemSlotSprite)
         {
-            const int columns = 4;
-            const int rows = 5;
-            const float slotSize = 58f;
-            const float gap = 66f;
-            Vector2 start = new Vector2(90f, -90f);
+            const int columns = 5;
+            const int rows = 6;
+            const float slotSize = 41.8f;
+            const float horizontalGap = 60f;
+            const float verticalGap = 55f;
+            Vector2 start = new Vector2(70f, -55f);
             List<Image> slots = new List<Image>();
 
             for (int row = 0; row < rows; row++)
@@ -1805,7 +1852,7 @@ namespace TaskbarTactics.Editor
                     slot.raycastTarget = false;
                     slot.rectTransform.anchorMin = slot.rectTransform.anchorMax = new Vector2(0, 1);
                     slot.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                    slot.rectTransform.anchoredPosition = start + new Vector2(column * gap, -row * gap);
+                    slot.rectTransform.anchoredPosition = start + new Vector2(column * horizontalGap, -row * verticalGap);
                     slot.rectTransform.sizeDelta = new Vector2(slotSize, slotSize);
                     slots.Add(slot);
                 }
@@ -1823,6 +1870,7 @@ namespace TaskbarTactics.Editor
 
             Image layout = CreateImage(parent, "Equipment Preview Layout", Color.white);
             layout.sprite = equipLayoutSprite;
+            layout.color = Color.clear;
             layout.type = Image.Type.Sliced;
             layout.preserveAspect = false;
             layout.raycastTarget = false;
@@ -2016,7 +2064,7 @@ namespace TaskbarTactics.Editor
             emptyBackground.rectTransform.anchorMin = emptyBackground.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             emptyBackground.rectTransform.pivot = new Vector2(0.5f, 1f);
             emptyBackground.rectTransform.anchoredPosition = new Vector2(0, 0);
-            emptyBackground.rectTransform.sizeDelta = new Vector2(111, 111);
+            emptyBackground.rectTransform.sizeDelta = new Vector2(99.9f, 99.9f);
 
             Image icon = CreateImage(button.transform, "Class Icon", Color.white);
             icon.sprite = LoadPixelUiSprite(
@@ -2101,12 +2149,10 @@ namespace TaskbarTactics.Editor
             {
                 { "town", "narrow_bridge" },
                 { "narrow_bridge", "cave" },
-                { "narrow_bridge", "cemetery" },
-                { "cave", "goblin_village" },
+                { "cave", "cemetery" },
                 { "cemetery", "goblin_village" },
                 { "goblin_village", "tomb_pass" },
-                { "goblin_village", "mountain_pass" },
-                { "tomb_pass", "lost_forest" },
+                { "tomb_pass", "mountain_pass" },
                 { "mountain_pass", "lost_forest" },
                 { "lost_forest", "last_bastion" }
             };

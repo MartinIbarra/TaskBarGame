@@ -26,6 +26,7 @@ namespace TaskbarTactics.Presentation
         private const float SilverDropScaleMultiplier = 0.765f;
         private const float SilverDropApexScaleMultiplier = 0.55f;
         private const float SilverDropSoundVolume = 0.56f;
+        private static readonly Color GoldCoinColor = new Color(1f, 0.84f, 0.12f, 1f);
         private const float ChestOpenEffectYOffset = 0.16f;
         private const float ChestOpenEffectFrameSeconds = 0.12f;
         private const float RewardItemPopupDurationSeconds = 1.15f;
@@ -195,6 +196,7 @@ namespace TaskbarTactics.Presentation
             coinObject.transform.localScale = Vector3.one * SilverDropScaleMultiplier;
             SpriteRenderer coinRenderer = coinObject.AddComponent<SpriteRenderer>();
             coinRenderer.sprite = silverCoinFrames[0];
+            coinRenderer.color = GoldCoinColor;
             coinRenderer.sortingOrder = 40;
             SpriteRenderer shineRenderer = null;
             if (silverCoinShineFrames != null && silverCoinShineFrames.Length > 0)

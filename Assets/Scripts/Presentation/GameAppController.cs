@@ -38,7 +38,6 @@ namespace TaskbarTactics.Presentation
 
         private readonly CombatSimulator combatSimulator = new CombatSimulator();
         private readonly LootGenerator lootGenerator = new LootGenerator();
-        private readonly RouteSelector routeSelector = new RouteSelector();
         private readonly OfflineProgressService offlineProgress =
             new OfflineProgressService(TimeSpan.FromHours(8));
         private readonly LocalizationCatalog localization = LocalizationCatalog.CreateBuiltIn();
@@ -567,6 +566,7 @@ namespace TaskbarTactics.Presentation
                         State.Inventory,
                         node,
                         State.Expedition.Seed + State.Expedition.CompletedNodes);
+                    ApplyRouteDifficulty(combatRequest);
                     CombatResult result = combatSimulator.Simulate(combatRequest);
                     ApplyCombatResult(result);
                     silverDropEnemyIds = RollSilverDrops(combatRequest, result);
@@ -625,7 +625,7 @@ namespace TaskbarTactics.Presentation
                 }
 
                 RewardNode(node, rewardLoot);
-                bool reachedExpeditionEnd = node.NextNodeIds.Count == 0;
+                bool reachedExpeditionEnd = !ExpeditionPath.TryGetNextNodeId(node.Id, out _);
                 Advance(node);
                 SaveAndRefresh();
                 if (reachedExpeditionEnd)
@@ -744,19 +744,13 @@ namespace TaskbarTactics.Presentation
 
         private void Advance(MapNodeDefinition node)
         {
-            if (node.NextNodeIds.Count == 0)
+            if (!ExpeditionPath.TryGetNextNodeId(node.Id, out string nextNodeId))
             {
                 CompleteExpedition();
                 return;
             }
 
-            List<MapNodeState> choices = node.NextNodeIds
-                .Select(id => catalog.Map.FindNode(id))
-                .Where(item => item != null)
-                .Select(item => new MapNodeState(item.Id, item.Type, item.Difficulty))
-                .ToList();
-            State.Expedition.CurrentNodeId =
-                routeSelector.SelectNext(choices, State.Party.RoutePreference).Id;
+            State.Expedition.CurrentNodeId = nextNodeId;
         }
 
         private void CompleteExpedition()
@@ -821,6 +815,7 @@ namespace TaskbarTactics.Presentation
                         State.Inventory,
                         node,
                         State.Expedition.Seed + State.Expedition.CompletedNodes);
+                    ApplyRouteDifficulty(request);
                     CombatResult result = combatSimulator.Simulate(request);
                     ApplyCombatResult(result);
                     if (result.Outcome != CombatOutcome.Victory)
@@ -857,6 +852,45 @@ namespace TaskbarTactics.Presentation
                     node.Type == MapNodeType.Boss ||
                     node.Id == "cave" ||
                     node.Id == "mountain_pass");
+        }
+
+        private void ApplyRouteDifficulty(CombatRequest request)
+        {
+            if (request?.Enemies == null)
+            {
+                return;
+            }
+
+            float healthMultiplier = RouteHealthMultiplier(State.Party.RoutePreference);
+            if (Mathf.Approximately(healthMultiplier, 1f))
+            {
+                return;
+            }
+
+            foreach (CombatantState enemy in request.Enemies)
+            {
+                if (enemy == null)
+                {
+                    continue;
+                }
+
+                int scaledHealth = Mathf.Max(1, Mathf.CeilToInt(enemy.MaxHealth * healthMultiplier));
+                enemy.MaxHealth = scaledHealth;
+                enemy.CurrentHealth = scaledHealth;
+            }
+        }
+
+        private static float RouteHealthMultiplier(RoutePreference preference)
+        {
+            switch (preference)
+            {
+                case RoutePreference.Loot:
+                    return 1.25f;
+                case RoutePreference.Challenge:
+                    return 1.5f;
+                default:
+                    return 1f;
+            }
         }
 
         private static bool ShowsChestReward(MapNodeDefinition node)
@@ -1119,7 +1153,20 @@ namespace TaskbarTactics.Presentation
 
         private string NodeStatus(MapNodeDefinition node)
         {
-            return $"{node.Id} · {node.Type} · Dificultad {node.Difficulty}";
+            return $"{node.Id} · {node.Type} · {RouteDifficultyName(State.Party.RoutePreference)}";
+        }
+
+        private static string RouteDifficultyName(RoutePreference preference)
+        {
+            switch (preference)
+            {
+                case RoutePreference.Loot:
+                    return "Difficulty Normal";
+                case RoutePreference.Challenge:
+                    return "Difficulty Hard";
+                default:
+                    return "Difficulty Easy";
+            }
         }
 
         private string Localize(string key)

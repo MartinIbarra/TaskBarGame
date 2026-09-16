@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cdf0f7977cce5b54aaeba0a253c29ff1, type: 3}
+  m_Name: blue_legs
+  m_EditorClassIdentifier: TaskbarTactics.Content::TaskbarTactics.Content.ItemDefinition
+  id: blue_legs
+  descriptor:
+    InstanceId: blue_legs
+    DefinitionId: blue_legs
+    PrimarySlot: 6
+    Category: 0
+    WeaponType: 0
+    Handedness: 0
+    OffHandType: 0
+    ArmorType: 1
+    Modifiers:
+    - Stat: 1
+      Operation: 0
+      Value: 10
+      SourceId: item_base
+  tagId: arcane
+  icon: {fileID: 21300000, guid: 84a47c17ff56af040a8456f6bbb368dc, type: 3}

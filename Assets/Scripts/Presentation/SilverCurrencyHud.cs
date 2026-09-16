@@ -13,6 +13,7 @@ namespace TaskbarTactics.Presentation
         private const float HudWidth = 138.2865f;
         private const float HudHeight = 42f;
         private const float CoinPositionX = 36f;
+        private static readonly Color GoldCoinColor = new Color(1f, 0.84f, 0.12f, 1f);
 
         // The source strip has slightly different transparent margins per frame.
         // These offsets keep the coin's visible center fixed while it rotates.
@@ -47,12 +48,13 @@ namespace TaskbarTactics.Presentation
 
         private void EnsureVisuals()
         {
+            RemoveLegacyCurrencyLayouts();
             RectTransform root = transform as RectTransform;
             if (root != null)
             {
                 root.anchorMin = root.anchorMax = new Vector2(0f, 1f);
                 root.pivot = new Vector2(0f, 1f);
-                root.anchoredPosition = new Vector2(83f, -8f);
+                root.anchoredPosition = new Vector2(113f, -5f);
                 root.sizeDelta = new Vector2(HudWidth, HudHeight);
             }
 
@@ -65,7 +67,7 @@ namespace TaskbarTactics.Presentation
                     typeof(Image));
                 backgroundObject.transform.SetParent(transform, false);
                 background = backgroundObject.GetComponent<Image>();
-                background.sprite = Resources.Load<Sprite>("UI/Command");
+                background.sprite = Resources.Load<Sprite>("UI/GoldCurrencyLayout");
                 background.type = Image.Type.Sliced;
                 background.preserveAspect = false;
                 background.raycastTarget = false;
@@ -83,6 +85,7 @@ namespace TaskbarTactics.Presentation
                 coin = coinObject.GetComponent<Image>();
                 coin.type = Image.Type.Simple;
                 coin.preserveAspect = true;
+                coin.color = GoldCoinColor;
                 coin.raycastTarget = false;
                 coin.rectTransform.anchorMin = coin.rectTransform.anchorMax = new Vector2(0f, 0.5f);
                 coin.rectTransform.pivot = new Vector2(0f, 0.5f);
@@ -114,6 +117,35 @@ namespace TaskbarTactics.Presentation
             background.transform.SetAsFirstSibling();
             coin.transform.SetAsLastSibling();
             amountLabel.transform.SetAsLastSibling();
+        }
+
+        private void RemoveLegacyCurrencyLayouts()
+        {
+            Transform parent = transform.parent;
+            if (parent == null)
+            {
+                return;
+            }
+
+            for (int i = parent.childCount - 1; i >= 0; i--)
+            {
+                Transform sibling = parent.GetChild(i);
+                if (sibling == transform)
+                {
+                    continue;
+                }
+
+                Image image = sibling.GetComponent<Image>();
+                RectTransform rect = sibling as RectTransform;
+                bool isLegacyCurrencyLayout = sibling.name == "Silver Currency Layout" ||
+                    (image != null && image.sprite != null && image.sprite.name == "Command" &&
+                     rect != null && Mathf.Abs(rect.sizeDelta.x - HudWidth) < 2f &&
+                     Mathf.Abs(rect.sizeDelta.y - HudHeight) < 2f);
+                if (isLegacyCurrencyLayout)
+                {
+                    Destroy(sibling.gameObject);
+                }
+            }
         }
 
         private void Refresh()

@@ -227,6 +227,26 @@ namespace TaskbarTactics.Content
                 ArmorType.Leather, "poison", Flat(HeroStatType.Evasion, 4f)));
             content.Items.Add(ItemBlueprint.Armor("arcane_robe", EquipmentSlot.Chest,
                 ArmorType.Cloth, "arcane", Flat(HeroStatType.SpellPower, 3f)));
+            content.Items.Add(ItemBlueprint.Armor("leather_hood", EquipmentSlot.Head,
+                ArmorType.Leather, "poison", Flat(HeroStatType.Evasion, 3f)));
+            content.Items.Add(ItemBlueprint.Armor("leather_chest", EquipmentSlot.Chest,
+                ArmorType.Leather, "poison", Flat(HeroStatType.Evasion, 5f)));
+            content.Items.Add(ItemBlueprint.Armor("leather_legs", EquipmentSlot.Legs,
+                ArmorType.Leather, "poison", Flat(HeroStatType.Evasion, 4f)));
+            content.Items.Add(ItemBlueprint.Armor("plate_chest", EquipmentSlot.Chest,
+                ArmorType.Plate, "guard", Flat(HeroStatType.Defense, 13f)));
+            content.Items.Add(ItemBlueprint.Armor("plate_legs", EquipmentSlot.Legs,
+                ArmorType.Plate, "guard", Flat(HeroStatType.Defense, 8f)));
+            content.Items.Add(ItemBlueprint.Armor("tela_chest", EquipmentSlot.Chest,
+                ArmorType.Cloth, "arcane", Flat(HeroStatType.SpellPower, 4f)));
+            content.Items.Add(ItemBlueprint.Armor("tela_glove", EquipmentSlot.Hands,
+                ArmorType.Cloth, "arcane", Flat(HeroStatType.CastSpeed, 0.05f)));
+            content.Items.Add(ItemBlueprint.Armor("blue_legs", EquipmentSlot.Legs,
+                ArmorType.Cloth, "arcane", Flat(HeroStatType.MaxMana, 10f)));
+            content.Items.Add(ItemBlueprint.Armor("iron_boots", EquipmentSlot.Boots,
+                ArmorType.Plate, "steel", Flat(HeroStatType.Defense, 5f)));
+            content.Items.Add(ItemBlueprint.Armor("iron_helmet", EquipmentSlot.Head,
+                ArmorType.Plate, "steel", Flat(HeroStatType.Defense, 7f)));
             content.Items.Add(ItemBlueprint.Accessory("sun_medallion", EquipmentSlot.Neck,
                 "sacred", Flat(HeroStatType.MaxMana, 15f)));
             content.Items.Add(ItemBlueprint.Accessory("warding_ring", EquipmentSlot.Ring1,
@@ -360,21 +380,21 @@ namespace TaskbarTactics.Content
         private static void AddMap(ContentBlueprint content)
         {
             content.MapNodes.Add(Node("town", MapNodeType.Event, 0, "narrow_bridge"));
-            content.MapNodes.Add(Node("narrow_bridge", MapNodeType.Combat, 3, "cave", "cemetery"));
-            content.MapNodes.Add(Node("cave", MapNodeType.Treasure, 4, "goblin_village"));
+            content.MapNodes.Add(Node("narrow_bridge", MapNodeType.Combat, 3, "cave"));
+            content.MapNodes.Add(Node("cave", MapNodeType.Treasure, 4, "cemetery"));
             content.MapNodes.Add(Node("cemetery", MapNodeType.Combat, 4, "goblin_village"));
-            content.MapNodes.Add(Node("goblin_village", MapNodeType.Elite, 4, "tomb_pass", "mountain_pass"));
-            content.MapNodes.Add(Node("tomb_pass", MapNodeType.Elite, 6, "lost_forest"));
+            content.MapNodes.Add(Node("goblin_village", MapNodeType.Elite, 4, "tomb_pass"));
+            content.MapNodes.Add(Node("tomb_pass", MapNodeType.Elite, 6, "mountain_pass"));
             content.MapNodes.Add(Node("mountain_pass", MapNodeType.Treasure, 4, "lost_forest"));
             content.MapNodes.Add(Node("lost_forest", MapNodeType.Combat, 7, "last_bastion"));
             content.MapNodes.Add(Node("last_bastion", MapNodeType.Boss, 10));
             content.MapNodes.Add(Node("city2", MapNodeType.Event, 0, "corrupt_pass"));
             content.MapNodes.Add(Node("corrupt_pass", MapNodeType.Combat, 3, "lo_hueso"));
-            content.MapNodes.Add(Node("lo_hueso", MapNodeType.Combat, 4, "mt_secret", "ancient_ruins"));
+            content.MapNodes.Add(Node("lo_hueso", MapNodeType.Combat, 4, "mt_secret"));
             content.MapNodes.Add(Node("mt_secret", MapNodeType.Combat, 5, "ancient_ruins"));
             content.MapNodes.Add(Node("ancient_ruins", MapNodeType.Combat, 5, "arbol_morto"));
             content.MapNodes.Add(Node("arbol_morto", MapNodeType.Combat, 6, "mountain_pass_act2"));
-            content.MapNodes.Add(Node("mountain_pass_act2", MapNodeType.Combat, 7, "black_tower", "port"));
+            content.MapNodes.Add(Node("mountain_pass_act2", MapNodeType.Combat, 7, "black_tower"));
             content.MapNodes.Add(Node("black_tower", MapNodeType.Combat, 8, "port"));
             content.MapNodes.Add(Node("port", MapNodeType.Combat, 9, "lost_bay"));
             content.MapNodes.Add(Node("lost_bay", MapNodeType.Boss, 10));

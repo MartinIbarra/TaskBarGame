@@ -10,10 +10,12 @@ namespace TaskbarTactics.Presentation
 {
     public sealed class InventorySlotGridView : MonoBehaviour
     {
-        private const int Columns = 4;
-        private const float Gap = 66f;
-        private const float SlotSize = 58f;
-        private static readonly Vector2 SlotStart = new Vector2(90f, -90f);
+        private const int Columns = 5;
+        private const int Rows = 6;
+        private const float HorizontalGap = 60f;
+        private const float VerticalGap = 55f;
+        private const float SlotSize = 41.8f;
+        private static readonly Vector2 SlotStart = new Vector2(70f, -55f);
         private static readonly Vector2 ItemIconOffset = new Vector2(2f, -2f);
 
         private readonly List<Image> slots = new List<Image>();
@@ -35,6 +37,7 @@ namespace TaskbarTactics.Presentation
         {
             slots.Clear();
             slots.AddRange(slotImages.Where(slot => slot != null));
+            EnsureSlotCount();
             EnsureItemIcons();
             ArrangeSlots();
             ConfigureDropTargets();
@@ -55,6 +58,7 @@ namespace TaskbarTactics.Presentation
                 DiscoverSlots();
             }
 
+            EnsureSlotCount();
             EnsureItemIcons();
             ArrangeSlots();
             ConfigureDropTargets();
@@ -181,13 +185,38 @@ namespace TaskbarTactics.Presentation
                 RectTransform slotRect = slot.rectTransform;
                 slotRect.anchorMin = slotRect.anchorMax = new Vector2(0f, 1f);
                 slotRect.pivot = new Vector2(0.5f, 0.5f);
-                slotRect.anchoredPosition = SlotStart + new Vector2((i % Columns) * Gap, -(i / Columns) * Gap);
+                slotRect.anchoredPosition = SlotStart + new Vector2(
+                    (i % Columns) * HorizontalGap,
+                    -(i / Columns) * VerticalGap);
                 slotRect.sizeDelta = new Vector2(SlotSize, SlotSize);
 
                 if (i < itemIcons.Count && itemIcons[i] != null)
                 {
                     itemIcons[i].rectTransform.anchoredPosition = ItemIconOffset;
                 }
+            }
+        }
+
+        private void EnsureSlotCount()
+        {
+            int requiredCount = Columns * Rows;
+            Sprite slotSprite = slots.Count > 0 && slots[0] != null
+                ? slots[0].sprite
+                : Resources.Load<Sprite>("UI/itemSlot");
+            while (slots.Count < requiredCount)
+            {
+                GameObject slotObject = new GameObject(
+                    $"Inventory Slot {slots.Count + 1:00}",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image));
+                slotObject.transform.SetParent(transform, false);
+                Image slot = slotObject.GetComponent<Image>();
+                slot.sprite = slotSprite;
+                slot.type = Image.Type.Simple;
+                slot.preserveAspect = true;
+                slot.raycastTarget = true;
+                slots.Add(slot);
             }
         }
 

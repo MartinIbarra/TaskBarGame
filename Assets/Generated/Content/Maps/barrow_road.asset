@@ -24,12 +24,11 @@ MonoBehaviour:
     Difficulty: 3
     NextNodeIds:
     - cave
-    - cemetery
   - Id: cave
     Type: 1
     Difficulty: 4
     NextNodeIds:
-    - goblin_village
+    - cemetery
   - Id: cemetery
     Type: 0
     Difficulty: 4
@@ -40,12 +39,11 @@ MonoBehaviour:
     Difficulty: 4
     NextNodeIds:
     - tomb_pass
-    - mountain_pass
   - Id: tomb_pass
     Type: 3
     Difficulty: 6
     NextNodeIds:
-    - lost_forest
+    - mountain_pass
   - Id: mountain_pass
     Type: 1
     Difficulty: 4
@@ -75,7 +73,6 @@ MonoBehaviour:
     Difficulty: 4
     NextNodeIds:
     - mt_secret
-    - ancient_ruins
   - Id: mt_secret
     Type: 0
     Difficulty: 5
@@ -96,7 +93,6 @@ MonoBehaviour:
     Difficulty: 7
     NextNodeIds:
     - black_tower
-    - port
   - Id: black_tower
     Type: 0
     Difficulty: 8

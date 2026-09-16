@@ -76,6 +76,14 @@ namespace TaskbarTactics.Presentation
             slotFrame.sprite = isFront && frontSprite != null ? frontSprite : defaultSprite;
         }
 
+        public void SetFormationColor(Color color)
+        {
+            if (slotFrame != null)
+            {
+                slotFrame.color = color;
+            }
+        }
+
         public void OnDrop(PointerEventData eventData)
         {
             HeroDragSource source = eventData.pointerDrag != null

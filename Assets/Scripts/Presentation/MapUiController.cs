@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using TaskbarTactics.Content;
+using TaskbarTactics.Core.Progression;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -64,7 +65,7 @@ namespace TaskbarTactics.Presentation
         private Image actTwoLockDim;
         private Image actTwoLockBadge;
         private Sprite generatedBlockMapSprite;
-        private bool actOneOpeningRouteOffsetsApplied;
+        private bool actOneProgressionRoutesApplied;
         private readonly List<MapNodeView> actTwoNodes = new List<MapNodeView>();
         private readonly List<MapRouteView> actTwoRoutes = new List<MapRouteView>();
         private RectTransform actTwoRoutesLayer;
@@ -151,13 +152,11 @@ namespace TaskbarTactics.Presentation
             }
 
             ApplyActPreview();
-            ApplyActOneOpeningRouteOffsets();
+            EnsureActOneProgressionRoutes();
 
             HashSet<string> completed = new HashSet<string>(
                 app.State.Expedition.CompletedNodeIds ?? Enumerable.Empty<string>());
             string currentNodeId = app.State.Expedition.CurrentNodeId;
-            bool challengeMode = app.State.Party.RoutePreference.ToString()
-                .Equals("Challenge", StringComparison.OrdinalIgnoreCase);
             if (!app.State.Expedition.IsActive && string.IsNullOrEmpty(currentNodeId))
             {
                 currentNodeId = app.Catalog.Map.Nodes.FirstOrDefault()?.Id ?? string.Empty;
@@ -165,19 +164,13 @@ namespace TaskbarTactics.Presentation
 
             foreach (MapRouteView route in routes)
             {
-                bool hasArtistRoutes = routeArtworkOverlays.Any(item =>
-                    item.Image != null && item.Image.texture != null);
-                bool plannedRoute = IsRouteOnPreferencePath(
-                    route.FromNodeId,
-                    route.ToNodeId,
-                    app.State.Party.RoutePreference.ToString());
+                bool traversedRoute = IsTraversedRoute(route, completed, currentNodeId);
                 foreach (Image dash in route.Dashes)
                 {
                     if (dash != null)
                     {
-                        dash.color = hasArtistRoutes || challengeMode
-                            ? new Color(1f, 1f, 1f, 0f)
-                            : plannedRoute ? PlannedRoute : LockedRoute;
+                        dash.gameObject.SetActive(traversedRoute);
+                        dash.color = traversedRoute ? PlannedRoute : LockedRoute;
                     }
                 }
             }
@@ -191,12 +184,10 @@ namespace TaskbarTactics.Presentation
                 bool isAvailable = app.Catalog.Map.Nodes.Any(item =>
                     completed.Contains(item.Id) && item.NextNodeIds.Contains(node.NodeId));
 
-                Color color = challengeMode
-                    ? ChallengeNode
-                    : isCompleted ? CompletedNode :
-                        isCurrent ? CurrentNode :
-                        isAvailable ? AvailableNode :
-                        LockedNode;
+                Color color = isCompleted ? CompletedNode :
+                    isCurrent ? CurrentNode :
+                    isAvailable ? AvailableNode :
+                    LockedNode;
                 if (node.Marker != null)
                 {
                     node.Marker.gameObject.SetActive(true);
@@ -266,14 +257,8 @@ namespace TaskbarTactics.Presentation
                     continue;
                 }
 
-                bool active = string.Equals(
-                    overlay.PreferenceName,
-                    app.State.Party.RoutePreference.ToString(),
-                    StringComparison.OrdinalIgnoreCase);
-                overlay.Image.gameObject.SetActive(overlay.Image.texture != null);
-                overlay.Image.color = active && !challengeMode
-                    ? new Color(1f, 1f, 1f, 0.95f)
-                    : new Color(1f, 1f, 1f, 0f);
+                overlay.Image.gameObject.SetActive(false);
+                overlay.Image.color = new Color(1f, 1f, 1f, 0f);
             }
         }
 
@@ -503,7 +488,7 @@ namespace TaskbarTactics.Presentation
             {
                 if (overlay.Image != null)
                 {
-                    overlay.Image.gameObject.SetActive(showActOneGameplay);
+                    overlay.Image.gameObject.SetActive(false);
                 }
             }
 
@@ -698,11 +683,10 @@ namespace TaskbarTactics.Presentation
             }
 
             actTwoRoutes.Clear();
-            string[,] routeIds = ActTwoRouteIds();
-            for (int i = 0; i < routeIds.GetLength(0); i++)
+            for (int i = 0; i + 1 < ExpeditionPath.ActTwoNodeIds.Length; i++)
             {
-                string from = routeIds[i, 0];
-                string to = routeIds[i, 1];
+                string from = ExpeditionPath.ActTwoNodeIds[i];
+                string to = ExpeditionPath.ActTwoNodeIds[i + 1];
                 if (positions.TryGetValue(from, out Vector2 start) &&
                     positions.TryGetValue(to, out Vector2 end))
                 {
@@ -754,24 +738,6 @@ namespace TaskbarTactics.Presentation
                 ["black_tower"] = new Vector2(304.4f, 159.8f),
                 ["port"] = new Vector2(227.8f, 219.3f),
                 ["lost_bay"] = new Vector2(158.2f, 293.1f)
-            };
-        }
-
-        private static string[,] ActTwoRouteIds()
-        {
-            return new[,]
-            {
-                { "city2", "corrupt_pass" },
-                { "corrupt_pass", "lo_hueso" },
-                { "lo_hueso", "mt_secret" },
-                { "mt_secret", "ancient_ruins" },
-                { "lo_hueso", "ancient_ruins" },
-                { "ancient_ruins", "arbol_morto" },
-                { "arbol_morto", "mountain_pass_act2" },
-                { "mountain_pass_act2", "black_tower" },
-                { "black_tower", "port" },
-                { "mountain_pass_act2", "port" },
-                { "port", "lost_bay" }
             };
         }
 
@@ -917,57 +883,129 @@ namespace TaskbarTactics.Presentation
             return image;
         }
 
-        private void ApplyActOneOpeningRouteOffsets()
+        private void EnsureActOneProgressionRoutes()
         {
-            if (actOneOpeningRouteOffsetsApplied)
+            if (actOneProgressionRoutesApplied || nodes.Count == 0)
             {
                 return;
             }
 
-            OffsetRoute("town", "narrow_bridge", 7f);
-            LimitRouteDashes("town", "narrow_bridge", 4);
-            OffsetRoute("narrow_bridge", "cave", 4f);
-            actOneOpeningRouteOffsetsApplied = true;
-        }
-
-        private void OffsetRoute(string fromNodeId, string toNodeId, float yOffset)
-        {
-            MapRouteView route = routes.FirstOrDefault(candidate =>
-                candidate != null &&
-                string.Equals(candidate.FromNodeId, fromNodeId, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(candidate.ToNodeId, toNodeId, StringComparison.OrdinalIgnoreCase));
-            if (route == null)
+            Transform routeParent = routes
+                .SelectMany(route => route?.Dashes ?? Enumerable.Empty<Image>())
+                .Select(dash => dash?.transform.parent?.parent)
+                .FirstOrDefault(parent => parent != null);
+            routeParent ??= mapBackground?.transform.parent?.Find("Routes");
+            if (routeParent == null)
             {
                 return;
             }
 
-            foreach (Image dash in route.Dashes)
+            for (int i = 0; i < routes.Count; i++)
             {
-                if (dash != null)
+                MapRouteView route = routes[i];
+                if (route == null || ExpeditionPath.IsProgressionEdge(route.FromNodeId, route.ToNodeId))
                 {
-                    dash.rectTransform.anchoredPosition += new Vector2(0f, yOffset);
+                    continue;
+                }
+
+                foreach (Image dash in route.Dashes)
+                {
+                    dash?.gameObject.SetActive(false);
                 }
             }
+
+            for (int i = 0; i + 1 < ExpeditionPath.ActOneNodeIds.Length; i++)
+            {
+                string fromNodeId = ExpeditionPath.ActOneNodeIds[i];
+                string toNodeId = ExpeditionPath.ActOneNodeIds[i + 1];
+                if (FindRoute(routes, fromNodeId, toNodeId) != null)
+                {
+                    continue;
+                }
+
+                RectTransform from = NodeRoot(fromNodeId);
+                RectTransform to = NodeRoot(toNodeId);
+                if (from == null || to == null)
+                {
+                    continue;
+                }
+
+                routes.Add(CreateRuntimeRoute(routeParent, fromNodeId, toNodeId,
+                    from.anchoredPosition, to.anchoredPosition));
+            }
+
+            actOneProgressionRoutesApplied = true;
         }
 
-        private void LimitRouteDashes(string fromNodeId, string toNodeId, int visibleDashCount)
+        private static MapRouteView FindRoute(
+            IEnumerable<MapRouteView> candidates,
+            string fromNodeId,
+            string toNodeId)
         {
-            MapRouteView route = routes.FirstOrDefault(candidate =>
-                candidate != null &&
-                string.Equals(candidate.FromNodeId, fromNodeId, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(candidate.ToNodeId, toNodeId, StringComparison.OrdinalIgnoreCase));
-            if (route == null)
+            return candidates.FirstOrDefault(route =>
+                route != null &&
+                string.Equals(route.FromNodeId, fromNodeId, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(route.ToNodeId, toNodeId, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private RectTransform NodeRoot(string nodeId)
+        {
+            MapNodeView node = nodes.FirstOrDefault(candidate => candidate?.NodeId == nodeId);
+            return node?.Marker?.transform.parent as RectTransform;
+        }
+
+        private static MapRouteView CreateRuntimeRoute(
+            Transform parent,
+            string fromNodeId,
+            string toNodeId,
+            Vector2 start,
+            Vector2 end)
+        {
+            GameObject routeRoot = new GameObject($"{fromNodeId} to {toNodeId}", typeof(RectTransform));
+            routeRoot.transform.SetParent(parent, false);
+            RectTransform routeRect = routeRoot.GetComponent<RectTransform>();
+            routeRect.anchorMin = Vector2.zero;
+            routeRect.anchorMax = Vector2.one;
+            routeRect.offsetMin = Vector2.zero;
+            routeRect.offsetMax = Vector2.zero;
+
+            Vector2 delta = end - start;
+            float distance = delta.magnitude;
+            float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
+            int dashCount = Mathf.Max(2, Mathf.FloorToInt(distance / 18f));
+            List<Image> dashes = new List<Image>();
+            for (int i = 0; i < dashCount; i++)
             {
-                return;
+                float t = dashCount == 1 ? 0.5f : i / (dashCount - 1f);
+                Image dash = CreateRuntimeImage(routeRoot.transform, $"Dash {i + 1:00}");
+                dash.color = LockedRoute;
+                dash.raycastTarget = false;
+                RectTransform dashRect = dash.rectTransform;
+                dashRect.anchorMin = dashRect.anchorMax = new Vector2(0f, 1f);
+                dashRect.pivot = new Vector2(0.5f, 0.5f);
+                dashRect.anchoredPosition = Vector2.Lerp(start, end, t);
+                dashRect.sizeDelta = new Vector2(10f, 3f);
+                dashRect.localRotation = Quaternion.Euler(0f, 0f, angle);
+                dashes.Add(dash);
             }
 
-            for (int i = 0; i < route.Dashes.Count; i++)
+            return new MapRouteView
             {
-                if (route.Dashes[i] != null)
-                {
-                    route.Dashes[i].gameObject.SetActive(i < visibleDashCount);
-                }
-            }
+                FromNodeId = fromNodeId,
+                ToNodeId = toNodeId,
+                Dashes = dashes
+            };
+        }
+
+        private static bool IsTraversedRoute(
+            MapRouteView route,
+            ISet<string> completed,
+            string currentNodeId)
+        {
+            return route != null &&
+                ExpeditionPath.IsProgressionEdge(route.FromNodeId, route.ToNodeId) &&
+                completed.Contains(route.FromNodeId) &&
+                (completed.Contains(route.ToNodeId) || route.ToNodeId == currentNodeId);
         }
 
         private void RefreshActTwoPreview()
@@ -981,22 +1019,17 @@ namespace TaskbarTactics.Presentation
             }
 
             RectTransform focusNodeTransform = null;
+            HashSet<string> completed = new HashSet<string>(
+                boundApp?.State.Expedition.CompletedNodeIds ?? Enumerable.Empty<string>());
             foreach (MapRouteView route in actTwoRoutes)
             {
-                bool showRoutes = !string.Equals(
-                    lastRoutePreferenceName,
-                    "Challenge",
-                    StringComparison.OrdinalIgnoreCase);
-                bool plannedRoute = IsActTwoRouteOnPreferencePath(
-                    route.FromNodeId,
-                    route.ToNodeId,
-                    lastRoutePreferenceName);
+                bool traversedRoute = IsTraversedRoute(route, completed, focusNodeId);
                 foreach (Image dash in route.Dashes)
                 {
                     if (dash != null)
                     {
-                        dash.gameObject.SetActive(showRoutes);
-                        dash.color = plannedRoute ? PlannedRoute : LockedRoute;
+                        dash.gameObject.SetActive(traversedRoute);
+                        dash.color = traversedRoute ? PlannedRoute : LockedRoute;
                     }
                 }
             }
@@ -1004,15 +1037,18 @@ namespace TaskbarTactics.Presentation
             foreach (MapNodeView node in actTwoNodes)
             {
                 bool isCurrent = actTwoUnlocked && node.NodeId == focusNodeId;
+                bool isCompleted = completed.Contains(node.NodeId);
+                bool isAvailable = IsNextNode(ExpeditionPath.ActTwoNodeIds, focusNodeId, node.NodeId);
                 if (node.NodeId == focusNodeId && node.Marker != null)
                 {
                     focusNodeTransform = node.Marker.transform.parent as RectTransform;
                 }
                 if (node.Marker != null)
                 {
-                    node.Marker.color = IsActTwoNodeOnPreferencePath(node.NodeId, lastRoutePreferenceName)
-                        ? AvailableNode
-                        : LockedNode;
+                    node.Marker.color = isCompleted ? CompletedNode :
+                        isCurrent ? CurrentNode :
+                        isAvailable ? AvailableNode :
+                        LockedNode;
                 }
 
                 if (node.CurrentFlag != null)
@@ -1040,6 +1076,22 @@ namespace TaskbarTactics.Presentation
                     node.CurrentFlag.gameObject.SetActive(false);
                 }
             }
+        }
+
+        private static bool IsNextNode(
+            IReadOnlyList<string> path,
+            string currentNodeId,
+            string candidateNodeId)
+        {
+            for (int i = 0; i + 1 < path.Count; i++)
+            {
+                if (path[i] == currentNodeId)
+                {
+                    return path[i + 1] == candidateNodeId;
+                }
+            }
+
+            return false;
         }
 
         private static Sprite[] LoadMapFlagFrames()
@@ -1102,37 +1154,6 @@ namespace TaskbarTactics.Presentation
             }
         }
 
-        private static bool IsRouteOnPreferencePath(string fromNodeId, string toNodeId, string preferenceName)
-        {
-            switch (preferenceName)
-            {
-                case "Loot":
-                    return IsRoute(
-                        fromNodeId,
-                        toNodeId,
-                        "town",
-                        "narrow_bridge",
-                        "cave",
-                        "goblin_village",
-                        "mountain_pass",
-                        "lost_forest",
-                        "last_bastion");
-                case "Safety":
-                    return IsRoute(
-                        fromNodeId,
-                        toNodeId,
-                        "town",
-                        "narrow_bridge",
-                        "cemetery",
-                        "goblin_village",
-                        "mountain_pass",
-                        "lost_forest",
-                        "last_bastion");
-                default:
-                    return false;
-            }
-        }
-
         private static string ActTwoDisplayName(string nodeId)
         {
             switch (nodeId)
@@ -1162,113 +1183,5 @@ namespace TaskbarTactics.Presentation
             }
         }
 
-        private static bool IsActTwoNodeOnPreferencePath(string nodeId, string preferenceName)
-        {
-            switch (preferenceName)
-            {
-                case "Loot":
-                    return IsNodeInPath(
-                        nodeId,
-                        "city2",
-                        "corrupt_pass",
-                        "lo_hueso",
-                        "mt_secret",
-                        "ancient_ruins",
-                        "arbol_morto",
-                        "mountain_pass_act2",
-                        "port",
-                        "lost_bay");
-                case "Challenge":
-                    return IsNodeInPath(
-                        nodeId,
-                        "city2",
-                        "corrupt_pass",
-                        "lo_hueso",
-                        "mt_secret",
-                        "ancient_ruins",
-                        "arbol_morto",
-                        "mountain_pass_act2",
-                        "black_tower",
-                        "port",
-                        "lost_bay");
-                case "Safety":
-                default:
-                    return IsNodeInPath(
-                        nodeId,
-                        "city2",
-                        "corrupt_pass",
-                        "lo_hueso",
-                        "ancient_ruins",
-                        "arbol_morto",
-                        "mountain_pass_act2",
-                        "port",
-                        "lost_bay");
-            }
-        }
-
-        private static bool IsActTwoRouteOnPreferencePath(string fromNodeId, string toNodeId, string preferenceName)
-        {
-            switch (preferenceName)
-            {
-                case "Loot":
-                    return IsRoute(
-                        fromNodeId,
-                        toNodeId,
-                        "city2",
-                        "corrupt_pass",
-                        "lo_hueso",
-                        "mt_secret",
-                        "ancient_ruins",
-                        "arbol_morto",
-                        "mountain_pass_act2",
-                        "port",
-                        "lost_bay");
-                case "Challenge":
-                    return IsRoute(
-                        fromNodeId,
-                        toNodeId,
-                        "city2",
-                        "corrupt_pass",
-                        "lo_hueso",
-                        "mt_secret",
-                        "ancient_ruins",
-                        "arbol_morto",
-                        "mountain_pass_act2",
-                        "black_tower",
-                        "port",
-                        "lost_bay");
-                case "Safety":
-                default:
-                    return IsRoute(
-                        fromNodeId,
-                        toNodeId,
-                        "city2",
-                        "corrupt_pass",
-                        "lo_hueso",
-                        "ancient_ruins",
-                        "arbol_morto",
-                        "mountain_pass_act2",
-                        "port",
-                        "lost_bay");
-            }
-        }
-
-        private static bool IsNodeInPath(string nodeId, params string[] path)
-        {
-            return path.Any(item => item == nodeId);
-        }
-
-        private static bool IsRoute(string fromNodeId, string toNodeId, params string[] path)
-        {
-            for (int i = 0; i < path.Length - 1; i++)
-            {
-                if (path[i] == fromNodeId && path[i + 1] == toNodeId)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
     }
 }
