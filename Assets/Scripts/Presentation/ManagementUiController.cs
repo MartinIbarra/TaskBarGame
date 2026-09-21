@@ -48,6 +48,12 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private SilverCurrencyHud silverCurrencyHud;
         [SerializeField] private ItemTooltipView itemTooltip;
 
+        [Header("Item rarity visuals")]
+        [SerializeField, Range(0f, 1f), Tooltip("Opacity at the edges of non-Normal item slots.")]
+        private float rarityGradientOpacity = 0.45f;
+        [SerializeField, Range(0.05f, 1f), Tooltip("Inward reach as a fraction of the slot's half width.")]
+        private float rarityGradientDepth = 0.7f;
+
         public void ConfigureItemTooltip(ItemTooltipView view) => itemTooltip = view;
 
         public void BindItemHover(Image icon, InventoryItem item)
@@ -55,6 +61,7 @@ namespace TaskbarTactics.Presentation
             ItemHoverTarget target = icon.GetComponent<ItemHoverTarget>() ??
                 icon.gameObject.AddComponent<ItemHoverTarget>();
             target.Configure(itemTooltip, app.Catalog, item, app.State.LanguageCode);
+            ItemRarityOverlay.Bind(icon, item, rarityGradientOpacity, rarityGradientDepth);
         }
 
         [Header("Actions")]

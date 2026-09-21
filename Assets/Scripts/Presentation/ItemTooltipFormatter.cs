@@ -11,6 +11,8 @@ namespace TaskbarTactics.Presentation
 {
     public static class ItemTooltipFormatter
     {
+        private const string RarityBonusColor = "66B5FF";
+
         public static string Format(GameContentCatalog catalog, InventoryItem item, Func<string, string> text)
         {
             ItemDefinition definition = item == null ? null : catalog.FindItem(item.DefinitionId);
@@ -27,27 +29,18 @@ namespace TaskbarTactics.Presentation
             if (definition.Descriptor.ArmorType != ArmorType.None)
                 result.Append(" · ").Append(text($"item.armor.{definition.Descriptor.ArmorType}"));
             AppendSection(result, text("item.tooltip.base"), stats.Base, text);
-            result.Append("\n\n<b><color=#").Append(RarityColor(item.Rarity)).Append('>')
-                .Append(text("item.tooltip.rarity")).Append("</color></b>\n");
-            if (stats.Rarity.Count == 0)
-                result.Append(text("item.tooltip.no_rarity_bonus"));
-            else
-                AppendStats(result, stats.Rarity, text);
             if (stats.Extras.Count > 0)
                 AppendSection(result, text("item.tooltip.extras"), stats.Extras, text);
+            if (stats.Rarity.Count > 0)
+            {
+                result.Append("\n\n<color=#").Append(RarityBonusColor).Append('>');
+                AppendStats(result, stats.Rarity, text);
+                result.Append("</color>");
+            }
             return result.ToString().TrimEnd();
         }
 
-        public static string RarityColor(ItemRarity rarity)
-        {
-            switch (rarity)
-            {
-                case ItemRarity.Rare: return "66B5FF";
-                case ItemRarity.Epic: return "C48CFF";
-                case ItemRarity.Legendary: return "FFAD4D";
-                default: return "F0F0E8";
-            }
-        }
+        public static string RarityColor(ItemRarity rarity) => ItemRarityColors.Hex(rarity);
 
         private static void AppendSection(StringBuilder result, string heading,
             IReadOnlyList<StatModifier> stats, Func<string, string> text)

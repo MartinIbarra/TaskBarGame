@@ -33,6 +33,8 @@ namespace TaskbarTactics.Content
             new ItemRarityScaling(ItemRarity.Epic, 1.35f),
             new ItemRarityScaling(ItemRarity.Legendary, 1.65f)
         };
+        [SerializeField, Tooltip("Enable extra item attributes in loot, equipment stats and tooltips. Disabled keeps saved bonuses dormant.")]
+        private bool enableItemExtraAttributes = false;
         [SerializeField] private List<ItemBonusDefinition> itemBonuses =
             new List<ItemBonusDefinition>();
         [SerializeField] private List<StatusEffectDefinition> statusEffects =
@@ -115,7 +117,7 @@ namespace TaskbarTactics.Content
             return new LootTable
             {
                 Entries = items.Select(item => new LootEntry(item.Id, item.Slot, 10)).ToList(),
-                ItemBonusIds = itemBonuses.Select(item => item.Id).ToList()
+                ItemBonusIds = CreateLootBonusIds()
             };
         }
 
@@ -134,9 +136,13 @@ namespace TaskbarTactics.Content
             return new LootTable
             {
                 Entries = entries,
-                ItemBonusIds = itemBonuses.Select(item => item.Id).ToList()
+                ItemBonusIds = CreateLootBonusIds()
             };
         }
+
+        private List<string> CreateLootBonusIds() => enableItemExtraAttributes
+            ? itemBonuses.Select(item => item.Id).ToList()
+            : new List<string>();
 
         public HeroStats ResolveHeroStats(
             HeroState state,
@@ -221,8 +227,10 @@ namespace TaskbarTactics.Content
             ItemDefinition definition = instance == null ? null : FindItem(instance.DefinitionId);
             if (definition == null)
                 return new ItemStatBreakdown(null, 1f, null);
-            var extras = (instance.ItemBonusIds ?? new List<string>()).Select(FindItemBonus)
-                .Where(bonus => bonus != null).SelectMany(bonus => bonus.Modifiers);
+            IEnumerable<StatModifier> extras = Enumerable.Empty<StatModifier>();
+            if (enableItemExtraAttributes)
+                extras = (instance.ItemBonusIds ?? new List<string>()).Select(FindItemBonus)
+                    .Where(bonus => bonus != null).SelectMany(bonus => bonus.Modifiers);
             return new ItemStatBreakdown(definition.Descriptor.Modifiers,
                 GetItemRarityMultiplier(instance.Rarity), extras);
         }
