@@ -29,3 +29,4 @@ MonoBehaviour:
       SourceId: item_base
   tagId: mark
   icon: {fileID: 21300000, guid: 82b1eb7a9419400b8e07d4a541d62b61, type: 3}
+  displayNameKey: 

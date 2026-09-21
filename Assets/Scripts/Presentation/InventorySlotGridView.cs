@@ -83,6 +83,7 @@ namespace TaskbarTactics.Presentation
                 dragSource.Configure(
                     i < visibleItems.Count ? visibleItems[i].InstanceId : string.Empty,
                     icon.sprite);
+                owner?.BindItemHover(icon, i < visibleItems.Count ? visibleItems[i] : null);
             }
         }
 

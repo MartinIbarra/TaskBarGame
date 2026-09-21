@@ -1643,7 +1643,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294966005
   m_fontColor: {r: 0.96, g: 0.98, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -1656,7 +1656,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -2671,7 +2671,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -3119,7 +3119,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -3725,7 +3725,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -4161,6 +4161,7 @@ GameObject:
   m_Component:
   - component: {fileID: 295193343}
   - component: {fileID: 295193344}
+  - component: {fileID: 295193345}
   m_Layer: 0
   m_Name: Game Application
   m_TagString: Untagged
@@ -4205,6 +4206,21 @@ MonoBehaviour:
   nodeTransitionPresenter: {fileID: 1165632500}
   combatPresentationSeconds: 30
   nonCombatNodeSeconds: 4
+--- !u!114 &295193345
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 295193342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fe012ea2857b61429fcd40acea82107, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TaskbarTactics.Presentation::TaskbarTactics.Presentation.ItemInventoryPreview
+  app: {fileID: 295193344}
+  addMissingItemsOnStart: 1
+  previewRarity: 0
 --- !u!1 &299034252
 GameObject:
   m_ObjectHideFlags: 0
@@ -4429,6 +4445,132 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 309506921}
+  m_CullTransparentMesh: 1
+--- !u!1 &332036010
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 332036013}
+  - component: {fileID: 332036016}
+  - component: {fileID: 332036015}
+  - component: {fileID: 332036012}
+  - component: {fileID: 332036011}
+  - component: {fileID: 332036014}
+  m_Layer: 0
+  m_Name: Item Tooltip
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &332036011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332036010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e595364870bd2f428e030a854ee5963, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: TaskbarTactics.Presentation::TaskbarTactics.Presentation.ItemTooltipView
+  label: {fileID: 442533065}
+  visibility: {fileID: 332036012}
+  bounds: {fileID: 989606268}
+  english: {fileID: 11400000, guid: 87f687010c06d5f428084865e24462f7, type: 2}
+  spanish: {fileID: 11400000, guid: 305b556f3ba23db46b18070afd7be18e, type: 2}
+  preferredWidth: 280
+  pointerOffset: {x: 16, y: -16}
+  padding: 12
+--- !u!225 &332036012
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332036010}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!224 &332036013
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332036010}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 442533067}
+  m_Father: {fileID: 989606268}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 280, y: 190}
+  m_Pivot: {x: 0, y: 1}
+--- !u!114 &332036014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332036010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 0.55, g: 0.48, b: 0.29, a: 1}
+  m_EffectDistance: {x: 1, y: -1}
+  m_UseGraphicAlpha: 1
+--- !u!114 &332036015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332036010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.025, g: 0.035, b: 0.065, a: 0.97}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &332036016
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 332036010}
   m_CullTransparentMesh: 1
 --- !u!1 &332180221
 GameObject:
@@ -5693,7 +5835,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294966005
   m_fontColor: {r: 0.96, g: 0.98, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -5706,7 +5848,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -6016,6 +6158,143 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 441722567}
   m_CullTransparentMesh: 1
+--- !u!1 &442533064
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 442533067}
+  - component: {fileID: 442533066}
+  - component: {fileID: 442533065}
+  m_Layer: 0
+  m_Name: Item Details
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &442533065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 442533064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: 
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: a95d6fcbd943ec54db70cfea52fd9af9, type: 2}
+  m_sharedMaterial: {fileID: -357185093533477015, guid: a95d6fcbd943ec54db70cfea52fd9af9, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 0.9, g: 0.91, b: 0.95, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 14
+  m_fontSizeBase: 14
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &442533066
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 442533064}
+  m_CullTransparentMesh: 1
+--- !u!224 &442533067
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 442533064}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 332036013}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: -24, y: -24}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &446497009
 GameObject:
   m_ObjectHideFlags: 0
@@ -8658,7 +8937,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294966005
   m_fontColor: {r: 0.96, g: 0.98, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -8671,7 +8950,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -9163,7 +9442,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294966005
   m_fontColor: {r: 0.96, g: 0.98, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -9176,7 +9455,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -9426,7 +9705,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -9563,7 +9842,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -11493,7 +11772,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294966005
   m_fontColor: {r: 0.96, g: 0.98, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -11506,7 +11785,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -13581,7 +13860,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -14544,7 +14823,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294966005
   m_fontColor: {r: 0.96, g: 0.98, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -14557,7 +14836,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -14955,6 +15234,7 @@ MonoBehaviour:
   heroStatsSummary: {fileID: 0}
   equipmentHeroTabs: []
   silverCurrencyHud: {fileID: 0}
+  itemTooltip: {fileID: 332036011}
   cycleActiveSkillButton: {fileID: 0}
   cyclePassiveSkillButton: {fileID: 0}
   equipSlotButtons: []
@@ -15024,7 +15304,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -15042,6 +15322,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1444399773}
+  - {fileID: 332036013}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -15902,7 +16183,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -16414,7 +16695,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -17880,7 +18161,7 @@ Sprite:
         format: 0
         dimension: 0
       m_DataSize: 1464
-      _typelessdata: c3f58840ec51b83e00000000295c8740a470bd3e00000000c3f5884052b89e3e00000000c3f518c09a99193f00000000a4701dc085eb113f00000000cdcc1cc0713d0a3f00000000ae4721c085eb113f00000000d7a340c0d7a3f03e000000005c8f22c0cdcc0c3f000000007b141ec0b81e053f0000000085eb21c0b81e053f000000009a99f93f14ae073f00000000d7a3b03f3d0a173f000000009a99f93f8fc2f53e00000000c3f5884014aec73e00000000e17a8440a470bd3e00000000c3f588405c8fc23e000000001f858b401f85eb3e00000000ae478140ec51b83e00000000a4706d4048e1fa3e00000000cdcc8c403d0ad73e00000000f6288c4014aec73e00000000cdcc8c4085ebd13e000000000ad78b401f85eb3e00000000a4708d405c8f023f000000009a99914052b89e3e00000000713d9240c3f5a83e00000000e17a94400ad7a33e0000000033339340c3f5a83e00000000333393400ad7a33e000000000ad7a3400ad7233f000000003333a3407b14ae3e000000000ad7a3407b14ae3e000000009a99a1400ad7233f000000005c8f9240a470bd3e000000005c8f92403333b33e000000005c8f9240ec51b83e00000000cdcc9c40e17a943e000000000ad7a3400ad723bf000000000ad7a3408fc2753e00000000cdcc8440a470bd3e0000000000005040d7a3f03e000000000000404048e1fa3e0000000014ae0740f628dc3e00000000b81e0540ae47e13e00000000b81e0540ae47e13e000000003d0a173ff6281c3f00000000cdccccbe9a99193f00000000f6285cbfae47213f000000008fc275bf0ad7233f000000005c8f82bff6281c3f000000005c8f82bfe17a143f00000000666686bf85eb113f000000000ad703c00ad7233f00000000c3f588bf9a99193f00000000666676c05c8fc23e00000000666666c0e17a143f000000009a9989c0c3f5a83e000000000ad7a3c03d0ad73e00000000e17a94c0a470bd3e000000000ad7a3c00ad723bf00000000b81e05400000003f00000000e17a0440d7a3f03e00000000666686c014ae073f000000005c8f8ac0e17a143f00000000e17a94c03d0ad73e0000000014ae97c0713d0a3f000000005c8fa2c00ad7233f000000001f85a3c014ae073f000000005c8fa2c0295c0f3f000000000ad7a3c00ad7233f000000000ad7a3c014ae073f00000000666686bf52b81e3f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      _typelessdata: c3f58840ec51b83e00000000295c8740a470bd3e00000000c3f5884052b89e3e00000000c3f518c09a99193f00000000a4701dc085eb113f00000000cdcc1cc0713d0a3f00000000ae4721c085eb113f00000000d7a340c0d7a3f03e000000005c8f22c0cdcc0c3f000000007b141ec0b81e053f0000000085eb21c0b81e053f000000009a99f93f14ae073f00000000d7a3b03f3d0a173f000000009a99f93f8fc2f53e00000000c3f5884014aec73e00000000e17a8440a470bd3e00000000c3f588405c8fc23e000000001f858b401f85eb3e00000000ae478140ec51b83e00000000a4706d4048e1fa3e00000000cdcc8c403d0ad73e00000000f6288c4014aec73e00000000cdcc8c4085ebd13e000000000ad78b401f85eb3e00000000a4708d405c8f023f000000009a99914052b89e3e00000000713d9240c3f5a83e00000000e17a94400ad7a33e0000000033339340c3f5a83e00000000333393400ad7a33e000000000ad7a3400ad7233f000000003333a3407b14ae3e000000000ad7a3407b14ae3e000000009a99a1400ad7233f000000005c8f9240a470bd3e000000005c8f92403333b33e000000005c8f9240ec51b83e00000000cdcc9c40e17a943e000000000ad7a3400ad723bf000000000ad7a3408fc2753e00000000cdcc8440a470bd3e0000000000005040d7a3f03e000000000000404048e1fa3e0000000014ae0740f628dc3e00000000b81e0540ae47e13e00000000b81e0540ae47e13e000000003d0a173ff6281c3f00000000cdccccbe9a99193f00000000f6285cbfae47213f000000008fc275bf0ad7233f000000005c8f82bff6281c3f000000005c8f82bfe17a143f00000000666686bf85eb113f000000000ad703c00ad7233f00000000c3f588bf9a99193f00000000666676c05c8fc23e00000000666666c0e17a143f000000009a9989c0c3f5a83e000000000ad7a3c03d0ad73e00000000e17a94c0a470bd3e000000000ad7a3c00ad723bf00000000b81e05400000003f00000000e17a0440d7a3f03e00000000666686c014ae073f000000005c8f8ac0e17a143f00000000e17a94c03d0ad73e0000000014ae97c0713d0a3f000000005c8fa2c00ad7233f000000001f85a3c014ae073f000000005c8fa2c0295c0f3f000000000ad7a3c00ad7233f000000000ad7a3c014ae073f00000000666686bf52b81e3f000000000000000000006b3f0000483f00c0693f00004a3f00006b3f00003e3f0080883e0000783f0000853e0000723f0080853e00006c3f0000823e0000723f0000533e00005e3f0000813e00006e3f0080843e0000683f0080813e0000683f00c0303f00006a3f0080223f0000763f00c0303f0000603f00006b3f00004e3f0080673f00004a3f00006b3f00004c3f00006d3f00005c3f0000653f0000483f00c05c3f0000623f00006e3f0000543f00806d3f00004e3f00006e3f0000523f00406d3f00005c3f00806e3f0000663f00c0713f00003e3f0040723f0000423f0000743f0000403f0000733f0000423f0000733f0000403f0000803f0000803f00807f3f0000443f0000803f0000443f00407e3f0000803f0080723f00004a3f0080723f0000463f0080723f0000483f00807a3f00003a3f0000803f000000000000803f0000303f00c0673f00004a3f0040513f00005e3f00004b3f0000623f0000353f0000563f0000343f0000583f0000343f0000583f00c00e3f00007a3f0000ec3e0000783f0000d53e00007e3f0000d03e0000803f0000cd3e00007a3f0000cd3e0000743f0080cb3e0000723f0000993e0000803f0080ca3e0000783f0000fe3d00004c3f0000183e0000743ffcffa33d0000423f000000000000543f0000403d00004a3f00000000000000000000343f0000643f00c0333f00005e3f0400b83d00006a3f00009e3d0000743f0000403d0000543f0800183d00006c3f0000803b0000803f0000803a00006a3f0000803b0000703f000000000000803f0000000000006a3f0080cb3e00007c3f
     m_Bindpose: []
     textureRect:
       serializedVersion: 2
@@ -17971,7 +18252,7 @@ Sprite:
         format: 0
         dimension: 0
       m_DataSize: 1464
-      _typelessdata: c3f58840ec51b83e00000000295c8740a470bd3e00000000c3f5884052b89e3e00000000c3f518c09a99193f00000000a4701dc085eb113f00000000cdcc1cc0713d0a3f00000000ae4721c085eb113f00000000d7a340c0d7a3f03e000000005c8f22c0cdcc0c3f000000007b141ec0b81e053f0000000085eb21c0b81e053f000000009a99f93f14ae073f00000000d7a3b03f3d0a173f000000009a99f93f8fc2f53e00000000c3f5884014aec73e00000000e17a8440a470bd3e00000000c3f588405c8fc23e000000001f858b401f85eb3e00000000ae478140ec51b83e00000000a4706d4048e1fa3e00000000cdcc8c403d0ad73e00000000f6288c4014aec73e00000000cdcc8c4085ebd13e000000000ad78b401f85eb3e00000000a4708d405c8f023f000000009a99914052b89e3e00000000713d9240c3f5a83e00000000e17a94400ad7a33e0000000033339340c3f5a83e00000000333393400ad7a33e000000000ad7a3400ad7233f000000003333a3407b14ae3e000000000ad7a3407b14ae3e000000009a99a1400ad7233f000000005c8f9240a470bd3e000000005c8f92403333b33e000000005c8f9240ec51b83e00000000cdcc9c40e17a943e000000000ad7a3400ad723bf000000000ad7a3408fc2753e00000000cdcc8440a470bd3e0000000000005040d7a3f03e000000000000404048e1fa3e0000000014ae0740f628dc3e00000000b81e0540ae47e13e00000000b81e0540ae47e13e000000003d0a173ff6281c3f00000000cdccccbe9a99193f00000000f6285cbfae47213f000000008fc275bf0ad7233f000000005c8f82bff6281c3f000000005c8f82bfe17a143f00000000666686bf85eb113f000000000ad703c00ad7233f00000000c3f588bf9a99193f00000000666676c05c8fc23e00000000666666c0e17a143f000000009a9989c0c3f5a83e000000000ad7a3c03d0ad73e00000000e17a94c0a470bd3e000000000ad7a3c00ad723bf00000000b81e05400000003f00000000e17a0440d7a3f03e00000000666686c014ae073f000000005c8f8ac0e17a143f00000000e17a94c03d0ad73e0000000014ae97c0713d0a3f000000005c8fa2c00ad7233f000000001f85a3c014ae073f000000005c8fa2c0295c0f3f000000000ad7a3c00ad7233f000000000ad7a3c014ae073f00000000666686bf52b81e3f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+      _typelessdata: c3f58840ec51b83e00000000295c8740a470bd3e00000000c3f5884052b89e3e00000000c3f518c09a99193f00000000a4701dc085eb113f00000000cdcc1cc0713d0a3f00000000ae4721c085eb113f00000000d7a340c0d7a3f03e000000005c8f22c0cdcc0c3f000000007b141ec0b81e053f0000000085eb21c0b81e053f000000009a99f93f14ae073f00000000d7a3b03f3d0a173f000000009a99f93f8fc2f53e00000000c3f5884014aec73e00000000e17a8440a470bd3e00000000c3f588405c8fc23e000000001f858b401f85eb3e00000000ae478140ec51b83e00000000a4706d4048e1fa3e00000000cdcc8c403d0ad73e00000000f6288c4014aec73e00000000cdcc8c4085ebd13e000000000ad78b401f85eb3e00000000a4708d405c8f023f000000009a99914052b89e3e00000000713d9240c3f5a83e00000000e17a94400ad7a33e0000000033339340c3f5a83e00000000333393400ad7a33e000000000ad7a3400ad7233f000000003333a3407b14ae3e000000000ad7a3407b14ae3e000000009a99a1400ad7233f000000005c8f9240a470bd3e000000005c8f92403333b33e000000005c8f9240ec51b83e00000000cdcc9c40e17a943e000000000ad7a3400ad723bf000000000ad7a3408fc2753e00000000cdcc8440a470bd3e0000000000005040d7a3f03e000000000000404048e1fa3e0000000014ae0740f628dc3e00000000b81e0540ae47e13e00000000b81e0540ae47e13e000000003d0a173ff6281c3f00000000cdccccbe9a99193f00000000f6285cbfae47213f000000008fc275bf0ad7233f000000005c8f82bff6281c3f000000005c8f82bfe17a143f00000000666686bf85eb113f000000000ad703c00ad7233f00000000c3f588bf9a99193f00000000666676c05c8fc23e00000000666666c0e17a143f000000009a9989c0c3f5a83e000000000ad7a3c03d0ad73e00000000e17a94c0a470bd3e000000000ad7a3c00ad723bf00000000b81e05400000003f00000000e17a0440d7a3f03e00000000666686c014ae073f000000005c8f8ac0e17a143f00000000e17a94c03d0ad73e0000000014ae97c0713d0a3f000000005c8fa2c00ad7233f000000001f85a3c014ae073f000000005c8fa2c0295c0f3f000000000ad7a3c00ad7233f000000000ad7a3c014ae073f00000000666686bf52b81e3f000000000000000000006b3f0000483f00c0693f00004a3f00006b3f00003e3f0080883e0000783f0000853e0000723f0080853e00006c3f0000823e0000723f0000533e00005e3f0000813e00006e3f0080843e0000683f0080813e0000683f00c0303f00006a3f0080223f0000763f00c0303f0000603f00006b3f00004e3f0080673f00004a3f00006b3f00004c3f00006d3f00005c3f0000653f0000483f00c05c3f0000623f00006e3f0000543f00806d3f00004e3f00006e3f0000523f00406d3f00005c3f00806e3f0000663f00c0713f00003e3f0040723f0000423f0000743f0000403f0000733f0000423f0000733f0000403f0000803f0000803f00807f3f0000443f0000803f0000443f00407e3f0000803f0080723f00004a3f0080723f0000463f0080723f0000483f00807a3f00003a3f0000803f000000000000803f0000303f00c0673f00004a3f0040513f00005e3f00004b3f0000623f0000353f0000563f0000343f0000583f0000343f0000583f00c00e3f00007a3f0000ec3e0000783f0000d53e00007e3f0000d03e0000803f0000cd3e00007a3f0000cd3e0000743f0080cb3e0000723f0000993e0000803f0080ca3e0000783f0000fe3d00004c3f0000183e0000743ffcffa33d0000423f000000000000543f0000403d00004a3f00000000000000000000343f0000643f00c0333f00005e3f0400b83d00006a3f00009e3d0000743f0000403d0000543f0800183d00006c3f0000803b0000803f0000803a00006a3f0000803b0000703f000000000000803f0000000000006a3f0080cb3e00007c3f
     m_Bindpose: []
     textureRect:
       serializedVersion: 2
@@ -19086,7 +19367,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -19389,7 +19670,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -21081,7 +21362,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -23557,7 +23838,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -24193,7 +24474,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294966005
   m_fontColor: {r: 0.96, g: 0.98, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -24206,7 +24487,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -24864,7 +25145,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294966005
   m_fontColor: {r: 0.96, g: 0.98, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -24877,7 +25158,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -25165,7 +25446,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294966005
   m_fontColor: {r: 0.96, g: 0.98, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -25178,7 +25459,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -28950,7 +29231,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294966005
   m_fontColor: {r: 0.96, g: 0.98, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -28963,7 +29244,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -29709,7 +29990,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4294966005
   m_fontColor: {r: 0.96, g: 0.98, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -29722,7 +30003,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -30427,7 +30708,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -31729,7 +32010,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2

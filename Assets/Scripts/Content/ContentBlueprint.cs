@@ -188,7 +188,8 @@ namespace TaskbarTactics.Content
             content.Items.Add(ItemBlueprint.Weapon("wooden_mace", WeaponType.Mace,
                 Handedness.OneHanded, "sacred", Flat(HeroStatType.AttackPower, 1.5f)));
             content.Items.Add(ItemBlueprint.Weapon("wooden_staff", WeaponType.Staff,
-                Handedness.TwoHanded, "fire", Flat(HeroStatType.SpellPower, 2.5f)));
+                Handedness.TwoHanded, "fire", Flat(HeroStatType.AttackPower, 2f),
+                Flat(HeroStatType.SpellPower, 2.5f)));
             content.Items.Add(ItemBlueprint.Weapon("wooden_bow", WeaponType.Bow,
                 Handedness.TwoHanded, "mark", Flat(HeroStatType.AttackPower, 2.5f)));
             content.Items.Add(ItemBlueprint.Weapon("wooden_dagger", WeaponType.Dagger,
@@ -228,25 +229,29 @@ namespace TaskbarTactics.Content
             content.Items.Add(ItemBlueprint.Armor("arcane_robe", EquipmentSlot.Chest,
                 ArmorType.Cloth, "arcane", Flat(HeroStatType.SpellPower, 3f)));
             content.Items.Add(ItemBlueprint.Armor("leather_hood", EquipmentSlot.Head,
-                ArmorType.Leather, "poison", Flat(HeroStatType.Evasion, 3f)));
+                ArmorType.Leather, "poison", Flat(HeroStatType.Defense, 3f),
+                Flat(HeroStatType.MaxHealth, 8f), Flat(HeroStatType.Evasion, 1f)));
             content.Items.Add(ItemBlueprint.Armor("leather_chest", EquipmentSlot.Chest,
-                ArmorType.Leather, "poison", Flat(HeroStatType.Evasion, 5f)));
+                ArmorType.Leather, "poison", Flat(HeroStatType.Defense, 5f),
+                Flat(HeroStatType.MaxHealth, 12f), Flat(HeroStatType.Evasion, 2f)));
             content.Items.Add(ItemBlueprint.Armor("leather_legs", EquipmentSlot.Legs,
-                ArmorType.Leather, "poison", Flat(HeroStatType.Evasion, 4f)));
+                ArmorType.Leather, "poison", Flat(HeroStatType.Defense, 4f),
+                Flat(HeroStatType.MaxHealth, 10f), Flat(HeroStatType.Evasion, 1f)));
             content.Items.Add(ItemBlueprint.Armor("plate_chest", EquipmentSlot.Chest,
-                ArmorType.Plate, "guard", Flat(HeroStatType.Defense, 13f)));
+                ArmorType.Plate, "guard", Flat(HeroStatType.Defense, 10f), Flat(HeroStatType.MaxHealth, 18f)));
             content.Items.Add(ItemBlueprint.Armor("plate_legs", EquipmentSlot.Legs,
-                ArmorType.Plate, "guard", Flat(HeroStatType.Defense, 8f)));
+                ArmorType.Plate, "guard", Flat(HeroStatType.Defense, 7f), Flat(HeroStatType.MaxHealth, 12f)));
             content.Items.Add(ItemBlueprint.Armor("tela_chest", EquipmentSlot.Chest,
-                ArmorType.Cloth, "arcane", Flat(HeroStatType.SpellPower, 4f)));
+                ArmorType.Cloth, "arcane", Flat(HeroStatType.Defense, 2f),
+                Flat(HeroStatType.MaxHealth, 10f), Flat(HeroStatType.SpellPower, 3f)));
             content.Items.Add(ItemBlueprint.Armor("tela_glove", EquipmentSlot.Hands,
-                ArmorType.Cloth, "arcane", Flat(HeroStatType.CastSpeed, 0.05f)));
+                ArmorType.Cloth, "arcane", Flat(HeroStatType.Defense, 1f), Flat(HeroStatType.AttackPower, 1f)));
             content.Items.Add(ItemBlueprint.Armor("blue_legs", EquipmentSlot.Legs,
-                ArmorType.Cloth, "arcane", Flat(HeroStatType.MaxMana, 10f)));
+                ArmorType.Cloth, "arcane", Flat(HeroStatType.Defense, 2f), Flat(HeroStatType.MaxHealth, 8f)));
             content.Items.Add(ItemBlueprint.Armor("iron_boots", EquipmentSlot.Boots,
-                ArmorType.Plate, "steel", Flat(HeroStatType.Defense, 5f)));
+                ArmorType.Plate, "steel", Flat(HeroStatType.Defense, 4f), Flat(HeroStatType.MaxHealth, 6f)));
             content.Items.Add(ItemBlueprint.Armor("iron_helmet", EquipmentSlot.Head,
-                ArmorType.Plate, "steel", Flat(HeroStatType.Defense, 7f)));
+                ArmorType.Plate, "steel", Flat(HeroStatType.Defense, 6f), Flat(HeroStatType.MaxHealth, 10f)));
             content.Items.Add(ItemBlueprint.Accessory("sun_medallion", EquipmentSlot.Neck,
                 "sacred", Flat(HeroStatType.MaxMana, 15f)));
             content.Items.Add(ItemBlueprint.Accessory("warding_ring", EquipmentSlot.Ring1,

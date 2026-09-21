@@ -94,7 +94,8 @@ namespace TaskbarTactics.Core.Models
     {
         Common,
         Rare,
-        Epic
+        Epic,
+        Legendary
     }
 
     public enum CombatSide

@@ -23,9 +23,18 @@ MonoBehaviour:
     OffHandType: 0
     ArmorType: 2
     Modifiers:
-    - Stat: 12
+    - Stat: 4
       Operation: 0
       Value: 3
       SourceId: item_base
+    - Stat: 0
+      Operation: 0
+      Value: 8
+      SourceId: item_base
+    - Stat: 12
+      Operation: 0
+      Value: 1
+      SourceId: item_base
   tagId: poison
   icon: {fileID: 21300000, guid: 6c3cd9c2c9ad8ac4b86295320bce2a43, type: 3}
+  displayNameKey: 

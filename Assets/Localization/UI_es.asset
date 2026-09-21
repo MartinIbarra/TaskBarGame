@@ -46,6 +46,338 @@ MonoBehaviour:
     m_Localized: "Desaf\xEDo"
     m_Metadata:
       m_Items: []
+  - m_Id: 19893232750624768
+    m_Localized: "Estad\xEDsticas base"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482368
+    m_Localized: Mejoras por rareza
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482369
+    m_Localized: Sin mejora adicional
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482370
+    m_Localized: Atributos extra
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482371
+    m_Localized: pp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482372
+    m_Localized: multiplicativo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482373
+    m_Localized: Normal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482374
+    m_Localized: Raro
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482375
+    m_Localized: "\xC9pico"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482376
+    m_Localized: Legendario
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482377
+    m_Localized: Vida
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482378
+    m_Localized: "Man\xE1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482379
+    m_Localized: Ataque
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482380
+    m_Localized: "Poder m\xE1gico"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482381
+    m_Localized: Armadura
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482382
+    m_Localized: "Resistencia m\xE1gica"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482383
+    m_Localized: Velocidad de ataque
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482384
+    m_Localized: Velocidad de lanzamiento
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482385
+    m_Localized: Alcance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482386
+    m_Localized: "Probabilidad de cr\xEDtico"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482387
+    m_Localized: "Multiplicador de da\xF1o cr\xEDtico"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482388
+    m_Localized: "Precisi\xF3n"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482389
+    m_Localized: "Evasi\xF3n"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482390
+    m_Localized: Vida / segundo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482391
+    m_Localized: "Man\xE1 / segundo"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482392
+    m_Localized: "Reducci\xF3n de enfriamiento"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482393
+    m_Localized: Cabeza
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482394
+    m_Localized: Hombros
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482395
+    m_Localized: Cuello
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482396
+    m_Localized: Pecho
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482397
+    m_Localized: Brazales
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482398
+    m_Localized: Manos
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482399
+    m_Localized: Piernas
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482400
+    m_Localized: Botas
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482401
+    m_Localized: "Cintur\xF3n"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482402
+    m_Localized: Capa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482403
+    m_Localized: Mano principal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482404
+    m_Localized: Mano secundaria
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482405
+    m_Localized: Anillo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482406
+    m_Localized: Anillo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482407
+    m_Localized: Pendiente
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482408
+    m_Localized: Pendiente
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482409
+    m_Localized: Tela
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482410
+    m_Localized: Cuero
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482411
+    m_Localized: Malla
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482412
+    m_Localized: Placas
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482413
+    m_Localized: Espada de madera
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482414
+    m_Localized: Maza de madera
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482415
+    m_Localized: "Bast\xF3n de aprendiz"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482416
+    m_Localized: Arco de entrenamiento
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482417
+    m_Localized: Daga de madera
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482418
+    m_Localized: Capucha de cuero
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482419
+    m_Localized: Chaleco de cuero
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482420
+    m_Localized: Pantalones de cuero
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482421
+    m_Localized: Coraza de hierro
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482422
+    m_Localized: Grebas de hierro
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482423
+    m_Localized: "T\xFAnica de aprendiz"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482424
+    m_Localized: Guantes de tela
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482425
+    m_Localized: Pantalones de tela azul
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482426
+    m_Localized: Botas de hierro
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482427
+    m_Localized: Casco de hierro
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870976
+    m_Localized: Iron Sword
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870977
+    m_Localized: Greatsword
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870978
+    m_Localized: Iron Mace
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870979
+    m_Localized: War Maul
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870980
+    m_Localized: Hand Axe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870981
+    m_Localized: Greataxe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870982
+    m_Localized: Ember Staff
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870983
+    m_Localized: Arcane Wand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870984
+    m_Localized: Archer Bow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870985
+    m_Localized: Field Crossbow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870986
+    m_Localized: Steel Dagger
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870987
+    m_Localized: Tower Shield
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870988
+    m_Localized: Arcane Book
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870989
+    m_Localized: Tower Mail
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870990
+    m_Localized: Cleric Mail
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870991
+    m_Localized: Venom Leathers
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870992
+    m_Localized: Arcane Robe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870993
+    m_Localized: Sun Medallion
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870994
+    m_Localized: Warding Ring
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870995
+    m_Localized: Silver Earring
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870996
+    m_Localized: Steel Belt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870997
+    m_Localized: Cinder Cloak
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

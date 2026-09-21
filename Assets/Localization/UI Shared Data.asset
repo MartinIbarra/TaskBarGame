@@ -43,6 +43,338 @@ MonoBehaviour:
     m_Key: route.challenge
     m_Metadata:
       m_Items: []
+  - m_Id: 19893232750624768
+    m_Key: item.tooltip.base
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482368
+    m_Key: item.tooltip.rarity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482369
+    m_Key: item.tooltip.no_rarity_bonus
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482370
+    m_Key: item.tooltip.extras
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482371
+    m_Key: item.tooltip.percentage_points
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482372
+    m_Key: item.tooltip.multiplicative
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482373
+    m_Key: item.rarity.Common
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482374
+    m_Key: item.rarity.Rare
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482375
+    m_Key: item.rarity.Epic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482376
+    m_Key: item.rarity.Legendary
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482377
+    m_Key: item.stat.MaxHealth
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482378
+    m_Key: item.stat.MaxMana
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482379
+    m_Key: item.stat.AttackPower
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482380
+    m_Key: item.stat.SpellPower
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482381
+    m_Key: item.stat.Defense
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482382
+    m_Key: item.stat.MagicResistance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482383
+    m_Key: item.stat.AttackSpeed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482384
+    m_Key: item.stat.CastSpeed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482385
+    m_Key: item.stat.AttackRange
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482386
+    m_Key: item.stat.CriticalChance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482387
+    m_Key: item.stat.CriticalDamage
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482388
+    m_Key: item.stat.Accuracy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482389
+    m_Key: item.stat.Evasion
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482390
+    m_Key: item.stat.HealthRegeneration
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482391
+    m_Key: item.stat.ManaRegeneration
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482392
+    m_Key: item.stat.CooldownReduction
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482393
+    m_Key: item.slot.Head
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482394
+    m_Key: item.slot.Shoulders
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482395
+    m_Key: item.slot.Neck
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482396
+    m_Key: item.slot.Chest
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482397
+    m_Key: item.slot.Bracers
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482398
+    m_Key: item.slot.Hands
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482399
+    m_Key: item.slot.Legs
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482400
+    m_Key: item.slot.Boots
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482401
+    m_Key: item.slot.Belt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482402
+    m_Key: item.slot.Cloak
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482403
+    m_Key: item.slot.MainWeapon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482404
+    m_Key: item.slot.SecondaryWeapon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482405
+    m_Key: item.slot.Ring1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482406
+    m_Key: item.slot.Ring2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482407
+    m_Key: item.slot.Earring1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482408
+    m_Key: item.slot.Earring2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482409
+    m_Key: item.armor.Cloth
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482410
+    m_Key: item.armor.Leather
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482411
+    m_Key: item.armor.Mail
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482412
+    m_Key: item.armor.Plate
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482413
+    m_Key: item.wooden_sword.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482414
+    m_Key: item.wooden_mace.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482415
+    m_Key: item.wooden_staff.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482416
+    m_Key: item.wooden_bow.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482417
+    m_Key: item.wooden_dagger.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482418
+    m_Key: item.leather_hood.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482419
+    m_Key: item.leather_chest.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482420
+    m_Key: item.leather_legs.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482421
+    m_Key: item.plate_chest.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482422
+    m_Key: item.plate_legs.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482423
+    m_Key: item.tela_chest.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482424
+    m_Key: item.tela_glove.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482425
+    m_Key: item.blue_legs.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482426
+    m_Key: item.iron_boots.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482427
+    m_Key: item.iron_helmet.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870976
+    m_Key: item.iron_sword.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870977
+    m_Key: item.greatsword.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870978
+    m_Key: item.iron_mace.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870979
+    m_Key: item.war_maul.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870980
+    m_Key: item.hand_axe.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870981
+    m_Key: item.greataxe.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870982
+    m_Key: item.ember_staff.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870983
+    m_Key: item.arcane_wand.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870984
+    m_Key: item.archer_bow.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870985
+    m_Key: item.field_crossbow.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870986
+    m_Key: item.steel_dagger.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870987
+    m_Key: item.tower_shield.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870988
+    m_Key: item.arcane_book.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870989
+    m_Key: item.tower_mail.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870990
+    m_Key: item.cleric_mail.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870991
+    m_Key: item.venom_leathers.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870992
+    m_Key: item.arcane_robe.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870993
+    m_Key: item.sun_medallion.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870994
+    m_Key: item.warding_ring.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870995
+    m_Key: item.silver_earring.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870996
+    m_Key: item.steel_belt.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870997
+    m_Key: item.cinder_cloak.name
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

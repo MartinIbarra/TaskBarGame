@@ -46,6 +46,16 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private TMP_Text heroStatsSummary;
         [SerializeField] private List<Button> equipmentHeroTabs = new List<Button>();
         [SerializeField] private SilverCurrencyHud silverCurrencyHud;
+        [SerializeField] private ItemTooltipView itemTooltip;
+
+        public void ConfigureItemTooltip(ItemTooltipView view) => itemTooltip = view;
+
+        public void BindItemHover(Image icon, InventoryItem item)
+        {
+            ItemHoverTarget target = icon.GetComponent<ItemHoverTarget>() ??
+                icon.gameObject.AddComponent<ItemHoverTarget>();
+            target.Configure(itemTooltip, app.Catalog, item, app.State.LanguageCode);
+        }
 
         [Header("Actions")]
         [SerializeField] private Button cycleActiveSkillButton;
@@ -512,6 +522,7 @@ namespace TaskbarTactics.Presentation
 
         private void ShowPanel(int index)
         {
+            itemTooltip?.Hide();
             if (activePanelIndex != index)
             {
                 InventorySlotGridView.ClearActiveDragVisuals();

@@ -25,7 +25,12 @@ MonoBehaviour:
     Modifiers:
     - Stat: 4
       Operation: 0
-      Value: 8
+      Value: 7
+      SourceId: item_base
+    - Stat: 0
+      Operation: 0
+      Value: 12
       SourceId: item_base
   tagId: guard
   icon: {fileID: 21300000, guid: 766a82d5d64ecb9478a963ca2addbb28, type: 3}
+  displayNameKey: 

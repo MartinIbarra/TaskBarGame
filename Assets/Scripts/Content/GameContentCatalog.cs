@@ -25,6 +25,14 @@ namespace TaskbarTactics.Content
         [SerializeField] private List<HeroDefinition> heroes = new List<HeroDefinition>();
         [SerializeField] private List<SkillDefinition> skills = new List<SkillDefinition>();
         [SerializeField] private List<ItemDefinition> items = new List<ItemDefinition>();
+        [SerializeField, Tooltip("Only base item stats are scaled. Random bonuses remain separate.")]
+        private List<ItemRarityScaling> itemRarityScaling = new List<ItemRarityScaling>
+        {
+            new ItemRarityScaling(ItemRarity.Common, 1f),
+            new ItemRarityScaling(ItemRarity.Rare, 1.15f),
+            new ItemRarityScaling(ItemRarity.Epic, 1.35f),
+            new ItemRarityScaling(ItemRarity.Legendary, 1.65f)
+        };
         [SerializeField] private List<ItemBonusDefinition> itemBonuses =
             new List<ItemBonusDefinition>();
         [SerializeField] private List<StatusEffectDefinition> statusEffects =
@@ -197,11 +205,26 @@ namespace TaskbarTactics.Content
                 return null;
             }
 
-            IEnumerable<ItemBonusDefinition> bonuses = (instance.ItemBonusIds ??
-                new List<string>())
-                .Select(FindItemBonus)
-                .Where(item => item != null);
-            return definition.CreateDescriptor(instance.InstanceId, bonuses);
+            EquipmentDescriptor descriptor = definition.Descriptor.CloneForInstance(instance.InstanceId);
+            descriptor.Modifiers = ResolveItemStats(instance).CollectModifiers();
+            return descriptor;
+        }
+
+        public float GetItemRarityMultiplier(ItemRarity rarity)
+        {
+            ItemRarityScaling scaling = itemRarityScaling.Find(entry => entry.Rarity == rarity);
+            return scaling == null ? 1f : Mathf.Max(1f, scaling.BaseStatMultiplier);
+        }
+
+        public ItemStatBreakdown ResolveItemStats(InventoryItem instance)
+        {
+            ItemDefinition definition = instance == null ? null : FindItem(instance.DefinitionId);
+            if (definition == null)
+                return new ItemStatBreakdown(null, 1f, null);
+            var extras = (instance.ItemBonusIds ?? new List<string>()).Select(FindItemBonus)
+                .Where(bonus => bonus != null).SelectMany(bonus => bonus.Modifiers);
+            return new ItemStatBreakdown(definition.Descriptor.Modifiers,
+                GetItemRarityMultiplier(instance.Rarity), extras);
         }
 
         public CombatRequest CreateCombatRequest(

@@ -49,6 +49,11 @@ namespace TaskbarTactics.Presentation
         private bool pendingCompletionMapFocus;
 
         public GameContentCatalog Catalog => catalog;
+        public void RefreshInventoryAfterAuthoring()
+        {
+            foreach (HeroState hero in State.Party.Heroes) ClampHeroResources(hero);
+            SaveAndRefresh();
+        }
         public GameState State { get; private set; }
         public string CurrentStatus { get; private set; } = "Preparando el campamento";
         public bool HasAttention { get; private set; }

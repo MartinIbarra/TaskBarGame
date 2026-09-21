@@ -23,9 +23,14 @@ MonoBehaviour:
     OffHandType: 0
     ArmorType: 0
     Modifiers:
+    - Stat: 2
+      Operation: 0
+      Value: 2
+      SourceId: item_base
     - Stat: 3
       Operation: 0
       Value: 2.5
       SourceId: item_base
   tagId: fire
   icon: {fileID: 21300000, guid: c487a962c3ee48febe7892bc1720d3c1, type: 3}
+  displayNameKey: 

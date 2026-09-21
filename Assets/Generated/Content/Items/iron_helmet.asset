@@ -25,7 +25,12 @@ MonoBehaviour:
     Modifiers:
     - Stat: 4
       Operation: 0
-      Value: 7
+      Value: 6
+      SourceId: item_base
+    - Stat: 0
+      Operation: 0
+      Value: 10
       SourceId: item_base
   tagId: steel
   icon: {fileID: 21300000, guid: ef09975516a510a43b7cab0081aa2fed, type: 3}
+  displayNameKey: 

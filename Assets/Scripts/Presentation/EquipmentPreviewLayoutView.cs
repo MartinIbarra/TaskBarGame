@@ -137,6 +137,7 @@ namespace TaskbarTactics.Presentation
                     pair.Key,
                     icon != null ? instanceId : string.Empty,
                     icon);
+                owner?.BindItemHover(pair.Value, icon != null ? item : null);
 
                 if (emptySlotIcons.TryGetValue(pair.Key, out Image emptyIcon) && emptyIcon != null)
                 {

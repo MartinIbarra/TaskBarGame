@@ -82,6 +82,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a4905559f4f6c2b45977ff43ff467f07, type: 2}
   - {fileID: 11400000, guid: 50b43ef61ff0e1c478efa2d45df13c1f, type: 2}
   - {fileID: 11400000, guid: 227615c2fcf236d4989e9ca5ff88f57d, type: 2}
+  itemRarityScaling:
+  - Rarity: 0
+    BaseStatMultiplier: 1
+  - Rarity: 1
+    BaseStatMultiplier: 1.15
+  - Rarity: 2
+    BaseStatMultiplier: 1.35
+  - Rarity: 3
+    BaseStatMultiplier: 1.65
   itemBonuses:
   - {fileID: 11400000, guid: 6f300296fb1d8bf4d9e18ea1d6769af7, type: 2}
   - {fileID: 11400000, guid: a834657365b62244f89c917312ff4949, type: 2}

@@ -46,6 +46,338 @@ MonoBehaviour:
     m_Localized: Challenge
     m_Metadata:
       m_Items: []
+  - m_Id: 19893232750624768
+    m_Localized: Base stats
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482368
+    m_Localized: Rarity improvements
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482369
+    m_Localized: No additional bonus
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482370
+    m_Localized: Extra attributes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482371
+    m_Localized: pp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482372
+    m_Localized: multiplicative
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482373
+    m_Localized: Normal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482374
+    m_Localized: Rare
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482375
+    m_Localized: Epic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482376
+    m_Localized: Legendary
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482377
+    m_Localized: Health
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482378
+    m_Localized: Mana
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482379
+    m_Localized: Attack power
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482380
+    m_Localized: Spell power
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482381
+    m_Localized: Armor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482382
+    m_Localized: Magic resistance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482383
+    m_Localized: Attack speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482384
+    m_Localized: Cast speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482385
+    m_Localized: Attack range
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482386
+    m_Localized: Critical chance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482387
+    m_Localized: Critical damage multiplier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482388
+    m_Localized: Accuracy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482389
+    m_Localized: Evasion
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482390
+    m_Localized: Health / second
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482391
+    m_Localized: Mana / second
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482392
+    m_Localized: Cooldown reduction
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482393
+    m_Localized: Head
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482394
+    m_Localized: Shoulders
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482395
+    m_Localized: Neck
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482396
+    m_Localized: Chest
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482397
+    m_Localized: Bracers
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482398
+    m_Localized: Hands
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482399
+    m_Localized: Legs
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482400
+    m_Localized: Boots
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482401
+    m_Localized: Belt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482402
+    m_Localized: Cloak
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482403
+    m_Localized: Main hand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482404
+    m_Localized: Off hand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482405
+    m_Localized: Ring
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482406
+    m_Localized: Ring
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482407
+    m_Localized: Earring
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482408
+    m_Localized: Earring
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482409
+    m_Localized: Cloth
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482410
+    m_Localized: Leather
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482411
+    m_Localized: Mail
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482412
+    m_Localized: Plate
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482413
+    m_Localized: Wooden Sword
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482414
+    m_Localized: Wooden Mace
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482415
+    m_Localized: Apprentice Staff
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482416
+    m_Localized: Training Bow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482417
+    m_Localized: Wooden Dagger
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482418
+    m_Localized: Leather Hood
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482419
+    m_Localized: Leather Vest
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482420
+    m_Localized: Leather Leggings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482421
+    m_Localized: Iron Breastplate
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482422
+    m_Localized: Iron Legguards
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482423
+    m_Localized: Apprentice Robe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482424
+    m_Localized: Cloth Gloves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482425
+    m_Localized: Blue Cloth Trousers
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482426
+    m_Localized: Iron Boots
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232855482427
+    m_Localized: Iron Helmet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870976
+    m_Localized: Iron Sword
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870977
+    m_Localized: Greatsword
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870978
+    m_Localized: Iron Mace
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870979
+    m_Localized: War Maul
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870980
+    m_Localized: Hand Axe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870981
+    m_Localized: Greataxe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870982
+    m_Localized: Ember Staff
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870983
+    m_Localized: Arcane Wand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870984
+    m_Localized: Archer Bow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870985
+    m_Localized: Field Crossbow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870986
+    m_Localized: Steel Dagger
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870987
+    m_Localized: Tower Shield
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870988
+    m_Localized: Arcane Book
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870989
+    m_Localized: Tower Mail
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870990
+    m_Localized: Cleric Mail
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870991
+    m_Localized: Venom Leathers
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870992
+    m_Localized: Arcane Robe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870993
+    m_Localized: Sun Medallion
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870994
+    m_Localized: Warding Ring
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870995
+    m_Localized: Silver Earring
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870996
+    m_Localized: Steel Belt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 19893232863870997
+    m_Localized: Cinder Cloak
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

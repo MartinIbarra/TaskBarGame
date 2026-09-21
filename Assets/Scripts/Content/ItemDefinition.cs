@@ -14,11 +14,15 @@ namespace TaskbarTactics.Content
         private EquipmentDescriptor descriptor = new EquipmentDescriptor();
         [SerializeField] private string tagId;
         [SerializeField] private Sprite icon;
+        [SerializeField, Tooltip("Entry in the UI localization table. Empty uses item.<id>.name.")]
+        private string displayNameKey;
 
         public EquipmentSlot Slot => descriptor.PrimarySlot;
         public EquipmentDescriptor Descriptor => descriptor;
         public string TagId => tagId;
         public Sprite Icon => icon;
+        public string DisplayNameKey => string.IsNullOrWhiteSpace(displayNameKey)
+            ? $"item.{Id}.name" : displayNameKey;
 
         public void Configure(ItemBlueprint data)
         {
