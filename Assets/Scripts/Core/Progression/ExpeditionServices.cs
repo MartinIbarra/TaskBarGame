@@ -179,6 +179,12 @@ namespace TaskbarTactics.Core.Progression
             state.Expedition.IsActive = false;
             state.Expedition.CurrentNodeId = string.Empty;
             state.Party.IsFormationLocked = false;
+
+            foreach (HeroState hero in state.Party.Heroes)
+            {
+                hero.IsSelected = false;
+                hero.Position = new FormationPosition(0, 0);
+            }
         }
     }
 }

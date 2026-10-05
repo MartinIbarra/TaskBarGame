@@ -91,6 +91,7 @@ MonoBehaviour:
     BaseStatMultiplier: 1.35
   - Rarity: 3
     BaseStatMultiplier: 1.65
+  enableItemExtraAttributes: 0
   itemBonuses:
   - {fileID: 11400000, guid: 6f300296fb1d8bf4d9e18ea1d6769af7, type: 2}
   - {fileID: 11400000, guid: a834657365b62244f89c917312ff4949, type: 2}

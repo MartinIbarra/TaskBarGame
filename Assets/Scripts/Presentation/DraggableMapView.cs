@@ -19,7 +19,10 @@ namespace TaskbarTactics.Presentation
         private Vector2 dragStartPointer;
         private Vector2 dragStartPosition;
         private Vector2 initialPosition;
+        private Vector2 panPadding;
         private bool useInitialPosition;
+        private bool useTopLeftContentBounds;
+        private bool zoomAroundPointer;
         private float zoom = 1f;
 
         public void Configure(RectTransform targetContent)
@@ -31,6 +34,9 @@ namespace TaskbarTactics.Presentation
         {
             content = targetContent;
             viewport = transform as RectTransform;
+            panPadding = Vector2.zero;
+            useTopLeftContentBounds = false;
+            zoomAroundPointer = false;
             minZoom = Mathf.Max(0.25f, minimumZoom);
             maxZoom = Mathf.Max(minZoom, maximumZoom);
             initialZoom = Mathf.Clamp(defaultZoom, minZoom, maxZoom);
@@ -48,8 +54,42 @@ namespace TaskbarTactics.Presentation
 
         public void ConfigureCentered(RectTransform targetContent, float defaultZoom, float minimumZoom, float maximumZoom)
         {
+            ConfigureCentered(targetContent, defaultZoom, minimumZoom, maximumZoom, false);
+        }
+
+        public void ConfigureCentered(
+            RectTransform targetContent,
+            float defaultZoom,
+            float minimumZoom,
+            float maximumZoom,
+            bool topLeftContentBounds)
+        {
+            ConfigureCentered(
+                targetContent,
+                defaultZoom,
+                minimumZoom,
+                maximumZoom,
+                topLeftContentBounds,
+                Vector2.zero,
+                false);
+        }
+
+        public void ConfigureCentered(
+            RectTransform targetContent,
+            float defaultZoom,
+            float minimumZoom,
+            float maximumZoom,
+            bool topLeftContentBounds,
+            Vector2 contentPanPadding,
+            bool preservePointerOnZoom)
+        {
             content = targetContent;
             viewport = transform as RectTransform;
+            panPadding = new Vector2(
+                Mathf.Max(0f, contentPanPadding.x),
+                Mathf.Max(0f, contentPanPadding.y));
+            useTopLeftContentBounds = topLeftContentBounds;
+            zoomAroundPointer = preservePointerOnZoom;
             minZoom = Mathf.Max(0.25f, minimumZoom);
             maxZoom = Mathf.Max(minZoom, maximumZoom);
             initialZoom = Mathf.Clamp(defaultZoom, minZoom, maxZoom);
@@ -93,13 +133,46 @@ namespace TaskbarTactics.Presentation
 
         public void FocusOnAtZoom(RectTransform target, float targetZoom)
         {
+            FocusOnAtZoom(target, targetZoom, new Vector2(0.5f, 0.5f));
+        }
+
+        public void FocusOnAtZoom(RectTransform target, float targetZoom, Vector2 viewportAnchor)
+        {
             zoom = Mathf.Clamp(targetZoom, minZoom, maxZoom);
             if (content != null)
             {
                 content.localScale = new Vector3(zoom, zoom, 1f);
             }
 
-            FocusOn(target);
+            FocusOn(target, viewportAnchor);
+        }
+
+        public void CenterOnContentPoint(Vector2 contentPoint, float targetZoom)
+        {
+            if (content == null)
+            {
+                return;
+            }
+
+            if (viewport == null)
+            {
+                viewport = transform as RectTransform;
+            }
+
+            if (viewport == null)
+            {
+                return;
+            }
+
+            zoom = Mathf.Clamp(targetZoom, minZoom, maxZoom);
+            content.localScale = new Vector3(zoom, zoom, 1f);
+            Vector2 viewportSize = viewport.rect.size;
+            content.anchoredPosition = new Vector2(
+                viewportSize.x * 0.5f - contentPoint.x * zoom,
+                -viewportSize.y * 0.5f - contentPoint.y * zoom);
+            ClampContent();
+            initialPosition = content.anchoredPosition;
+            useInitialPosition = true;
         }
 
         public void ResetView()
@@ -181,8 +254,29 @@ namespace TaskbarTactics.Presentation
                 return;
             }
 
+            Vector3 pointerWorld = Vector3.zero;
+            Vector2 contentPoint = Vector2.zero;
+            bool preservePointer = zoomAroundPointer && viewport != null &&
+                RectTransformUtility.ScreenPointToWorldPointInRectangle(
+                    viewport,
+                    eventData.position,
+                    eventData.pressEventCamera,
+                    out pointerWorld) &&
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    content,
+                    eventData.position,
+                    eventData.pressEventCamera,
+                    out contentPoint);
+
             zoom = nextZoom;
             content.localScale = new Vector3(zoom, zoom, 1f);
+
+            if (preservePointer)
+            {
+                Vector3 contentPointWorld = content.TransformPoint(contentPoint);
+                content.position += pointerWorld - contentPointWorld;
+            }
+
             ClampContent();
         }
 
@@ -212,26 +306,36 @@ namespace TaskbarTactics.Presentation
             content.anchoredPosition = position;
         }
 
-        private static float ClampHorizontal(float value, float viewportSize, float contentSize)
+        private float ClampHorizontal(float value, float viewportSize, float contentSize)
         {
             if (contentSize <= viewportSize)
             {
-                return (viewportSize - contentSize) * 0.5f;
+                float centered = (viewportSize - contentSize) * 0.5f;
+                return Mathf.Clamp(value, centered - panPadding.x, centered + panPadding.x);
             }
 
-            float min = viewportSize - contentSize;
-            return Mathf.Clamp(value, min, 0f);
+            float min = viewportSize - contentSize - panPadding.x;
+            return Mathf.Clamp(value, min, panPadding.x);
         }
 
-        private static float ClampVertical(float value, float viewportSize, float contentSize)
+        private float ClampVertical(float value, float viewportSize, float contentSize)
         {
             if (contentSize <= viewportSize)
             {
-                return (contentSize - viewportSize) * 0.5f;
+                float centered = useTopLeftContentBounds
+                    ? (viewportSize - contentSize) * 0.5f
+                    : (contentSize - viewportSize) * 0.5f;
+                return Mathf.Clamp(value, centered - panPadding.y, centered + panPadding.y);
             }
 
-            float max = contentSize - viewportSize;
-            return Mathf.Clamp(value, 0f, max);
+            if (useTopLeftContentBounds)
+            {
+                float min = viewportSize - contentSize - panPadding.y;
+                return Mathf.Clamp(value, min, panPadding.y);
+            }
+
+            float max = contentSize - viewportSize + panPadding.y;
+            return Mathf.Clamp(value, -panPadding.y, max);
         }
 
         private Vector2 CenteredContentPosition()
@@ -245,7 +349,9 @@ namespace TaskbarTactics.Presentation
             Vector2 contentSize = content.rect.size * zoom;
             return new Vector2(
                 (viewportSize.x - contentSize.x) * 0.5f,
-                (contentSize.y - viewportSize.y) * 0.5f);
+                useTopLeftContentBounds
+                    ? (viewportSize.y - contentSize.y) * 0.5f
+                    : (contentSize.y - viewportSize.y) * 0.5f);
         }
     }
 }

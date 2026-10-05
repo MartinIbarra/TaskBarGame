@@ -21,12 +21,17 @@ namespace TaskbarTactics.Presentation
             classSprite = classIcon != null ? classIcon.sprite : null;
         }
 
-        public void Refresh(string heroName, bool selected, bool active)
+        public void Refresh(
+            string heroName,
+            bool selected,
+            bool active,
+            bool dimUnselectedIcon,
+            Color classNameColor)
         {
             if (label != null)
             {
                 label.text = heroName;
-                label.color = selected ? Color.white : new Color(0.78f, 0.82f, 0.9f, 0.9f);
+                label.color = classNameColor;
             }
 
             if (selectionFrame != null)
@@ -37,14 +42,16 @@ namespace TaskbarTactics.Presentation
             if (icon != null)
             {
                 icon.sprite = classSprite;
-                icon.color = selected ? Color.clear : new Color(0.72f, 0.75f, 0.8f, 0.82f);
+                icon.color = selected
+                    ? Color.clear
+                    : dimUnselectedIcon
+                        ? new Color(0.72f, 0.75f, 0.8f, 0.82f)
+                        : Color.white;
             }
 
             if (emptyBackground != null)
             {
-                emptyBackground.color = selected
-                    ? new Color(1f, 1f, 1f, 0.85f)
-                    : new Color(1f, 1f, 1f, 0.55f);
+                emptyBackground.color = Color.white;
             }
         }
     }

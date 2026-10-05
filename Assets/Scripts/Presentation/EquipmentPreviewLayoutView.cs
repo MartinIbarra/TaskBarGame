@@ -14,6 +14,7 @@ namespace TaskbarTactics.Presentation
         private const string SlotRoot = "UI/EquipmentSlots/";
         private const float SlotSize = 41.8f;
         private const float SlotPositionScale = 1.1f;
+        private const float HeroPreviewVerticalOffset = 10f;
         private static readonly EquipmentSlot[] DisplaySlots =
         {
             EquipmentSlot.Head,
@@ -238,6 +239,8 @@ namespace TaskbarTactics.Presentation
                     heroRect.anchoredPosition = new Vector2(0f, -18f);
                     break;
             }
+
+            heroRect.anchoredPosition += new Vector2(0f, HeroPreviewVerticalOffset);
         }
 
         private void CreateSlot(string slotName, string iconName, Vector2 position)
@@ -410,10 +413,10 @@ namespace TaskbarTactics.Presentation
                     position = new Vector2(106f, -80f);
                     break;
                 case EquipmentSlot.Earring1:
-                    position = new Vector2(-28f, 124f);
+                    position = new Vector2(-28f, 104f);
                     break;
                 case EquipmentSlot.Earring2:
-                    position = new Vector2(28f, 124f);
+                    position = new Vector2(28f, 104f);
                     break;
                 case EquipmentSlot.MainWeapon:
                     position = new Vector2(-78f, -126f);

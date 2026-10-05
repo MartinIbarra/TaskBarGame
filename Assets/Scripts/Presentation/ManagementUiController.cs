@@ -44,6 +44,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private InventorySlotGridView inventoryGrid;
         [SerializeField] private EquipmentPreviewLayoutView equipmentPreview;
         [SerializeField] private TMP_Text heroStatsSummary;
+        [SerializeField] private TMP_Text heroIdentitySummary;
         [SerializeField] private List<Button> equipmentHeroTabs = new List<Button>();
         [SerializeField] private SilverCurrencyHud silverCurrencyHud;
         [SerializeField] private ItemTooltipView itemTooltip;
@@ -81,6 +82,7 @@ namespace TaskbarTactics.Presentation
         private Sprite commandNormalSprite;
         private Sprite commandPressedSprite;
         private Sprite commandSelectedSprite;
+        private Sprite menuCommandSprite;
         private AudioClip formationSelectClip;
         private static TMP_FontAsset shadowPixelTitleFont;
         private static Material shadowPixelTitleMaterial;
@@ -174,13 +176,15 @@ namespace TaskbarTactics.Presentation
             ApplyCommandLabels();
             ApplyTitleLayout();
             ApplyTitleFont();
+            ApplyFormationSlotLayout();
             ApplyFormationClassFrameLayout();
+            ApplyHeroClassButtonLayout();
+            ApplyHeroClassContentLayout();
             EnsureTopRightControlsLayout();
             ApplyTopRightButtonOffset();
             ApplyUniformHudShadowDim();
-            HideOuterHudTorches();
-            ApplyPartyTorchPosition();
-            ApplySkillTreeTorchLayout();
+            ApplyGlobalHudTorchLayout();
+            HidePanelTorchPairs();
             EnsureNavigationChains();
             cycleActiveSkillButton?.gameObject.SetActive(false);
             cyclePassiveSkillButton?.gameObject.SetActive(false);
@@ -280,7 +284,7 @@ namespace TaskbarTactics.Presentation
         {
             const float mapCommandWidth = 159.8f;
             const float mapCommandX = 64f;
-            float[] routeYPositions = { -199f, -261f, -323f };
+            float[] routeYPositions = { -144f, -206f, -268f };
 
             for (int i = 0; i < routeButtons.Count && i < 3; i++)
             {
@@ -299,7 +303,7 @@ namespace TaskbarTactics.Presentation
                 RectTransform rect = startExpeditionButton.transform as RectTransform;
                 if (rect != null)
                 {
-                    rect.anchoredPosition = new Vector2(mapCommandX, -377f);
+                    rect.anchoredPosition = new Vector2(mapCommandX, -322f);
                     rect.sizeDelta = new Vector2(mapCommandWidth, rect.sizeDelta.y);
                 }
             }
@@ -408,22 +412,12 @@ namespace TaskbarTactics.Presentation
 
             if (titleFrame != null)
             {
-                Image titleFrameImage = titleFrame.GetComponent<Image>();
-                if (titleFrameImage != null)
-                {
-                    titleFrameImage.sprite = Resources.Load<Sprite>("UI/TitleWide");
-                    titleFrameImage.type = Image.Type.Simple;
-                    titleFrameImage.preserveAspect = false;
-                }
-
-                titleFrame.anchoredPosition = new Vector2(364f, -7f);
-                titleFrame.sizeDelta = new Vector2(302.4f, 43.74f);
+                titleFrame.gameObject.SetActive(false);
             }
 
             if (title != null)
             {
-                title.anchoredPosition = new Vector2(347f, -14f);
-                title.sizeDelta = new Vector2(342f, 32f);
+                title.gameObject.SetActive(false);
             }
         }
 
@@ -631,12 +625,12 @@ namespace TaskbarTactics.Presentation
             RefreshEquipmentHeroTabs();
             RefreshHeroStatsSummary();
             ApplyInventorySubmenuVisibility();
-            ApplyInventoryTorchPosition();
+            ApplyGlobalHudTorchLayout();
+            HidePanelTorchPairs();
 
             mapSummary.text =
                 $"{app.State.Expedition.CurrentNodeId}\n" +
-                $"Explored {app.State.Expedition.CompletedNodes}/{app.Catalog.Map.Nodes.Count}\n\n" +
-                RouteDescription(app.State.Party.RoutePreference);
+                $"Explored {app.State.Expedition.CompletedNodes}/{app.Catalog.Map.Nodes.Count}";
             mapUi?.Refresh(app);
             ApplyStartButtonState();
             RefreshFormationButtonHighlight();
@@ -650,7 +644,7 @@ namespace TaskbarTactics.Presentation
                 TMP_Text label = routeButtons[i].GetComponentInChildren<TMP_Text>(true);
                 if (label != null)
                 {
-                    label.text = i == 0 ? "Safe" : i == 1 ? "Loot" : "Challenge";
+                    label.text = i == 0 ? "Easy" : i == 1 ? "Normal" : "Hard";
                     label.color = RouteDifficultyColor(i);
                 }
             }
@@ -660,6 +654,8 @@ namespace TaskbarTactics.Presentation
                 "Avisos: visuales y silenciosos\n" +
                 "Progreso offline máximo: 8 horas";
 
+            bool partyIsFull = app.State.Party.Heroes.Count(hero => hero.IsSelected) >= GameAppController.PartySize;
+            bool dimUnselectedClassIcons = app.State.Expedition.IsActive && partyIsFull;
             for (int i = 0; i < heroButtons.Count && i < app.Catalog.Heroes.Count; i++)
             {
                 HeroDefinition definition = app.Catalog.Heroes[i];
@@ -669,7 +665,12 @@ namespace TaskbarTactics.Presentation
                 HeroClassCardView card = heroButtons[i].GetComponent<HeroClassCardView>();
                 if (card != null)
                 {
-                    card.Refresh(app.HeroName(definition.Id), isHeroSelected, isActiveHero);
+                    card.Refresh(
+                        PartyClassDisplayName(definition.Id, app.HeroName(definition.Id)),
+                        isHeroSelected,
+                        isActiveHero,
+                        dimUnselectedClassIcons,
+                        HeroTabTextColor(definition.Id, true));
                 }
 
                 HeroDragSource dragSource = heroButtons[i].GetComponent<HeroDragSource>();
@@ -738,7 +739,7 @@ namespace TaskbarTactics.Presentation
             heroStatsSummary.font = inventorySummary != null
                 ? inventorySummary.font
                 : heroStatsSummary.font;
-            heroStatsSummary.fontSize = 11f;
+            heroStatsSummary.fontSize = 13f;
             heroStatsSummary.color = new Color(0.96f, 0.98f, 1f, 1f);
             heroStatsSummary.alignment = TextAlignmentOptions.TopLeft;
             heroStatsSummary.textWrappingMode = TextWrappingModes.NoWrap;
@@ -748,15 +749,57 @@ namespace TaskbarTactics.Presentation
             RectTransform rect = heroStatsSummary.rectTransform;
             rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(580f, -18f);
-            rect.sizeDelta = new Vector2(300f, 102f);
+            rect.anchoredPosition = new Vector2(740f, -122f);
+            rect.sizeDelta = new Vector2(220f, 220f);
             heroStatsSummary.transform.SetAsLastSibling();
+        }
+
+        private void EnsureHeroIdentitySummary()
+        {
+            if (heroIdentitySummary != null || panels.Count <= 2 || panels[2] == null)
+            {
+                return;
+            }
+
+            Transform existing = panels[2].transform.Find("Hero Identity Summary");
+            heroIdentitySummary = existing != null
+                ? existing.GetComponent<TMP_Text>()
+                : null;
+            if (heroIdentitySummary == null)
+            {
+                GameObject identityObject = new GameObject(
+                    "Hero Identity Summary",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(TextMeshProUGUI));
+                identityObject.transform.SetParent(panels[2].transform, false);
+                heroIdentitySummary = identityObject.GetComponent<TextMeshProUGUI>();
+            }
+
+            heroIdentitySummary.font = inventorySummary != null
+                ? inventorySummary.font
+                : heroIdentitySummary.font;
+            heroIdentitySummary.fontSize = 15f;
+            heroIdentitySummary.fontStyle = FontStyles.Bold;
+            heroIdentitySummary.color = new Color(0.96f, 0.98f, 1f, 1f);
+            heroIdentitySummary.alignment = TextAlignmentOptions.Center;
+            heroIdentitySummary.textWrappingMode = TextWrappingModes.NoWrap;
+            heroIdentitySummary.overflowMode = TextOverflowModes.Overflow;
+            heroIdentitySummary.raycastTarget = false;
+
+            RectTransform rect = heroIdentitySummary.rectTransform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(460f, -240f);
+            rect.sizeDelta = new Vector2(250f, 30f);
+            heroIdentitySummary.transform.SetAsLastSibling();
         }
 
         private void RefreshHeroStatsSummary()
         {
             EnsureHeroStatsSummary();
-            if (heroStatsSummary == null)
+            EnsureHeroIdentitySummary();
+            if (heroStatsSummary == null || heroIdentitySummary == null)
             {
                 return;
             }
@@ -765,33 +808,34 @@ namespace TaskbarTactics.Presentation
             if (hero == null)
             {
                 heroStatsSummary.text = string.Empty;
+                heroIdentitySummary.text = string.Empty;
                 return;
             }
 
             HeroStats stats = app.Catalog.ResolveHeroStats(hero, app.State.Inventory);
-            heroStatsSummary.text =
-                $"<size=13><b>{app.HeroName(hero.DefinitionId).ToUpperInvariant()}  LEVEL {hero.Level}</b></size>\n" +
-                StatsLine("HP", stats.MaxHealth.ToString(CultureInfo.InvariantCulture),
-                    "MP", stats.MaxMana.ToString(CultureInfo.InvariantCulture)) + "\n" +
-                StatsLine("ATK", FormatStat(stats.AttackPower),
-                    "SPELL", FormatStat(stats.SpellPower)) + "\n" +
-                StatsLine("DEF", FormatStat(stats.Defense),
-                    "M.RES", FormatStat(stats.MagicResistance)) + "\n" +
-                StatsLine("ASPD", FormatStat(stats.AttackSpeed),
-                    "C.SPD", FormatStat(stats.CastSpeed)) + "\n" +
-                StatsLine("CRIT", FormatStat(stats.CriticalChance) + "%",
-                    "EVA", FormatStat(stats.Evasion) + "%");
-            heroStatsSummary.gameObject.SetActive(activePanelIndex == 2);
-        }
+            string heroDisplayName =
+                PartyClassDisplayName(hero.DefinitionId, app.HeroName(hero.DefinitionId)).ToUpperInvariant();
+            if (hero.DefinitionId == "magic_warrior")
+            {
+                heroDisplayName = $"<size=14>{heroDisplayName}</size>";
+            }
 
-        private static string StatsLine(
-            string leftLabel,
-            string leftValue,
-            string rightLabel,
-            string rightValue)
-        {
-            string left = $"{leftLabel} {leftValue}";
-            return left.PadRight(17) + $"{rightLabel} {rightValue}";
+            heroIdentitySummary.text =
+                $"{heroDisplayName}  Lvl. {hero.Level}";
+            heroStatsSummary.text =
+                $"HP {stats.MaxHealth.ToString(CultureInfo.InvariantCulture)}\n" +
+                $"MP {stats.MaxMana.ToString(CultureInfo.InvariantCulture)}\n" +
+                $"ATK {FormatStat(stats.AttackPower)}\n" +
+                $"SPELL {FormatStat(stats.SpellPower)}\n" +
+                $"DEF {FormatStat(stats.Defense)}\n" +
+                $"M.RES {FormatStat(stats.MagicResistance)}\n" +
+                $"ASPD {FormatStat(stats.AttackSpeed)}\n" +
+                $"C.SPD {FormatStat(stats.CastSpeed)}\n" +
+                $"CRIT {FormatStat(stats.CriticalChance)}%\n" +
+                $"EVA {FormatStat(stats.Evasion)}%";
+            bool showInventory = activePanelIndex == 2;
+            heroStatsSummary.gameObject.SetActive(showInventory);
+            heroIdentitySummary.gameObject.SetActive(showInventory);
         }
 
         private static string FormatStat(float value)
@@ -843,7 +887,7 @@ namespace TaskbarTactics.Presentation
             RectTransform rect = equipmentPreview.transform as RectTransform;
             if (rect != null)
             {
-                rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -230f);
+                rect.anchoredPosition = new Vector2(460f, -145f);
             }
         }
 
@@ -876,6 +920,7 @@ namespace TaskbarTactics.Presentation
         private void ApplyInventorySubmenuVisibility()
         {
             bool showInventoryOnlyViews = activePanelIndex == 2;
+
             if (equipmentPreview != null)
             {
                 equipmentPreview.gameObject.SetActive(showInventoryOnlyViews);
@@ -953,6 +998,16 @@ namespace TaskbarTactics.Presentation
             }
 
             ApplyInventoryBackgroundScale(panelImage, panelRect);
+            HideInventoryItemListFrame(panelRect);
+        }
+
+        private static void HideInventoryItemListFrame(RectTransform panelRect)
+        {
+            Transform layoutTransform = panelRect.Find("Inventory Layout Visual");
+            if (layoutTransform != null)
+            {
+                layoutTransform.gameObject.SetActive(false);
+            }
         }
 
         private static void ApplyInventoryBackgroundScale(Image panelImage, RectTransform panelRect)
@@ -1199,12 +1254,80 @@ namespace TaskbarTactics.Presentation
                 ?.GetComponent<DraggableMapView>();
             RectTransform content = panels[1].transform
                 .Find("Skill Tree Viewport/Skill Tree Content") as RectTransform;
+            EnsureInitialSkillTreeNodes(content);
+            EnsureSkillTreeCanvasSize(content);
             skillTreeView?.ConfigureCentered(
                 content,
-                0.6f,
-                0.5f,
-                1.2f);
-            EnsureInitialSkillTreeNodes(content);
+                0.72f,
+                0.35f,
+                1.8f,
+                true,
+                new Vector2(420f, 420f),
+                true);
+
+            RectTransform nodeLayer = content?.Find("Interactive Skill Tree Nodes") as RectTransform;
+            skillTreeView?.CenterOnContentPoint(SkillTreeNodeCenter(nodeLayer), 0.72f);
+        }
+
+        private static Vector2 SkillTreeNodeCenter(RectTransform nodeLayer)
+        {
+            if (nodeLayer == null || nodeLayer.childCount == 0)
+            {
+                return SkillTreePreviewCenter;
+            }
+
+            float minX = float.PositiveInfinity;
+            float maxX = float.NegativeInfinity;
+            float minY = float.PositiveInfinity;
+            float maxY = float.NegativeInfinity;
+            bool foundNode = false;
+
+            for (int i = 0; i < nodeLayer.childCount; i++)
+            {
+                Transform child = nodeLayer.GetChild(i);
+                if (child == null || child.name.Contains("Connector"))
+                {
+                    continue;
+                }
+
+                RectTransform rect = child as RectTransform;
+                if (rect == null)
+                {
+                    continue;
+                }
+
+                Vector2 position = rect.anchoredPosition;
+                Vector2 halfSize = rect.rect.size * 0.5f;
+                minX = Mathf.Min(minX, position.x - halfSize.x);
+                maxX = Mathf.Max(maxX, position.x + halfSize.x);
+                minY = Mathf.Min(minY, position.y - halfSize.y);
+                maxY = Mathf.Max(maxY, position.y + halfSize.y);
+                foundNode = true;
+            }
+
+            return foundNode
+                ? new Vector2((minX + maxX) * 0.5f, (minY + maxY) * 0.5f)
+                : SkillTreePreviewCenter;
+        }
+
+        private static void EnsureSkillTreeCanvasSize(RectTransform content)
+        {
+            if (content == null)
+            {
+                return;
+            }
+
+            Vector2 minimumSize = new Vector2(1100f, 800f);
+            content.sizeDelta = new Vector2(
+                Mathf.Max(content.sizeDelta.x, minimumSize.x),
+                Mathf.Max(content.sizeDelta.y, minimumSize.y));
+
+            RectTransform nodeLayer = content.Find("Interactive Skill Tree Nodes") as RectTransform;
+            if (nodeLayer != null)
+            {
+                nodeLayer.anchoredPosition = Vector2.zero;
+                nodeLayer.sizeDelta = content.sizeDelta;
+            }
         }
 
         private void EnsureInitialSkillTreeNodes(RectTransform content)
@@ -1225,7 +1348,7 @@ namespace TaskbarTactics.Presentation
             RectTransform layerRect = nodeLayer.GetComponent<RectTransform>();
             layerRect.anchorMin = layerRect.anchorMax = new Vector2(0f, 1f);
             layerRect.pivot = new Vector2(0f, 1f);
-            layerRect.anchoredPosition = new Vector2(-30f, 0f);
+            layerRect.anchoredPosition = Vector2.zero;
             layerRect.sizeDelta = content.sizeDelta;
 
             CreateSkillTreeNode(layerRect, "HUD/User", LoadSkillTreeSprite("UI/SkillTree/Skill1"), new Vector2(320f, -238f), true);
@@ -1549,30 +1672,10 @@ namespace TaskbarTactics.Presentation
             }
 
             Transform existing = skillPanel.Find("Skill Tree Frame");
-            Image frame = existing != null ? existing.GetComponent<Image>() : null;
-            if (frame == null)
+            if (existing != null)
             {
-                GameObject frameObject = new GameObject(
-                    "Skill Tree Frame",
-                    typeof(RectTransform),
-                    typeof(CanvasRenderer),
-                    typeof(Image));
-                frameObject.transform.SetParent(skillPanel, false);
-                frame = frameObject.GetComponent<Image>();
+                existing.gameObject.SetActive(false);
             }
-
-            frame.sprite = Resources.Load<Sprite>("UI/MapFrame");
-            frame.color = frame.sprite != null ? Color.white : Color.clear;
-            frame.type = Image.Type.Sliced;
-            frame.preserveAspect = false;
-            frame.raycastTarget = false;
-            RectTransform rect = frame.rectTransform;
-            rect.anchorMin = new Vector2(0f, 0f);
-            rect.anchorMax = new Vector2(1f, 1f);
-            rect.offsetMin = new Vector2(18f, 24f);
-            rect.offsetMax = new Vector2(-18f, -24f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            frame.transform.SetAsLastSibling();
         }
 
         private void ApplyInventoryTorchPosition()
@@ -1582,8 +1685,7 @@ namespace TaskbarTactics.Presentation
                 return;
             }
 
-            SetChildRectPosition(panels[2].transform, "Right Candle", new Vector2(560f, -41f));
-            SetChildRectPosition(panels[2].transform, "Right Candle Light", new Vector2(560f, -17f));
+            ApplyStandardTorchPair(panels[2].transform);
         }
 
         private void ApplyPartyTorchPosition()
@@ -1593,14 +1695,23 @@ namespace TaskbarTactics.Presentation
                 return;
             }
 
-            SetChildRectPosition(panels[0].transform, "Left Candle", new Vector2(-98f, 8f));
-            SetChildRectPosition(panels[0].transform, "Left Candle Light", new Vector2(-176f, 32f));
-            SetChildRectPosition(panels[0].transform, "Right Candle", new Vector2(-38f, 8f));
-            SetChildRectPosition(panels[0].transform, "Right Candle Light", new Vector2(40f, 32f));
+            ApplyStandardTorchPair(panels[0].transform);
+        }
+
+        private void ApplyAllPanelTorchPositions()
+        {
+            for (int i = 0; i < 4 && i < panels.Count; i++)
+            {
+                if (panels[i] != null)
+                {
+                    ApplyStandardTorchPair(panels[i].transform);
+                }
+            }
         }
 
         private void ApplyFormationClassFrameLayout()
         {
+            const float classFrameSize = 89.91f;
             for (int i = 0; i < heroButtons.Count; i++)
             {
                 Button button = heroButtons[i];
@@ -1612,19 +1723,204 @@ namespace TaskbarTactics.Presentation
                 RectTransform frame = button.transform.Find("Empty Class Frame") as RectTransform;
                 if (frame != null)
                 {
-                    frame.sizeDelta = new Vector2(99.9f, 99.9f);
+                    frame.sizeDelta = new Vector2(classFrameSize, classFrameSize);
                 }
             }
         }
 
-        private void HideOuterHudTorches()
+        private void ApplyHeroClassButtonLayout()
+        {
+            const float startX = 24f;
+            const float startY = 205f;
+            const float columnSpacing = 120f;
+            const float rowSpacing = 125f;
+
+            for (int i = 0; i < heroButtons.Count; i++)
+            {
+                Button button = heroButtons[i];
+                RectTransform rect = button != null ? button.transform as RectTransform : null;
+                if (rect == null)
+                {
+                    continue;
+                }
+
+                rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+                rect.pivot = new Vector2(0f, 1f);
+                rect.anchoredPosition = new Vector2(
+                    startX + (i % 3) * columnSpacing,
+                    -(startY + (i / 3) * rowSpacing));
+            }
+        }
+
+        private void ApplyFormationSlotLayout()
+        {
+            const float slotSize = 83.16f;
+            for (int i = 0; i < formationSlots.Count; i++)
+            {
+                FormationSlotView slot = formationSlots[i];
+                RectTransform rect = slot != null ? slot.transform as RectTransform : null;
+                if (rect != null)
+                {
+                    rect.sizeDelta = new Vector2(slotSize, slotSize);
+                }
+            }
+        }
+
+        private void ApplyHeroClassContentLayout()
+        {
+            const float classFrameTopOffset = 15f;
+            const float iconTopOffset = -12f;
+            const float labelTopOffset = -77f;
+            for (int i = 0; i < heroButtons.Count; i++)
+            {
+                Button button = heroButtons[i];
+                if (button == null)
+                {
+                    continue;
+                }
+
+                RectTransform icon = button.transform.Find("Class Icon") as RectTransform;
+                if (icon != null)
+                {
+                    icon.anchoredPosition = new Vector2(icon.anchoredPosition.x, iconTopOffset);
+                }
+
+                RectTransform emptyFrame = button.transform.Find("Empty Class Frame") as RectTransform;
+                if (emptyFrame != null)
+                {
+                    emptyFrame.anchoredPosition = new Vector2(
+                        emptyFrame.anchoredPosition.x,
+                        classFrameTopOffset);
+                }
+
+                TMP_Text label = button.transform.Find("Class Name")?.GetComponent<TMP_Text>();
+                if (label != null)
+                {
+                    label.fontSize = 12.5f;
+                    label.fontStyle = FontStyles.Bold;
+                    RectTransform labelRect = label.rectTransform;
+                    labelRect.anchoredPosition = new Vector2(labelRect.anchoredPosition.x, labelTopOffset);
+                }
+            }
+        }
+
+        private void ApplyGlobalHudTorchLayout()
         {
             Transform background = transform.Find("Management Background") ?? transform;
 
-            SetChildActive(background, "Left Candle", false);
-            SetChildActive(background, "Left Candle Light", false);
-            SetChildActive(background, "Right Candle", false);
-            SetChildActive(background, "Right Candle Light", false);
+            Transform left = background.Find("Left Candle");
+            Transform right = background.Find("Right Candle");
+            Transform leftLight = background.Find("Left Candle Light");
+            Transform rightLight = background.Find("Right Candle Light");
+
+            if (left == null)
+            {
+                left = CloneTorchAtWorldPosition(
+                    FindPanelTorch("Left Candle", "Skill Tree Candle"),
+                    background,
+                    "Left Candle");
+            }
+
+            if (right == null)
+            {
+                right = CloneTorchAtWorldPosition(
+                    FindPanelTorch("Right Candle", null),
+                    background,
+                    "Right Candle");
+            }
+
+            if (leftLight == null)
+            {
+                leftLight = CloneTorchAtWorldPosition(
+                    FindPanelTorch("Left Candle Light", "Skill Tree Candle Light"),
+                    background,
+                    "Left Candle Light");
+            }
+
+            if (rightLight == null)
+            {
+                rightLight = CloneTorchAtWorldPosition(
+                    FindPanelTorch("Right Candle Light", null),
+                    background,
+                    "Right Candle Light");
+            }
+
+            SetTorchVisibleOnTop(left);
+            SetTorchVisibleOnTop(leftLight);
+            SetTorchVisibleOnTop(right);
+            SetTorchVisibleOnTop(rightLight);
+            SetTorchLightLayout(leftLight, left, -88f);
+            SetTorchLightLayout(rightLight, right, 88f);
+        }
+
+        private void HidePanelTorchPairs()
+        {
+            foreach (GameObject panel in panels)
+            {
+                if (panel == null)
+                {
+                    continue;
+                }
+
+                Transform panelTransform = panel.transform;
+                SetChildActive(panelTransform, "Left Candle", false);
+                SetChildActive(panelTransform, "Left Candle Light", false);
+                SetChildActive(panelTransform, "Right Candle", false);
+                SetChildActive(panelTransform, "Right Candle Light", false);
+                SetChildActive(panelTransform, "Skill Tree Candle", false);
+                SetChildActive(panelTransform, "Skill Tree Candle Light", false);
+            }
+        }
+
+        private Transform FindPanelTorch(string name, string legacyName)
+        {
+            for (int i = 0; i < panels.Count; i++)
+            {
+                GameObject panel = panels[i];
+                if (panel == null)
+                {
+                    continue;
+                }
+
+                Transform torch = panel.transform.Find(name);
+                if (torch == null && !string.IsNullOrWhiteSpace(legacyName))
+                {
+                    torch = panel.transform.Find(legacyName);
+                }
+
+                if (torch != null)
+                {
+                    return torch;
+                }
+            }
+
+            return null;
+        }
+
+        private static Transform CloneTorchAtWorldPosition(
+            Transform source,
+            Transform parent,
+            string name)
+        {
+            if (source == null || parent == null)
+            {
+                return null;
+            }
+
+            GameObject clone = UnityEngine.Object.Instantiate(source.gameObject, parent, true);
+            clone.name = name;
+            return clone.transform;
+        }
+
+        private static void SetTorchVisibleOnTop(Transform torch)
+        {
+            if (torch == null)
+            {
+                return;
+            }
+
+            torch.gameObject.SetActive(true);
+            torch.SetAsLastSibling();
         }
 
         private void ApplyUniformHudShadowDim()
@@ -1666,42 +1962,91 @@ namespace TaskbarTactics.Presentation
                 return;
             }
 
-            Transform panel = panels[1].transform;
-            Transform candle = panel.Find("Skill Tree Candle") ?? panel.Find("Left Candle");
-            Transform candleLight = panel.Find("Skill Tree Candle Light") ?? panel.Find("Left Candle Light");
-            Transform extraCandle = panel.Find("Right Candle");
-            Transform extraLight = panel.Find("Right Candle Light");
-
-            if (extraCandle != null)
-            {
-                extraCandle.gameObject.SetActive(false);
-            }
-
-            if (extraLight != null)
-            {
-                extraLight.gameObject.SetActive(false);
-            }
-
-            SetRectPosition(candle, new Vector2(-92f, 8f));
-            SetRectPosition(candleLight, new Vector2(-92f, 32f));
+            ApplyStandardTorchPair(panels[1].transform);
         }
 
-        private static void SetChildRectPosition(Transform parent, string childName, Vector2 position)
+        private static void ApplyStandardTorchPair(Transform panel)
         {
-            RectTransform rect = parent.Find(childName) as RectTransform;
-            if (rect != null)
+            if (panel == null)
             {
-                rect.anchoredPosition = position;
+                return;
             }
+
+            Transform left = EnsureTorch(panel, "Left Candle", "Skill Tree Candle");
+            Transform leftLight = EnsureTorch(panel, "Left Candle Light", "Skill Tree Candle Light");
+            Transform right = EnsureTorch(panel, "Right Candle", null);
+            Transform rightLight = EnsureTorch(panel, "Right Candle Light", null);
+
+            if (right == null && left != null)
+            {
+                right = CloneTorch(left, panel, "Right Candle");
+            }
+
+            if (rightLight == null && leftLight != null)
+            {
+                rightLight = CloneTorch(leftLight, panel, "Right Candle Light");
+            }
+
+            SetTorchLayout(left, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(-98f, 8f));
+            SetTorchLayout(leftLight, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(-176f, 32f));
+            SetTorchLayout(right, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-38f, 8f));
+            SetTorchLayout(rightLight, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(40f, 32f));
         }
 
-        private static void SetRectPosition(Transform target, Vector2 position)
+        private static Transform EnsureTorch(Transform parent, string name, string legacyName)
         {
-            RectTransform rect = target as RectTransform;
-            if (rect != null)
+            Transform torch = parent.Find(name);
+            if (torch == null && !string.IsNullOrWhiteSpace(legacyName))
             {
-                rect.anchoredPosition = position;
+                torch = parent.Find(legacyName);
+                if (torch != null)
+                {
+                    torch.name = name;
+                }
             }
+
+            return torch;
+        }
+
+        private static Transform CloneTorch(Transform source, Transform parent, string name)
+        {
+            GameObject clone = UnityEngine.Object.Instantiate(source.gameObject, parent, false);
+            clone.name = name;
+            return clone.transform;
+        }
+
+        private static void SetTorchLayout(
+            Transform torch,
+            Vector2 anchor,
+            Vector2 pivot,
+            Vector2 position)
+        {
+            RectTransform rect = torch as RectTransform;
+            if (rect == null)
+            {
+                return;
+            }
+
+            rect.anchorMin = rect.anchorMax = anchor;
+            rect.pivot = pivot;
+            rect.anchoredPosition = position;
+            torch.gameObject.SetActive(true);
+            torch.SetAsLastSibling();
+        }
+
+        private static void SetTorchLightLayout(Transform light, Transform torch, float horizontalOffset)
+        {
+            RectTransform lightRect = light as RectTransform;
+            RectTransform torchRect = torch as RectTransform;
+            if (lightRect == null || torchRect == null)
+            {
+                return;
+            }
+
+            lightRect.anchorMin = lightRect.anchorMax = torchRect.anchorMin;
+            lightRect.pivot = torchRect.pivot;
+            lightRect.anchoredPosition = torchRect.anchoredPosition +
+                new Vector2(horizontalOffset, 24f);
         }
 
         private void EnsureEquipmentHeroTabs()
@@ -1759,8 +2104,8 @@ namespace TaskbarTactics.Presentation
 
         private void ApplyEquipmentHeroTabLayout()
         {
-            const float startX = 417f;
-            const float y = -400f;
+            const float startX = 322f;
+            const float y = -330f;
             const float width = 54f;
             const float height = 35f;
             const float gap = 52.8f;
@@ -1838,24 +2183,12 @@ namespace TaskbarTactics.Presentation
             return heroId == activeHeroId ? ">" : "•";
         }
 
-        private static string RouteDescription(RoutePreference preference)
-        {
-            switch (preference)
-            {
-                case RoutePreference.Loot:
-                    return "Difficulty: Normal";
-                case RoutePreference.Challenge:
-                    return "Difficulty: Hard";
-                default:
-                    return "Difficulty: Easy";
-            }
-        }
-
         private void LoadCommandSprites()
         {
             commandNormalSprite = Resources.Load<Sprite>("UI/Command");
             commandPressedSprite = Resources.Load<Sprite>("UI/CommandPressed");
             commandSelectedSprite = Resources.Load<Sprite>("UI/CommandSelected");
+            menuCommandSprite = Resources.Load<Sprite>("UI/MenuCommand");
             formationSelectClip = Resources.Load<AudioClip>("Audio/UI/formation_select");
         }
 
@@ -1875,8 +2208,12 @@ namespace TaskbarTactics.Presentation
 
         private void ApplyCommandButtonStates()
         {
-            IEnumerable<Button> commandButtons = tabButtons
-                .Concat(new[] { cycleActiveSkillButton, cyclePassiveSkillButton })
+            foreach (Button tab in tabButtons)
+            {
+                ApplyMenuCommandButtonState(tab);
+            }
+
+            IEnumerable<Button> commandButtons = new[] { cycleActiveSkillButton, cyclePassiveSkillButton }
                 .Concat(equipSlotButtons)
                 .Concat(routeButtons)
                 .Concat(new[] { startExpeditionButton, resetExpeditionButton, languageButton, quitButton })
@@ -1889,6 +2226,37 @@ namespace TaskbarTactics.Presentation
 
             ApplyResetButtonState();
             ApplyStartButtonState();
+        }
+
+        private void ApplyMenuCommandButtonState(Button button)
+        {
+            if (button == null || button.image == null || menuCommandSprite == null)
+            {
+                return;
+            }
+
+            Image image = button.image;
+            image.sprite = menuCommandSprite;
+            image.type = Image.Type.Sliced;
+            image.preserveAspect = false;
+            image.color = Color.white;
+            button.targetGraphic = image;
+            button.transition = Selectable.Transition.SpriteSwap;
+            button.spriteState = new SpriteState
+            {
+                highlightedSprite = menuCommandSprite,
+                pressedSprite = menuCommandSprite,
+                selectedSprite = menuCommandSprite,
+                disabledSprite = menuCommandSprite
+            };
+
+            ColorBlock colors = button.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = Color.white;
+            colors.pressedColor = Color.white;
+            colors.selectedColor = Color.white;
+            colors.disabledColor = new Color(1f, 1f, 1f, 0.42f);
+            button.colors = colors;
         }
 
         private void ApplyCommandButtonState(Button button)
@@ -2013,9 +2381,13 @@ namespace TaskbarTactics.Presentation
                 }
 
                 bool selected = i == activePanelIndex;
-                image.sprite = selected && commandSelectedSprite != null
-                    ? commandSelectedSprite
-                    : commandNormalSprite;
+                image.sprite = menuCommandSprite != null
+                    ? menuCommandSprite
+                    : selected && commandSelectedSprite != null
+                        ? commandSelectedSprite
+                        : commandNormalSprite;
+                image.type = menuCommandSprite != null ? Image.Type.Sliced : Image.Type.Simple;
+                image.preserveAspect = menuCommandSprite == null;
                 image.color = selected
                     ? Color.white
                     : new Color(0.78f, 0.78f, 0.78f, 0.92f);
@@ -2148,10 +2520,15 @@ namespace TaskbarTactics.Presentation
 
         private static Vector2 FormationSlotAnchoredPosition(FormationPosition position)
         {
-            const float startX = 84f;
-            const float startY = -38f;
+            const float startX = 110f;
+            const float startY = -43f;
             const float gap = 60f;
             return new Vector2(startX + position.Column * gap, startY - position.Row * gap);
+        }
+
+        private static string PartyClassDisplayName(string heroId, string localizedName)
+        {
+            return heroId == "magic_warrior" ? "Spell Blade" : localizedName;
         }
 
         private Sprite HeroFormationIcon(string heroId)

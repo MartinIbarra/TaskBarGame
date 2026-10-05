@@ -1062,7 +1062,6 @@ namespace TaskbarTactics.Editor
             Sprite mapPanelSprite = LoadUiSprite("Assets/Art/UI/Source/Square.png", new Vector4(54, 54, 54, 54));
             Sprite mapFrameSprite = LoadUiSprite("Assets/Resources/UI/MapFrame.png", new Vector4(16, 16, 16, 16));
             Sprite actParchmentSprite = LoadUiSprite("Assets/Resources/UI/ActParchment.png", Vector4.zero);
-            Sprite titleWideSprite = LoadUiSprite("Assets/Resources/UI/TitleWide.png", new Vector4(32, 32, 32, 32));
             Sprite commandSprite = LoadUiSprite("Assets/Resources/UI/Command.png", new Vector4(42, 42, 42, 42));
             Sprite equipLayoutSprite = LoadUiSprite("Assets/Resources/UI/EquipLayout.png", new Vector4(16, 16, 16, 16));
             Sprite itemSlotSprite = LoadSoftUiSprite("Assets/Resources/UI/itemSlot.png");
@@ -1085,7 +1084,6 @@ namespace TaskbarTactics.Editor
                 mapPanelSprite,
                 mapFrameSprite,
                 actParchmentSprite,
-                titleWideSprite,
                 commandSprite,
                 equipLayoutSprite,
                 itemSlotSprite,
@@ -1451,7 +1449,6 @@ namespace TaskbarTactics.Editor
             Sprite mapPanelSprite,
             Sprite mapFrameSprite,
             Sprite actParchmentSprite,
-            Sprite titleWideSprite,
             Sprite commandSprite,
             Sprite equipLayoutSprite,
             Sprite itemSlotSprite,
@@ -1472,17 +1469,6 @@ namespace TaskbarTactics.Editor
             background.color = new Color(0.85f, 0.85f, 0.85f, 1f);
             SetStretch(background.rectTransform, 0, 0, 0, 0);
             AddTorchShadowDim(background.transform);
-            Image titleFrame = CreateImage(background.transform, "Title Frame", Color.white);
-            ApplySimpleWideFrame(titleFrame, titleWideSprite);
-            titleFrame.rectTransform.anchorMin = titleFrame.rectTransform.anchorMax = new Vector2(0, 1);
-            titleFrame.rectTransform.pivot = new Vector2(0, 1);
-            titleFrame.rectTransform.anchoredPosition = new Vector2(364, -7);
-            titleFrame.rectTransform.sizeDelta = new Vector2(302.4f, 43.74f);
-            titleFrame.preserveAspect = false;
-            TMP_Text title = CreateText(background.transform, "Title", "TASKBAR TACTICS",
-                26, TextAlignmentOptions.Center, new Vector2(347, 14), new Vector2(342, 32));
-            title.fontStyle = FontStyles.Bold;
-            title.textWrappingMode = TextWrappingModes.NoWrap;
             GameObject silverCurrencyObject = new GameObject(
                 "Silver Currency HUD",
                 typeof(RectTransform));
@@ -1521,12 +1507,15 @@ namespace TaskbarTactics.Editor
             {
                 "Escuadrón", "Habilidades", "Inventario", "Mapa", "Ajustes"
             };
+            Sprite menuCommandSprite = LoadUiSprite(
+                "Assets/Resources/UI/MenuCommand.png",
+                new Vector4(32, 32, 32, 32));
             List<Button> tabs = new List<Button>();
             for (int i = 0; i < tabNames.Length; i++)
             {
                 tabs.Add(CreateButton(background.transform, $"{tabNames[i]} Tab", tabNames[i],
                     new Vector2(33, 150 + i * 62), new Vector2(150.4f, 54.4f), Color.white));
-                ApplyUiFrame(tabs[i].GetComponent<Image>(), commandSprite);
+                ApplyUiFrame(tabs[i].GetComponent<Image>(), menuCommandSprite ?? commandSprite);
                 InsetButtonLabel(tabs[i], new Vector2(34, 16), new Vector2(-34, -16));
             }
             CreateNavigationChains(background.transform, tabs);
@@ -1576,15 +1565,14 @@ namespace TaskbarTactics.Editor
                 panel.gameObject.SetActive(i == 0);
             }
             AddCandlePair(panels[0].transform, candleFrames, new Vector2(-98, 8), new Vector2(-38, 8), torchLightFrames);
-            AddCenteredCandle(panels[1].transform, "Skill Tree Candle", candleFrames, new Vector2(-92, 8), torchLightFrames);
-            AddCandle(panels[2].transform, "Left Candle", candleFrames, new Vector2(0, 1), new Vector2(0, 1), new Vector2(10, 8), torchLightFrames);
-            AddCandlePair(panels[3].transform, candleFrames, new Vector2(10, 8), new Vector2(-24, 8), torchLightFrames);
+            AddCandlePair(panels[1].transform, candleFrames, new Vector2(-98, 8), new Vector2(-38, 8), torchLightFrames);
+            AddCandlePair(panels[2].transform, candleFrames, new Vector2(-98, 8), new Vector2(-38, 8), torchLightFrames);
+            AddCandlePair(panels[3].transform, candleFrames, new Vector2(-98, 8), new Vector2(-38, 8), torchLightFrames);
             summaries[1].gameObject.SetActive(false);
-            CreateSkillTreeView(panels[1].transform, skillTreeTexture, mapFrameSprite);
+            CreateSkillTreeView(panels[1].transform, skillTreeTexture);
             CreateEquipmentPreviewLayout(panels[2].transform, equipLayoutSprite);
             summaries[2].gameObject.SetActive(false);
             CreateInventorySlotGrid(panels[2].transform, itemSlotSprite);
-            AddCenteredCandle(panels[2].transform, "Right Candle", candleFrames, new Vector2(560, -41), torchLightFrames);
             List<FormationSlotView> formationSlots = CreateFormationSlotHud(
                 panels[0].transform,
                 formationSlotSprite,
@@ -1605,12 +1593,12 @@ namespace TaskbarTactics.Editor
 
             List<Button> routeButtons = new List<Button>
             {
-                CreateButton(panels[3].transform, "Safety Route Button", "Safe",
-                    new Vector2(64, 200), new Vector2(159.8f, 68), PanelLight),
-                CreateButton(panels[3].transform, "Loot Route Button", "Loot",
-                    new Vector2(64, 262), new Vector2(159.8f, 68), PanelLight),
-                CreateButton(panels[3].transform, "Challenge Route Button", "Challenge",
-                    new Vector2(64, 324), new Vector2(159.8f, 68), PanelLight)
+                CreateButton(panels[3].transform, "Safety Route Button", "Easy",
+                    new Vector2(64, 145), new Vector2(159.8f, 68), PanelLight),
+                CreateButton(panels[3].transform, "Loot Route Button", "Normal",
+                    new Vector2(64, 207), new Vector2(159.8f, 68), PanelLight),
+                CreateButton(panels[3].transform, "Challenge Route Button", "Hard",
+                    new Vector2(64, 269), new Vector2(159.8f, 68), PanelLight)
             };
             foreach (Button routeButton in routeButtons)
             {
@@ -1618,7 +1606,7 @@ namespace TaskbarTactics.Editor
             }
 
             Button start = CreateButton(panels[3].transform, "Start Expedition Button",
-                "START CAMPAIGN", new Vector2(64, 378), new Vector2(150, 52), Accent);
+                "START CAMPAIGN", new Vector2(64, 323), new Vector2(150, 52), Accent);
             ApplyUiFrame(start.GetComponent<Image>(), commandSprite);
             start.GetComponent<RectTransform>().sizeDelta = new Vector2(159.8f, 68);
             TMP_Text startLabel = start.GetComponentInChildren<TMP_Text>();
@@ -1775,7 +1763,7 @@ namespace TaskbarTactics.Editor
                 slot.rectTransform.anchorMin = slot.rectTransform.anchorMax = new Vector2(0, 1);
                 slot.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 slot.rectTransform.anchoredPosition = FormationSlotPosition(positions[i]);
-                slot.rectTransform.sizeDelta = new Vector2(72, 72);
+                slot.rectTransform.sizeDelta = new Vector2(83.16f, 83.16f);
 
                 Image hero = CreateImage(slot.transform, "Hero Icon", Color.clear);
                 hero.preserveAspect = true;
@@ -1795,8 +1783,8 @@ namespace TaskbarTactics.Editor
 
         private static Vector2 FormationSlotPosition(FormationPosition position)
         {
-            const float startX = 84f;
-            const float startY = -38f;
+            const float startX = 110f;
+            const float startY = -43f;
             const float gap = 60f;
             return new Vector2(startX + position.Column * gap, startY - position.Row * gap);
         }
@@ -1832,12 +1820,12 @@ namespace TaskbarTactics.Editor
 
         private static void CreateInventorySlotGrid(Transform parent, Sprite itemSlotSprite)
         {
-            const int columns = 5;
-            const int rows = 6;
+            const int columns = 6;
+            const int rows = 7;
             const float slotSize = 41.8f;
-            const float horizontalGap = 60f;
-            const float verticalGap = 55f;
-            Vector2 start = new Vector2(70f, -55f);
+            const float horizontalGap = 50f;
+            const float verticalGap = 45f;
+            Vector2 start = new Vector2(30f, -30f);
             List<Image> slots = new List<Image>();
 
             for (int row = 0; row < rows; row++)
@@ -1876,12 +1864,12 @@ namespace TaskbarTactics.Editor
             layout.raycastTarget = false;
             layout.rectTransform.anchorMin = layout.rectTransform.anchorMax = new Vector2(0, 1);
             layout.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            layout.rectTransform.anchoredPosition = new Vector2(560f, -230f);
+            layout.rectTransform.anchoredPosition = new Vector2(460f, -145f);
             layout.rectTransform.sizeDelta = new Vector2(297f, 330f);
             layout.gameObject.AddComponent<EquipmentPreviewLayoutView>();
         }
 
-        private static void CreateSkillTreeView(Transform parent, Texture2D skillTreeTexture, Sprite mapFrameSprite)
+        private static void CreateSkillTreeView(Transform parent, Texture2D skillTreeTexture)
         {
             GameObject viewportObject = new GameObject("Skill Tree Viewport", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Mask));
             viewportObject.transform.SetParent(parent, false);
@@ -1921,11 +1909,13 @@ namespace TaskbarTactics.Editor
 
             viewportObject.AddComponent<DraggableMapView>().ConfigureCentered(
                 content,
-                2.4f,
-                0.65f,
-                2.4f);
+                0.72f,
+                0.35f,
+                1.8f,
+                true,
+                new Vector2(420f, 420f),
+                true);
 
-            AddSkillTreeFrame(parent, mapFrameSprite);
         }
 
         private static void CreateLegendBookRing(Transform parent)
@@ -2018,27 +2008,6 @@ namespace TaskbarTactics.Editor
             }
         }
 
-        private static void AddSkillTreeFrame(Transform parent, Sprite frameSprite)
-        {
-            if (frameSprite == null)
-            {
-                return;
-            }
-
-            Image frame = CreateImage(parent, "Skill Tree Frame", Color.white);
-            frame.sprite = frameSprite;
-            frame.type = Image.Type.Sliced;
-            frame.preserveAspect = false;
-            frame.raycastTarget = false;
-            RectTransform rect = frame.rectTransform;
-            rect.anchorMin = new Vector2(0, 0);
-            rect.anchorMax = new Vector2(1, 1);
-            rect.offsetMin = new Vector2(18, 24);
-            rect.offsetMax = new Vector2(-18, -24);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            frame.transform.SetAsLastSibling();
-        }
-
         private static Button CreateHeroClassButton(
             Transform parent,
             int index,
@@ -2046,7 +2015,7 @@ namespace TaskbarTactics.Editor
             Sprite emptyClassSprite)
         {
             string heroId = HeroIdForClassCard(index);
-            Vector2 position = new Vector2(24 + (index % 3) * 132, 206 + (index / 3) * 132);
+            Vector2 position = new Vector2(24 + (index % 3) * 120, 205 + (index / 3) * 125);
             Button button = CreateButton(parent, $"Hero Class {heroId} Button", string.Empty,
                 position, new Vector2(108, 124), Color.clear);
             ColorBlock buttonColors = button.colors;
@@ -2063,8 +2032,8 @@ namespace TaskbarTactics.Editor
             emptyBackground.raycastTarget = false;
             emptyBackground.rectTransform.anchorMin = emptyBackground.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             emptyBackground.rectTransform.pivot = new Vector2(0.5f, 1f);
-            emptyBackground.rectTransform.anchoredPosition = new Vector2(0, 0);
-            emptyBackground.rectTransform.sizeDelta = new Vector2(99.9f, 99.9f);
+            emptyBackground.rectTransform.anchoredPosition = new Vector2(0, 15);
+            emptyBackground.rectTransform.sizeDelta = new Vector2(89.91f, 89.91f);
 
             Image icon = CreateImage(button.transform, "Class Icon", Color.white);
             icon.sprite = LoadPixelUiSprite(
@@ -2074,11 +2043,12 @@ namespace TaskbarTactics.Editor
             icon.raycastTarget = false;
             icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             icon.rectTransform.pivot = new Vector2(0.5f, 1f);
-            icon.rectTransform.anchoredPosition = new Vector2(0, -37);
+            icon.rectTransform.anchoredPosition = new Vector2(0, -12);
             icon.rectTransform.sizeDelta = new Vector2(58, 58);
 
             TMP_Text label = CreateText(button.transform, "Class Name", heroId,
-                9.5f, TextAlignmentOptions.Center, new Vector2(0, 102), new Vector2(108, 24));
+                12.5f, TextAlignmentOptions.Center, new Vector2(0, 77), new Vector2(108, 24));
+            label.fontStyle = FontStyles.Bold;
             HeroClassCardView card = button.gameObject.AddComponent<HeroClassCardView>();
             card.Configure(icon, label, null, emptyBackground);
             Sprite dragSprite = index < formationHeroIcons.Length ? formationHeroIcons[index] : icon.sprite;
@@ -2583,7 +2553,7 @@ namespace TaskbarTactics.Editor
                 light.raycastTarget = false;
                 light.rectTransform.anchorMin = light.rectTransform.anchorMax = anchor;
                 light.rectTransform.pivot = pivot;
-                light.rectTransform.anchoredPosition = position + new Vector2(pivot.x == 0f ? -78f : 78f, 24f);
+                light.rectTransform.anchoredPosition = position + new Vector2(pivot.x == 0f ? -88f : 88f, 24f);
                 light.rectTransform.sizeDelta = new Vector2(305, 237);
                 light.gameObject.AddComponent<CandleFlicker>().Configure(light, lightFrames, 4f, false);
             }
@@ -2743,19 +2713,6 @@ namespace TaskbarTactics.Editor
             {
                 label.text = string.Empty;
             }
-        }
-
-        private static void ApplySimpleWideFrame(Image image, Sprite sprite)
-        {
-            if (image == null || sprite == null)
-            {
-                return;
-            }
-
-            image.sprite = sprite;
-            image.type = Image.Type.Simple;
-            image.preserveAspect = true;
-            image.color = Color.white;
         }
 
         private static void ApplyManagementUiSkin(

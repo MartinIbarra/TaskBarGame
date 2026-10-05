@@ -10,12 +10,12 @@ namespace TaskbarTactics.Presentation
 {
     public sealed class InventorySlotGridView : MonoBehaviour
     {
-        private const int Columns = 5;
-        private const int Rows = 6;
-        private const float HorizontalGap = 60f;
-        private const float VerticalGap = 55f;
+        private const int Columns = 6;
+        private const int Rows = 7;
+        private const float HorizontalGap = 50f;
+        private const float VerticalGap = 45f;
         private const float SlotSize = 41.8f;
-        private static readonly Vector2 SlotStart = new Vector2(70f, -55f);
+        private static readonly Vector2 SlotStart = new Vector2(30f, -30f);
         private static readonly Vector2 ItemIconOffset = new Vector2(2f, -2f);
 
         private readonly List<Image> slots = new List<Image>();

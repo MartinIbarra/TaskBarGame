@@ -29,3 +29,4 @@ MonoBehaviour:
       SourceId: item_base
   tagId: guard
   icon: {fileID: 0}
+  displayNameKey: 
