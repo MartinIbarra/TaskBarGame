@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -83,7 +84,24 @@ namespace TaskbarTactics.Presentation
         private Sprite commandPressedSprite;
         private Sprite commandSelectedSprite;
         private Sprite menuCommandSprite;
+        private Sprite barButtonSprite;
+        private Sprite[] swordAnimationFrames = new Sprite[0];
+        private bool swordAnimationActive;
+        private int swordAnimationFrame;
+        private float swordAnimationTimer;
+        private Sprite quitConfirmationSprite;
+        private GameObject quitConfirmationOverlay;
+        private RectTransform quitConfirmationPanel;
+        private Coroutine quitConfirmationDropRoutine;
+        private Button quitConfirmationYesButton;
+        private Button quitConfirmationNoButton;
         private AudioClip formationSelectClip;
+        private const float SwordAnimationFrameDuration = 0.12f;
+        private const float QuitConfirmationDropDuration = 0.34f;
+        private const float QuitConfirmationPanelWidth = 280f;
+        private const float QuitConfirmationPanelHeight = 93.6f;
+        private static readonly Vector2 QuitConfirmationPanelFinalPosition = new Vector2(909f, -64f);
+        private static readonly Vector2 QuitConfirmationPanelStartPosition = new Vector2(909f, 84f);
         private static TMP_FontAsset shadowPixelTitleFont;
         private static Material shadowPixelTitleMaterial;
 
@@ -169,6 +187,7 @@ namespace TaskbarTactics.Presentation
             RemoveEquipmentPreviewLayoutBackground();
             EnsureHeroStatsSummary();
             RemoveMapSubLayoutBackground();
+            ApplyMapPanelLayout();
             ApplyMapCommandLayout();
             ApplyMapCommandLabels();
             ApplyMapSummaryPosition();
@@ -186,14 +205,16 @@ namespace TaskbarTactics.Presentation
             ApplyGlobalHudTorchLayout();
             HidePanelTorchPairs();
             EnsureNavigationChains();
+            EnsureItemTooltipView();
             cycleActiveSkillButton?.gameObject.SetActive(false);
             cyclePassiveSkillButton?.gameObject.SetActive(false);
             LoadCommandSprites();
+            EnsureQuitConfirmationOverlay();
             ApplyCommandButtonStates();
             app.StateChanged += Refresh;
             closeButton.onClick.AddListener(window.ShowStrip);
             settingsShortcutButton?.onClick.AddListener(() => ShowPanel(4));
-            quitShortcutButton?.onClick.AddListener(app.Quit);
+            quitShortcutButton?.onClick.AddListener(ShowQuitConfirmation);
             quitButton.onClick.AddListener(app.Quit);
             startExpeditionButton.onClick.AddListener(TryStartExpeditionFromSelectedAct);
             resetExpeditionButton?.onClick.AddListener(app.ResetExpeditionProgress);
@@ -241,6 +262,76 @@ namespace TaskbarTactics.Presentation
             Refresh();
         }
 
+        private void EnsureItemTooltipView()
+        {
+            if (itemTooltip == null)
+            {
+                Canvas canvas = GetComponentInParent<Canvas>() ?? GetComponentInChildren<Canvas>(true);
+                itemTooltip = canvas != null
+                    ? canvas.GetComponentInChildren<ItemTooltipView>(true)
+                    : GetComponentInChildren<ItemTooltipView>(true);
+            }
+
+            if (itemTooltip == null)
+            {
+                Canvas canvas = GetComponentInParent<Canvas>() ?? GetComponentInChildren<Canvas>(true);
+                Transform parent = canvas != null ? canvas.transform : transform;
+                RectTransform bounds = parent as RectTransform;
+                if (bounds == null)
+                {
+                    Debug.LogWarning("Item tooltip could not be created because the HUD canvas is missing.", this);
+                    return;
+                }
+
+                GameObject panel = new GameObject(
+                    "Item Tooltip",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image),
+                    typeof(CanvasGroup),
+                    typeof(ItemTooltipView));
+                panel.transform.SetParent(parent, false);
+                RectTransform panelRect = (RectTransform)panel.transform;
+                panelRect.anchorMin = panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+                panelRect.pivot = new Vector2(0f, 1f);
+                panelRect.sizeDelta = new Vector2(280f, 190f);
+
+                Image background = panel.GetComponent<Image>();
+                background.color = new Color(0.025f, 0.035f, 0.065f, 0.97f);
+                background.raycastTarget = false;
+                Outline outline = panel.AddComponent<Outline>();
+                outline.effectColor = new Color(0.55f, 0.48f, 0.29f, 1f);
+                outline.effectDistance = new Vector2(1f, -1f);
+
+                GameObject labelObject = new GameObject(
+                    "Item Details",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(TextMeshProUGUI));
+                labelObject.transform.SetParent(panel.transform, false);
+                TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
+                label.font = Resources.Load<TMP_FontAsset>("UI/Fonts/VCR_OSD_MONO SDF");
+                label.fontSize = 14f;
+                label.color = new Color(0.9f, 0.91f, 0.95f, 1f);
+                label.richText = true;
+                label.textWrappingMode = TextWrappingModes.Normal;
+                label.raycastTarget = false;
+                RectTransform labelRect = label.rectTransform;
+                labelRect.anchorMin = Vector2.zero;
+                labelRect.anchorMax = Vector2.one;
+                labelRect.offsetMin = new Vector2(12f, 12f);
+                labelRect.offsetMax = new Vector2(-12f, -12f);
+
+                itemTooltip = panel.GetComponent<ItemTooltipView>();
+                itemTooltip.Configure(label, panel.GetComponent<CanvasGroup>(), bounds);
+                panel.transform.SetAsLastSibling();
+                Debug.LogWarning(
+                    "Item tooltip was missing from the authored HUD and was restored at runtime. " +
+                    "Run Taskbar Tactics/Items/Install Basic Stats and Tooltip to persist it in Main.",
+                    this);
+            }
+        }
+
         private void EnsureSilverCurrencyHud()
         {
             if (silverCurrencyHud == null)
@@ -260,6 +351,83 @@ namespace TaskbarTactics.Presentation
                 currencyObject.transform.SetParent(parent, false);
                 silverCurrencyHud = currencyObject.AddComponent<SilverCurrencyHud>();
             }
+        }
+
+        [ContextMenu("Sync Initial HUD Layout For Editor")]
+        public void SyncInitialHudLayoutForEditor()
+        {
+            if (tabButtons.Count == 0 || panels.Count == 0)
+            {
+                return;
+            }
+
+            EnsureSilverCurrencyHud();
+            silverCurrencyHud?.Bind(null);
+            silverCurrencyHud?.transform.Find("Silver Coin")?.gameObject.SetActive(false);
+            ApplyInventoryPanelLayout();
+            RemoveEquipmentPreviewLayoutBackground();
+            if (equipmentPreview == null && panels.Count > 2 && panels[2] != null)
+            {
+                equipmentPreview = panels[2].GetComponentInChildren<EquipmentPreviewLayoutView>(true);
+            }
+
+            ApplyEquipmentPreviewPosition();
+            EnsureHeroStatsSummary();
+            EnsureHeroIdentitySummary();
+            if (heroStatsSummary != null)
+            {
+                heroStatsSummary.gameObject.SetActive(false);
+            }
+
+            if (heroIdentitySummary != null)
+            {
+                heroIdentitySummary.gameObject.SetActive(false);
+            }
+
+            RemoveMapSubLayoutBackground();
+            ApplyMapPanelLayout();
+            ApplyMapCommandLayout();
+            ApplyMapCommandLabels();
+            ApplyMapSummaryPosition();
+            ApplyCommandLayout();
+            ApplyCommandLabels();
+            ApplyTitleLayout();
+            ApplyTitleFont();
+            ApplyFormationSlotLayout();
+            ApplyFormationClassFrameLayout();
+            ApplyHeroClassButtonLayout();
+            ApplyHeroClassContentLayout();
+            EnsureTopRightControlsLayout();
+            ApplyTopRightButtonOffset();
+            ApplyUniformHudShadowDim();
+            ApplyGlobalHudTorchLayout();
+            HidePanelTorchPairs();
+            EnsureNavigationChains();
+            LoadCommandSprites();
+            ApplyCommandButtonStates();
+            SetSwordAnimationActive(false);
+            if (closeButton != null)
+            {
+                closeButton.interactable = false;
+                if (closeButton.image != null)
+                {
+                    closeButton.image.color = new Color(0.82f, 0.12f, 0.12f, 1f);
+                }
+            }
+
+            EnsureQuitConfirmationOverlay();
+            if (quitConfirmationOverlay != null)
+            {
+                quitConfirmationOverlay.SetActive(false);
+            }
+
+            activePanelIndex = 0;
+            for (int i = 0; i < panels.Count; i++)
+            {
+                panels[i]?.SetActive(i == 0);
+            }
+
+            ApplyInventorySubmenuVisibility();
         }
 
         private void RemoveMapSubLayoutBackground()
@@ -282,9 +450,10 @@ namespace TaskbarTactics.Presentation
 
         private void ApplyMapCommandLayout()
         {
-            const float mapCommandWidth = 159.8f;
-            const float mapCommandX = 64f;
-            float[] routeYPositions = { -144f, -206f, -268f };
+            const float mapCommandWidth = 150.4f;
+            const float mapCommandHeight = 54.4f;
+            const float mapCommandX = 44f;
+            float[] routeYPositions = { -114f, -176f, -238f };
 
             for (int i = 0; i < routeButtons.Count && i < 3; i++)
             {
@@ -294,7 +463,7 @@ namespace TaskbarTactics.Presentation
                 if (rect != null)
                 {
                     rect.anchoredPosition = new Vector2(mapCommandX, routeYPositions[i]);
-                    rect.sizeDelta = new Vector2(mapCommandWidth, rect.sizeDelta.y);
+                    rect.sizeDelta = new Vector2(mapCommandWidth, mapCommandHeight);
                 }
             }
 
@@ -303,9 +472,32 @@ namespace TaskbarTactics.Presentation
                 RectTransform rect = startExpeditionButton.transform as RectTransform;
                 if (rect != null)
                 {
-                    rect.anchoredPosition = new Vector2(mapCommandX, -322f);
-                    rect.sizeDelta = new Vector2(mapCommandWidth, rect.sizeDelta.y);
+                    rect.anchoredPosition = new Vector2(mapCommandX, -292f);
+                    rect.sizeDelta = new Vector2(mapCommandWidth, mapCommandHeight);
                 }
+            }
+        }
+
+        private void ApplyMapPanelLayout()
+        {
+            if (panels.Count <= 3 || panels[3] == null)
+            {
+                return;
+            }
+
+            Transform mapPanel = panels[3].transform;
+            SetTopLeftPosition(mapPanel.Find("Map Visual"), new Vector2(260f, -38f));
+            SetTopLeftPosition(mapPanel.Find("Map Frame"), new Vector2(252f, -30f));
+            SetTopLeftPosition(mapPanel.Find("Route Preference Legend"), new Vector2(-6f, -304f));
+            SetTopLeftPosition(mapPanel.Find("Act Selector"), new Vector2(688f, -150f));
+        }
+
+        private static void SetTopLeftPosition(Transform target, Vector2 position)
+        {
+            RectTransform rect = target as RectTransform;
+            if (rect != null)
+            {
+                rect.anchoredPosition = position;
             }
         }
 
@@ -348,7 +540,7 @@ namespace TaskbarTactics.Presentation
             }
 
             RectTransform rect = mapSummary.rectTransform;
-            rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -62f);
+            rect.anchoredPosition = new Vector2(44f, -42f);
         }
 
         private void ApplyTitleFont()
@@ -637,9 +829,15 @@ namespace TaskbarTactics.Presentation
             for (int i = 0; i < routeButtons.Count && i < 3; i++)
             {
                 bool selectedRoute = (int)app.State.Party.RoutePreference == i;
-                routeButtons[i].image.sprite = selectedRoute && commandSelectedSprite != null
-                    ? commandSelectedSprite
-                    : commandNormalSprite;
+                routeButtons[i].image.sprite = menuCommandSprite != null
+                    ? menuCommandSprite
+                    : selectedRoute && commandSelectedSprite != null
+                        ? commandSelectedSprite
+                        : commandNormalSprite;
+                routeButtons[i].image.type = menuCommandSprite != null
+                    ? Image.Type.Sliced
+                    : Image.Type.Simple;
+                routeButtons[i].image.preserveAspect = menuCommandSprite == null;
                 routeButtons[i].image.color = selectedRoute ? Color.white : new Color(1f, 1f, 1f, 0.88f);
                 TMP_Text label = routeButtons[i].GetComponentInChildren<TMP_Text>(true);
                 if (label != null)
@@ -683,6 +881,23 @@ namespace TaskbarTactics.Presentation
                 }
 
                 heroButtons[i].image.color = Color.clear;
+            }
+        }
+
+        private void Update()
+        {
+            if (!swordAnimationActive || swordAnimationFrames.Length == 0 ||
+                closeButton == null || closeButton.image == null)
+            {
+                return;
+            }
+
+            swordAnimationTimer += Time.unscaledDeltaTime;
+            while (swordAnimationTimer >= SwordAnimationFrameDuration)
+            {
+                swordAnimationTimer -= SwordAnimationFrameDuration;
+                swordAnimationFrame = (swordAnimationFrame + 1) % swordAnimationFrames.Length;
+                closeButton.image.sprite = swordAnimationFrames[swordAnimationFrame];
             }
         }
 
@@ -790,7 +1005,7 @@ namespace TaskbarTactics.Presentation
             RectTransform rect = heroIdentitySummary.rectTransform;
             rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(460f, -240f);
+            rect.anchoredPosition = new Vector2(460f, -249f);
             rect.sizeDelta = new Vector2(250f, 30f);
             heroIdentitySummary.transform.SetAsLastSibling();
         }
@@ -938,7 +1153,7 @@ namespace TaskbarTactics.Presentation
         private void ApplyCommandLayout()
         {
             const float commandStartY = 150f;
-            const float commandSpacing = 62f;
+            const float commandSpacing = 67f;
             const float commandWidth = 150.4f;
             const float commandHeight = 54.4f;
 
@@ -1849,8 +2064,8 @@ namespace TaskbarTactics.Presentation
             SetTorchVisibleOnTop(leftLight);
             SetTorchVisibleOnTop(right);
             SetTorchVisibleOnTop(rightLight);
+            SetTorchHorizontalPosition(right, -98f);
             SetTorchLightLayout(leftLight, left, -88f);
-            SetTorchLightLayout(rightLight, right, 88f);
         }
 
         private void HidePanelTorchPairs()
@@ -2034,6 +2249,15 @@ namespace TaskbarTactics.Presentation
             torch.SetAsLastSibling();
         }
 
+        private static void SetTorchHorizontalPosition(Transform torch, float x)
+        {
+            RectTransform rect = torch as RectTransform;
+            if (rect != null)
+            {
+                rect.anchoredPosition = new Vector2(x, rect.anchoredPosition.y);
+            }
+        }
+
         private static void SetTorchLightLayout(Transform light, Transform torch, float horizontalOffset)
         {
             RectTransform lightRect = light as RectTransform;
@@ -2104,11 +2328,11 @@ namespace TaskbarTactics.Presentation
 
         private void ApplyEquipmentHeroTabLayout()
         {
-            const float startX = 322f;
-            const float y = -330f;
+            const float startX = 325f;
+            const float y = -325f;
             const float width = 54f;
             const float height = 35f;
-            const float gap = 52.8f;
+            const float gap = 48f;
 
             for (int i = 0; i < equipmentHeroTabs.Count; i++)
             {
@@ -2189,7 +2413,328 @@ namespace TaskbarTactics.Presentation
             commandPressedSprite = Resources.Load<Sprite>("UI/CommandPressed");
             commandSelectedSprite = Resources.Load<Sprite>("UI/CommandSelected");
             menuCommandSprite = Resources.Load<Sprite>("UI/MenuCommand");
+            barButtonSprite = Resources.Load<Sprite>("UI/BarButton");
+            quitConfirmationSprite = Resources.Load<Sprite>("UI/yn");
+            LoadSwordAnimationFrames();
             formationSelectClip = Resources.Load<AudioClip>("Audio/UI/formation_select");
+        }
+
+        private void EnsureQuitConfirmationOverlay()
+        {
+            if (quitConfirmationOverlay != null || quitShortcutButton == null)
+            {
+                return;
+            }
+
+            Transform parent = quitShortcutButton.transform.parent != null
+                ? quitShortcutButton.transform.parent
+                : transform;
+
+            Transform existingOverlay = parent.Find("Quit Confirmation Overlay");
+            if (existingOverlay != null)
+            {
+                quitConfirmationOverlay = existingOverlay.gameObject;
+                quitConfirmationPanel = existingOverlay
+                    .Find("Quit Confirmation Panel") as RectTransform;
+                if (quitConfirmationPanel != null)
+                {
+                    Image existingPanelImage = quitConfirmationPanel.GetComponent<Image>();
+                    if (existingPanelImage != null)
+                    {
+                        existingPanelImage.sprite = quitConfirmationSprite;
+                        existingPanelImage.color = quitConfirmationSprite != null
+                            ? Color.white
+                            : Color.clear;
+                        existingPanelImage.preserveAspect = true;
+                        existingPanelImage.raycastTarget = true;
+                    }
+
+                    quitConfirmationPanel.anchoredPosition = QuitConfirmationPanelFinalPosition;
+                    quitConfirmationPanel.sizeDelta = new Vector2(
+                        QuitConfirmationPanelWidth,
+                        QuitConfirmationPanelHeight);
+
+                    TMP_Text existingPrompt = quitConfirmationPanel
+                        .Find("Quit Confirmation Prompt")
+                        ?.GetComponent<TMP_Text>();
+                    if (existingPrompt != null)
+                    {
+                        existingPrompt.text = "SURE?";
+                        existingPrompt.fontSize = 20f;
+                        existingPrompt.fontStyle = FontStyles.Bold;
+                        existingPrompt.rectTransform.anchoredPosition = new Vector2(0f, -28f);
+                        existingPrompt.rectTransform.sizeDelta = new Vector2(180f, 26f);
+                    }
+
+                    quitConfirmationYesButton = quitConfirmationPanel
+                        .Find("Quit Confirmation Yes")
+                        ?.GetComponent<Button>();
+                    quitConfirmationNoButton = quitConfirmationPanel
+                        .Find("Quit Confirmation No")
+                        ?.GetComponent<Button>();
+                    ConfigureQuitConfirmationButton(
+                        quitConfirmationYesButton,
+                        "Y",
+                        new Vector2(-34f, -62f));
+                    ConfigureQuitConfirmationButton(
+                        quitConfirmationNoButton,
+                        "N",
+                        new Vector2(34f, -62f));
+                    quitConfirmationYesButton?.onClick.AddListener(ConfirmQuit);
+                    quitConfirmationNoButton?.onClick.AddListener(HideQuitConfirmation);
+                }
+
+                existingOverlay.gameObject.SetActive(false);
+                return;
+            }
+
+            GameObject overlayObject = new GameObject(
+                "Quit Confirmation Overlay",
+                typeof(RectTransform));
+            overlayObject.transform.SetParent(parent, false);
+            quitConfirmationOverlay = overlayObject;
+
+            RectTransform overlayRect = overlayObject.GetComponent<RectTransform>();
+            overlayRect.anchorMin = Vector2.zero;
+            overlayRect.anchorMax = Vector2.one;
+            overlayRect.offsetMin = Vector2.zero;
+            overlayRect.offsetMax = Vector2.zero;
+
+            GameObject dimObject = new GameObject(
+                "Quit Confirmation Dim",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
+            dimObject.transform.SetParent(overlayObject.transform, false);
+            Image dim = dimObject.GetComponent<Image>();
+            dim.color = new Color(0f, 0f, 0f, 0.68f);
+            dim.raycastTarget = true;
+            RectTransform dimRect = dim.rectTransform;
+            dimRect.anchorMin = Vector2.zero;
+            dimRect.anchorMax = Vector2.one;
+            dimRect.offsetMin = Vector2.zero;
+            dimRect.offsetMax = Vector2.zero;
+
+            GameObject panelObject = new GameObject(
+                "Quit Confirmation Panel",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
+            panelObject.transform.SetParent(overlayObject.transform, false);
+            Image panelImage = panelObject.GetComponent<Image>();
+            panelImage.sprite = quitConfirmationSprite;
+            panelImage.color = quitConfirmationSprite != null ? Color.white : Color.clear;
+            panelImage.preserveAspect = true;
+            panelImage.raycastTarget = true;
+            RectTransform panelRect = panelImage.rectTransform;
+            panelRect.anchorMin = panelRect.anchorMax = new Vector2(0f, 1f);
+            panelRect.pivot = new Vector2(0.5f, 1f);
+            panelRect.anchoredPosition = QuitConfirmationPanelFinalPosition;
+            panelRect.sizeDelta = new Vector2(
+                QuitConfirmationPanelWidth,
+                QuitConfirmationPanelHeight);
+            quitConfirmationPanel = panelRect;
+
+            TMP_Text prompt = CreateRuntimeText(panelObject.transform, "Quit Confirmation Prompt", "SURE?");
+            prompt.fontSize = 20f;
+            prompt.fontStyle = FontStyles.Bold;
+            prompt.color = new Color(1f, 0.95f, 0.78f, 1f);
+            RectTransform promptRect = prompt.rectTransform;
+            promptRect.anchoredPosition = new Vector2(0f, -28f);
+            promptRect.sizeDelta = new Vector2(180f, 26f);
+
+            quitConfirmationYesButton = CreateQuitConfirmationButton(
+                panelObject.transform,
+                "Quit Confirmation Yes",
+                "Y",
+                new Vector2(-34f, -62f));
+            quitConfirmationNoButton = CreateQuitConfirmationButton(
+                panelObject.transform,
+                "Quit Confirmation No",
+                "N",
+                new Vector2(34f, -62f));
+            quitConfirmationYesButton.onClick.AddListener(ConfirmQuit);
+            quitConfirmationNoButton.onClick.AddListener(HideQuitConfirmation);
+
+            overlayObject.transform.SetAsLastSibling();
+            overlayObject.SetActive(false);
+        }
+
+        private Button CreateQuitConfirmationButton(
+            Transform parent,
+            string objectName,
+            string labelValue,
+            Vector2 position)
+        {
+            GameObject buttonObject = new GameObject(
+                objectName,
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image),
+                typeof(Button));
+            buttonObject.transform.SetParent(parent, false);
+
+            Image image = buttonObject.GetComponent<Image>();
+            image.color = new Color(1f, 1f, 1f, 0.01f);
+            image.raycastTarget = true;
+            Button button = buttonObject.GetComponent<Button>();
+            button.targetGraphic = image;
+            button.transition = Selectable.Transition.ColorTint;
+            ColorBlock colors = button.colors;
+            colors.normalColor = new Color(1f, 1f, 1f, 0.01f);
+            colors.highlightedColor = new Color(1f, 0.95f, 0.65f, 0.14f);
+            colors.pressedColor = new Color(1f, 0.85f, 0.4f, 0.2f);
+            colors.selectedColor = colors.highlightedColor;
+            button.colors = colors;
+
+            RectTransform rect = buttonObject.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = new Vector2(70f, 30f);
+
+            TMP_Text label = CreateRuntimeText(buttonObject.transform, "Label", labelValue);
+            label.fontSize = 18f;
+            label.fontStyle = FontStyles.Bold;
+            label.color = new Color(1f, 0.95f, 0.78f, 1f);
+            label.rectTransform.sizeDelta = new Vector2(70f, 30f);
+            return button;
+        }
+
+        private static void ConfigureQuitConfirmationButton(
+            Button button,
+            string labelValue,
+            Vector2 position)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            RectTransform rect = button.transform as RectTransform;
+            if (rect != null)
+            {
+                rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = position;
+                rect.sizeDelta = new Vector2(70f, 30f);
+            }
+
+            TMP_Text label = button.transform.Find("Label")?.GetComponent<TMP_Text>();
+            if (label != null)
+            {
+                label.text = labelValue;
+                label.fontSize = 18f;
+                label.fontStyle = FontStyles.Bold;
+                label.color = new Color(1f, 0.95f, 0.78f, 1f);
+                label.rectTransform.sizeDelta = new Vector2(70f, 30f);
+            }
+        }
+
+        private void ShowQuitConfirmation()
+        {
+            EnsureQuitConfirmationOverlay();
+            if (quitConfirmationOverlay == null)
+            {
+                return;
+            }
+
+            quitConfirmationOverlay.transform.SetAsLastSibling();
+            quitConfirmationOverlay.SetActive(true);
+            if (quitConfirmationDropRoutine != null)
+            {
+                StopCoroutine(quitConfirmationDropRoutine);
+            }
+
+            if (quitConfirmationPanel != null)
+            {
+                quitConfirmationDropRoutine = StartCoroutine(DropQuitConfirmationPanel());
+            }
+
+            if (quitShortcutButton != null)
+            {
+                quitShortcutButton.interactable = false;
+            }
+        }
+
+        private IEnumerator DropQuitConfirmationPanel()
+        {
+            float elapsed = 0f;
+            while (elapsed < QuitConfirmationDropDuration && quitConfirmationPanel != null)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float progress = Mathf.Clamp01(elapsed / QuitConfirmationDropDuration);
+                progress = Mathf.SmoothStep(0f, 1f, progress);
+                quitConfirmationPanel.anchoredPosition = Vector2.Lerp(
+                    QuitConfirmationPanelStartPosition,
+                    QuitConfirmationPanelFinalPosition,
+                    progress);
+                yield return null;
+            }
+
+            if (quitConfirmationPanel != null)
+            {
+                quitConfirmationPanel.anchoredPosition = QuitConfirmationPanelFinalPosition;
+            }
+
+            quitConfirmationDropRoutine = null;
+        }
+
+        private void HideQuitConfirmation()
+        {
+            if (quitConfirmationDropRoutine != null)
+            {
+                StopCoroutine(quitConfirmationDropRoutine);
+                quitConfirmationDropRoutine = null;
+            }
+
+            if (quitConfirmationOverlay != null)
+            {
+                quitConfirmationOverlay.SetActive(false);
+            }
+
+            if (quitConfirmationPanel != null)
+            {
+                quitConfirmationPanel.anchoredPosition = QuitConfirmationPanelFinalPosition;
+            }
+
+            if (quitShortcutButton != null)
+            {
+                quitShortcutButton.interactable = true;
+            }
+        }
+
+        private void ConfirmQuit()
+        {
+            app?.Quit();
+        }
+
+        private void LoadSwordAnimationFrames()
+        {
+            if (swordAnimationFrames.Length > 0)
+            {
+                return;
+            }
+
+            Texture2D sheet = Resources.Load<Texture2D>("UI/SwordAnim");
+            if (sheet == null || sheet.width < 5 || sheet.width % 5 != 0)
+            {
+                return;
+            }
+
+            int frameWidth = sheet.width / 5;
+            swordAnimationFrames = new Sprite[5];
+            for (int i = 0; i < swordAnimationFrames.Length; i++)
+            {
+                swordAnimationFrames[i] = Sprite.Create(
+                    sheet,
+                    new Rect(i * frameWidth, 0f, frameWidth, sheet.height),
+                    new Vector2(0.5f, 0.5f),
+                    100f,
+                    0,
+                    SpriteMeshType.FullRect);
+                swordAnimationFrames[i].name = $"SwordAnim_{i}";
+            }
         }
 
         private static void PlayUiSound(AudioClip clip)
@@ -2267,22 +2812,25 @@ namespace TaskbarTactics.Presentation
                 return;
             }
 
-            if (commandNormalSprite != null)
+            bool useMenuCommand = menuCommandSprite != null && IsMapCommandButton(button);
+            Sprite normalSprite = useMenuCommand ? menuCommandSprite : commandNormalSprite;
+
+            if (normalSprite != null)
             {
-                image.sprite = commandNormalSprite;
+                image.sprite = normalSprite;
             }
 
-            image.type = Image.Type.Simple;
-            image.preserveAspect = true;
+            image.type = useMenuCommand ? Image.Type.Sliced : Image.Type.Simple;
+            image.preserveAspect = !useMenuCommand;
             image.color = Color.white;
             button.targetGraphic = image;
             button.transition = Selectable.Transition.SpriteSwap;
             button.spriteState = new SpriteState
             {
-                highlightedSprite = commandNormalSprite,
-                pressedSprite = commandPressedSprite,
-                selectedSprite = commandSelectedSprite,
-                disabledSprite = commandNormalSprite
+                highlightedSprite = normalSprite,
+                pressedSprite = useMenuCommand ? menuCommandSprite : commandPressedSprite,
+                selectedSprite = useMenuCommand ? menuCommandSprite : commandSelectedSprite,
+                disabledSprite = normalSprite
             };
 
             ColorBlock colors = button.colors;
@@ -2292,6 +2840,11 @@ namespace TaskbarTactics.Presentation
             colors.selectedColor = Color.white;
             colors.disabledColor = new Color(1f, 1f, 1f, 0.42f);
             button.colors = colors;
+        }
+
+        private bool IsMapCommandButton(Button button)
+        {
+            return button != null && (routeButtons.Contains(button) || button == startExpeditionButton);
         }
 
         private void ApplyResetButtonState()
@@ -2334,10 +2887,8 @@ namespace TaskbarTactics.Presentation
             TMP_Text label = startExpeditionButton.GetComponentInChildren<TMP_Text>();
             if (label != null)
             {
-                label.text = "START CAMPAIGN";
-                label.color = selectedActLocked
-                    ? new Color(0.72f, 0.72f, 0.72f, 0.9f)
-                    : new Color(1f, 0.92f, 0.08f, 1f);
+                label.text = "START";
+                label.color = Color.white;
             }
         }
 
@@ -2349,6 +2900,7 @@ namespace TaskbarTactics.Presentation
             }
 
             bool expeditionActive = app.State.Expedition != null && app.State.Expedition.IsActive;
+            SetSwordAnimationActive(expeditionActive);
             ColorBlock colors = closeButton.colors;
             colors.disabledColor = new Color(0.82f, 0.12f, 0.12f, 1f);
             closeButton.colors = colors;
@@ -2356,6 +2908,47 @@ namespace TaskbarTactics.Presentation
             closeButton.image.color = expeditionActive
                 ? Color.white
                 : new Color(0.82f, 0.12f, 0.12f, 1f);
+        }
+
+        private void SetSwordAnimationActive(bool active)
+        {
+            if (!active || swordAnimationFrames.Length == 0 || closeButton?.image == null)
+            {
+                swordAnimationActive = false;
+                swordAnimationTimer = 0f;
+                swordAnimationFrame = 0;
+                SetCloseButtonHorizontalPosition(831f);
+                if (closeButton?.image != null && barButtonSprite != null)
+                {
+                    closeButton.image.sprite = barButtonSprite;
+                    closeButton.image.type = Image.Type.Simple;
+                    closeButton.image.preserveAspect = true;
+                }
+
+                return;
+            }
+
+            if (swordAnimationActive)
+            {
+                return;
+            }
+
+            swordAnimationActive = true;
+            swordAnimationTimer = 0f;
+            swordAnimationFrame = 0;
+            SetCloseButtonHorizontalPosition(829f);
+            closeButton.image.sprite = swordAnimationFrames[0];
+            closeButton.image.type = Image.Type.Simple;
+            closeButton.image.preserveAspect = true;
+        }
+
+        private void SetCloseButtonHorizontalPosition(float x)
+        {
+            RectTransform rect = closeButton?.transform as RectTransform;
+            if (rect != null)
+            {
+                rect.anchoredPosition = new Vector2(x, rect.anchoredPosition.y);
+            }
         }
 
         private void BringResetButtonForward()

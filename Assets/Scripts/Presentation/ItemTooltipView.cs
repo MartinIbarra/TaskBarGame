@@ -2,6 +2,8 @@ using TaskbarTactics.Content;
 using TaskbarTactics.Core.Models;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 
 namespace TaskbarTactics.Presentation
@@ -53,7 +55,7 @@ namespace TaskbarTactics.Presentation
             panel = (RectTransform)transform;
             StringTable table = language == "es" ? spanish : english;
             label.text = ItemTooltipFormatter.Format(catalog, item,
-                key => table?.GetEntry(key)?.Value ?? english?.GetEntry(key)?.Value ?? key);
+                key => ResolveText(table, key, language));
             ResizeToContent();
             currentSource = source;
             visibility.alpha = 1f;
@@ -61,6 +63,19 @@ namespace TaskbarTactics.Presentation
             visibility.interactable = false;
             transform.SetAsLastSibling();
             Move(source, pointer, eventCamera);
+        }
+
+        private static string ResolveText(StringTable table, string key, string language)
+        {
+            string value = table?.GetEntry(key)?.Value;
+            if (!string.IsNullOrEmpty(value))
+            {
+                return value;
+            }
+
+            Locale locale = LocalizationSettings.AvailableLocales?.GetLocale(language);
+            value = LocalizationSettings.StringDatabase.GetLocalizedString("UI", key, locale);
+            return string.IsNullOrEmpty(value) ? key : value;
         }
 
         private void ResizeToContent()

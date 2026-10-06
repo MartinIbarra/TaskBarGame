@@ -304,12 +304,12 @@ namespace TaskbarTactics.Presentation
                 ArrangeActSelector(selectorRect);
 
                 actOneButton = CreateActButton(selector.transform, badgeSprite, "Act 1", Vector2.zero, 1);
-                actTwoButton = CreateActButton(selector.transform, badgeSprite, "Act 2", new Vector2(0f, -54f), 2);
+                actTwoButton = CreateActButton(selector.transform, badgeSprite, "Act 2", new Vector2(0f, -72f), 2);
                 existingSelector = selector.transform;
             }
 
             ArrangeActButton(actOneButton, Vector2.zero);
-            ArrangeActButton(actTwoButton, new Vector2(0f, -54f));
+            ArrangeActButton(actTwoButton, new Vector2(0f, -72f));
             ConfigureActButton(actOneButton, 1);
             ConfigureActButton(actTwoButton, 2);
             existingSelector.SetAsLastSibling();
@@ -325,8 +325,8 @@ namespace TaskbarTactics.Presentation
 
             selectorRect.anchorMin = selectorRect.anchorMax = new Vector2(0f, 1f);
             selectorRect.pivot = new Vector2(0f, 1f);
-            selectorRect.anchoredPosition = new Vector2(708f, -72f);
-            selectorRect.sizeDelta = new Vector2(96f, 100f);
+            selectorRect.anchoredPosition = new Vector2(688f, -150f);
+            selectorRect.sizeDelta = new Vector2(96f, 126f);
         }
 
         private static void ArrangeActButton(Button button, Vector2 position)

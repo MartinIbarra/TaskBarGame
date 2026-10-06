@@ -1514,7 +1514,7 @@ namespace TaskbarTactics.Editor
             for (int i = 0; i < tabNames.Length; i++)
             {
                 tabs.Add(CreateButton(background.transform, $"{tabNames[i]} Tab", tabNames[i],
-                    new Vector2(33, 150 + i * 62), new Vector2(150.4f, 54.4f), Color.white));
+                    new Vector2(33, 150 + i * 67), new Vector2(150.4f, 54.4f), Color.white));
                 ApplyUiFrame(tabs[i].GetComponent<Image>(), menuCommandSprite ?? commandSprite);
                 InsetButtonLabel(tabs[i], new Vector2(34, 16), new Vector2(-34, -16));
             }
@@ -1555,7 +1555,7 @@ namespace TaskbarTactics.Editor
                 Vector2 summaryPosition = i == 0
                     ? new Vector2(24, 42)
                     : i == 3
-                        ? new Vector2(58, 62)
+                ? new Vector2(44, 42)
                         : new Vector2(24, 72);
                 TMP_Text summary = CreateText(panel.transform, "Summary", string.Empty,
                     18, TextAlignmentOptions.TopLeft, summaryPosition, new Vector2(690, 360));
@@ -1594,25 +1594,24 @@ namespace TaskbarTactics.Editor
             List<Button> routeButtons = new List<Button>
             {
                 CreateButton(panels[3].transform, "Safety Route Button", "Easy",
-                    new Vector2(64, 145), new Vector2(159.8f, 68), PanelLight),
+                    new Vector2(44, 115), new Vector2(150.4f, 54.4f), PanelLight),
                 CreateButton(panels[3].transform, "Loot Route Button", "Normal",
-                    new Vector2(64, 207), new Vector2(159.8f, 68), PanelLight),
+                    new Vector2(44, 177), new Vector2(150.4f, 54.4f), PanelLight),
                 CreateButton(panels[3].transform, "Challenge Route Button", "Hard",
-                    new Vector2(64, 269), new Vector2(159.8f, 68), PanelLight)
+                    new Vector2(44, 239), new Vector2(150.4f, 54.4f), PanelLight)
             };
             foreach (Button routeButton in routeButtons)
             {
-                ApplyUiFrame(routeButton.GetComponent<Image>(), commandSprite);
+                ApplyUiFrame(routeButton.GetComponent<Image>(), menuCommandSprite ?? commandSprite);
             }
 
             Button start = CreateButton(panels[3].transform, "Start Expedition Button",
-                "START CAMPAIGN", new Vector2(64, 323), new Vector2(150, 52), Accent);
-            ApplyUiFrame(start.GetComponent<Image>(), commandSprite);
-            start.GetComponent<RectTransform>().sizeDelta = new Vector2(159.8f, 68);
+                "START", new Vector2(44, 293), new Vector2(150.4f, 54.4f), Accent);
+            ApplyUiFrame(start.GetComponent<Image>(), menuCommandSprite ?? commandSprite);
             TMP_Text startLabel = start.GetComponentInChildren<TMP_Text>();
             if (startLabel != null)
             {
-                startLabel.color = new Color(1f, 0.92f, 0.08f, 1f);
+                startLabel.color = Color.white;
             }
 
             MapUiController mapVisual = BuildMapVisual(
@@ -1645,10 +1644,12 @@ namespace TaskbarTactics.Editor
 
             foreach (Button routeButton in routeButtons)
             {
-                ApplySimpleCommandFrame(routeButton, commandSprite);
+                ApplyUiFrame(routeButton.GetComponent<Image>(), menuCommandSprite ?? commandSprite);
+                InsetButtonLabel(routeButton, new Vector2(34, 16), new Vector2(-34, -16));
             }
 
-            ApplySimpleCommandFrame(start, commandSprite);
+            ApplyUiFrame(start.GetComponent<Image>(), menuCommandSprite ?? commandSprite);
+            InsetButtonLabel(start, new Vector2(34, 16), new Vector2(-34, -16));
             ApplySimpleCommandFrame(language, commandSprite);
             ApplySimpleCommandFrame(reset, commandSprite);
             reset.GetComponent<Image>().color = new Color(0.82f, 0.12f, 0.12f);
@@ -2086,7 +2087,7 @@ namespace TaskbarTactics.Editor
             RectTransform rootRect = root.GetComponent<RectTransform>();
             rootRect.anchorMin = rootRect.anchorMax = new Vector2(0, 1);
             rootRect.pivot = new Vector2(0, 1);
-            rootRect.anchoredPosition = new Vector2(280, -58);
+            rootRect.anchoredPosition = new Vector2(260, -38);
             rootRect.sizeDelta = new Vector2(420, 386);
             Image viewport = root.AddComponent<Image>();
             viewport.color = new Color(0.03f, 0.04f, 0.05f, 0.95f);
@@ -2138,7 +2139,7 @@ namespace TaskbarTactics.Editor
             List<MapNodeView> nodes = positions.Select(pair =>
                 CreateMapNode(nodesLayer, pair.Key, pair.Value, circleSprite, flagFrames)).ToList();
             List<MapRoutePreferenceLegend> legends = CreateMapRouteLegend(root.transform);
-            AddMapFrame(parent, mapFrameSprite, new Vector2(272, -50), new Vector2(436, 402));
+            AddMapFrame(parent, mapFrameSprite, new Vector2(252, -30), new Vector2(436, 402));
             AddMapActSelector(parent, actParchmentSprite);
 
             MapUiController controller = root.AddComponent<MapUiController>();
@@ -2184,11 +2185,11 @@ namespace TaskbarTactics.Editor
             RectTransform selectorRect = selector.GetComponent<RectTransform>();
             selectorRect.anchorMin = selectorRect.anchorMax = new Vector2(0, 1);
             selectorRect.pivot = new Vector2(0, 1);
-            selectorRect.anchoredPosition = new Vector2(708, -72);
-            selectorRect.sizeDelta = new Vector2(96, 100);
+            selectorRect.anchoredPosition = new Vector2(688, -150);
+            selectorRect.sizeDelta = new Vector2(96, 126);
 
             AddMapActBadge(selector.transform, badgeSprite, "Act 1", Vector2.zero);
-            AddMapActBadge(selector.transform, badgeSprite, "Act 2", new Vector2(0, -54));
+            AddMapActBadge(selector.transform, badgeSprite, "Act 2", new Vector2(0, -72));
             selector.transform.SetAsLastSibling();
         }
 
@@ -2297,7 +2298,7 @@ namespace TaskbarTactics.Editor
             RectTransform rootRect = root.GetComponent<RectTransform>();
             rootRect.anchorMin = rootRect.anchorMax = new Vector2(0, 1);
             rootRect.pivot = new Vector2(0, 1);
-            rootRect.anchoredPosition = new Vector2(14, -324);
+            rootRect.anchoredPosition = new Vector2(-6, -304);
             rootRect.sizeDelta = new Vector2(372, 58);
 
             string[] names =

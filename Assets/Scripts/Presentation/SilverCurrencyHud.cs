@@ -93,6 +93,10 @@ namespace TaskbarTactics.Presentation
                 coin.rectTransform.sizeDelta = new Vector2(30f, 30f);
             }
 
+            // The editor-synced scene keeps the placeholder hidden until Play mode
+            // supplies the first real animation frame.
+            coin.gameObject.SetActive(true);
+
             if (amountLabel == null)
             {
                 GameObject labelObject = new GameObject(
