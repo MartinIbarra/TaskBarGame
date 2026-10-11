@@ -7,13 +7,22 @@ namespace TaskbarTactics.Presentation
 {
     public sealed class WindowModeController : MonoBehaviour
     {
+        private const string HudAmbientResourcePath = "Audio/UI/antorchAmbient";
+
         [Header("Editable UI roots")]
         [SerializeField] private GameObject stripRoot;
         [SerializeField] private GameObject managementRoot;
         [SerializeField] private Camera gameCamera;
         [SerializeField] private bool startInManagementInEditor = true;
 
+        [Header("HUD ambient audio")]
+        [SerializeField, Range(0f, 1f)] private float hudAmbientVolume = 0.18f;
+
         private IWindowController windowController;
+        private AudioSource hudAmbientSource;
+        private AudioClip hudAmbientClip;
+        private bool hudAmbientStarted;
+        private bool hudAmbientWarningLogged;
 
         public WindowMode CurrentMode => windowController?.CurrentMode ?? WindowMode.Management;
 
@@ -27,6 +36,7 @@ namespace TaskbarTactics.Presentation
         private IEnumerator Start()
         {
             windowController = new WindowsWindowController();
+            ConfigureHudAmbientAudio();
             if (gameCamera != null)
             {
 #if UNITY_EDITOR
@@ -73,7 +83,60 @@ namespace TaskbarTactics.Presentation
 
             Application.targetFrameRate = mode == WindowMode.Strip ? 30 : 60;
             windowController?.SetMode(mode);
+            UpdateHudAmbientAudio(mode);
             StartCoroutine(RepositionAfterResize());
+        }
+
+        private void ConfigureHudAmbientAudio()
+        {
+            hudAmbientClip = Resources.Load<AudioClip>(HudAmbientResourcePath);
+            if (hudAmbientClip == null)
+            {
+                if (!hudAmbientWarningLogged)
+                {
+                    Debug.LogWarning($"HUD ambient audio was not found at Resources/{HudAmbientResourcePath}.");
+                    hudAmbientWarningLogged = true;
+                }
+
+                return;
+            }
+
+            hudAmbientSource = GetComponent<AudioSource>();
+            if (hudAmbientSource == null)
+            {
+                hudAmbientSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            hudAmbientSource.clip = hudAmbientClip;
+            hudAmbientSource.playOnAwake = false;
+            hudAmbientSource.loop = true;
+            hudAmbientSource.volume = hudAmbientVolume;
+            hudAmbientSource.spatialBlend = 0f;
+        }
+
+        private void UpdateHudAmbientAudio(WindowMode mode)
+        {
+            if (hudAmbientSource == null || hudAmbientClip == null)
+            {
+                return;
+            }
+
+            if (mode == WindowMode.Management)
+            {
+                if (hudAmbientStarted)
+                {
+                    hudAmbientSource.UnPause();
+                }
+                else
+                {
+                    hudAmbientSource.Play();
+                    hudAmbientStarted = true;
+                }
+            }
+            else if (hudAmbientSource.isPlaying)
+            {
+                hudAmbientSource.Pause();
+            }
         }
 
         private IEnumerator RepositionAfterResize()

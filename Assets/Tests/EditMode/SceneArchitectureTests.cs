@@ -25,6 +25,8 @@ namespace TaskbarTactics.Tests
             Assert.That(Object.FindFirstObjectByType<GameAppController>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<WindowModeController>(), Is.Not.Null);
             Assert.That(Object.FindFirstObjectByType<CombatPresenter>(), Is.Not.Null);
+            Assert.That(Object.FindFirstObjectByType<PartyContextPanelView>(FindObjectsInactive.Include), Is.Not.Null,
+                "Party's contextual info panel must be authored in Main.unity.");
         }
 
         [Test]

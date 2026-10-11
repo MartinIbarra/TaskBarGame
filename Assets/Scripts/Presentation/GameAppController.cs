@@ -1179,6 +1179,16 @@ namespace TaskbarTactics.Presentation
             return localization.Get(State.LanguageCode, key);
         }
 
+        public string LocalizedText(string key)
+        {
+            return Localize(key);
+        }
+
+        public string EnglishText(string key)
+        {
+            return localization.Get("en", key);
+        }
+
         private void SetAttention(string localizationKey)
         {
             HasAttention = true;

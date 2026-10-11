@@ -5,7 +5,8 @@
     "TaskbarTactics.Core",
     "TaskbarTactics.Infrastructure",
     "TaskbarTactics.Content",
-    "TaskbarTactics.Presentation"
+    "TaskbarTactics.Presentation",
+    "Unity.TextMeshPro"
   ],
   "includePlatforms": [
     "Editor"

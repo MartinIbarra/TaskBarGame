@@ -5,6 +5,7 @@ using System.Linq;
 using TMPro;
 using TaskbarTactics.Content;
 using TaskbarTactics.Core.Models;
+using TaskbarTactics.Core.Progression;
 using TaskbarTactics.Core.Stats;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,7 +15,20 @@ namespace TaskbarTactics.Presentation
     public sealed class ManagementUiController : MonoBehaviour
     {
         private const float UiSoundVolume = 0.65f;
+        private const float ChainDropSoundVolume = UiSoundVolume * 0.7f;
+        private const float SkillTreeDefaultZoom = 0.98f * 1.15f;
+        private const float SkillTreeUpperLeftViewportExpansion = 18f;
+        private const float TopRightButtonFirstX = 790.5f;
+        private const float TopRightButtonSpacing = 33f;
+        private const float InventoryMiddleSectionVerticalShift = 30f;
+        private const float InventoryMiddleSectionHorizontalShift = 7f;
+        private const float InventoryExperienceBarWidth = 160f;
+        private const float InventoryExperienceBarHeight = 120f;
+        private const string AudioMutedPreferenceKey = "TaskbarTactics.AudioMuted";
+        private const string AudioOnSpritePath = "UI/AudioOn";
+        private const string AudioOffSpritePath = "UI/AudioOff";
         private static readonly Vector2 SkillTreePreviewCenter = new Vector2(320f, -320f);
+        private static readonly Vector2 SkillTreeInitialFocusPoint = new Vector2(360f, -336f);
 
         private enum SkillTreePreviewNodeKind
         {
@@ -27,6 +41,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private List<Button> tabButtons = new List<Button>();
         [SerializeField] private List<GameObject> panels = new List<GameObject>();
         [SerializeField] private Button closeButton;
+        [SerializeField] private Button audioToggleButton;
         [SerializeField] private Button settingsShortcutButton;
         [SerializeField] private Button quitShortcutButton;
 
@@ -35,6 +50,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private List<Button> formationButtons = new List<Button>();
         [SerializeField] private List<FormationSlotView> formationSlots = new List<FormationSlotView>();
         [SerializeField] private List<Sprite> formationHeroIcons = new List<Sprite>();
+        [SerializeField] private PartyContextPanelView partyContextPanel;
         [SerializeField] private TMP_Text partySummary;
         [SerializeField] private TMP_Text skillSummary;
         [SerializeField] private TMP_Text synergySummary;
@@ -45,8 +61,11 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private InventorySlotGridView inventoryGrid;
         [SerializeField] private EquipmentPreviewLayoutView equipmentPreview;
         [SerializeField] private TMP_Text heroStatsSummary;
+        private HeroStatsPanelView heroStatsPanel;
         [SerializeField] private TMP_Text heroIdentitySummary;
         [SerializeField] private List<Button> equipmentHeroTabs = new List<Button>();
+        private Image equipmentHeroExperienceFrame;
+        private Image equipmentHeroExperienceFill;
         [SerializeField] private SilverCurrencyHud silverCurrencyHud;
         [SerializeField] private ItemTooltipView itemTooltip;
 
@@ -79,6 +98,9 @@ namespace TaskbarTactics.Presentation
         private GameAppController app;
         private string activeHeroId = "warrior";
         private int activeFormationPreset;
+        private bool partyContextShowsFormation;
+        private readonly Dictionary<string, Sprite[]> partyContextHeroIdleSprites =
+            new Dictionary<string, Sprite[]>();
         private int activePanelIndex;
         private Sprite commandNormalSprite;
         private Sprite commandPressedSprite;
@@ -96,14 +118,31 @@ namespace TaskbarTactics.Presentation
         private Button quitConfirmationYesButton;
         private Button quitConfirmationNoButton;
         private AudioClip formationSelectClip;
+        private AudioClip chainDropClip;
+        private bool audioMuted;
         private const float SwordAnimationFrameDuration = 0.12f;
         private const float QuitConfirmationDropDuration = 0.34f;
         private const float QuitConfirmationPanelWidth = 280f;
         private const float QuitConfirmationPanelHeight = 93.6f;
-        private static readonly Vector2 QuitConfirmationPanelFinalPosition = new Vector2(909f, -64f);
+        private static readonly Vector2 QuitConfirmationPanelFinalPosition = new Vector2(909f, -52f);
         private static readonly Vector2 QuitConfirmationPanelStartPosition = new Vector2(909f, 84f);
         private static TMP_FontAsset shadowPixelTitleFont;
         private static Material shadowPixelTitleMaterial;
+        private static TMP_FontAsset cinzelUiFont;
+        private static TMP_FontAsset alegreyaUiFont;
+        private readonly Vector3[] partyContextPanelCornerBuffer = new Vector3[4];
+
+        private static TMP_FontAsset LoadCinzelUiFont()
+        {
+            return cinzelUiFont ?? (cinzelUiFont =
+                Resources.Load<TMP_FontAsset>("UI/Fonts/TMP/Cinzel SemiBold"));
+        }
+
+        private static TMP_FontAsset LoadAlegreyaUiFont()
+        {
+            return alegreyaUiFont ?? (alegreyaUiFont =
+                Resources.Load<TMP_FontAsset>("UI/Fonts/TMP/Alegreya Medium"));
+        }
 
         public void Configure(
             IEnumerable<Button> navigation,
@@ -168,6 +207,12 @@ namespace TaskbarTactics.Presentation
         public void Bind(GameAppController targetApp, WindowModeController window)
         {
             app = targetApp;
+            HeroState initiallySelectedHero = app.State.Party.Heroes.FirstOrDefault(hero => hero.IsSelected);
+            if (initiallySelectedHero != null)
+            {
+                activeHeroId = initiallySelectedHero.DefinitionId;
+            }
+
             EnsureSilverCurrencyHud();
             silverCurrencyHud?.Bind(app);
             tabButtons = tabButtons
@@ -186,6 +231,7 @@ namespace TaskbarTactics.Presentation
             ApplyInventoryPanelLayout();
             RemoveEquipmentPreviewLayoutBackground();
             EnsureHeroStatsSummary();
+            EnsureHeroStatsPanel();
             RemoveMapSubLayoutBackground();
             ApplyMapPanelLayout();
             ApplyMapCommandLayout();
@@ -213,6 +259,12 @@ namespace TaskbarTactics.Presentation
             ApplyCommandButtonStates();
             app.StateChanged += Refresh;
             closeButton.onClick.AddListener(window.ShowStrip);
+            if (audioToggleButton != null)
+            {
+                audioToggleButton.onClick.AddListener(ToggleAudioMute);
+                SetAudioMuted(PlayerPrefs.GetInt(AudioMutedPreferenceKey, 0) == 1, false);
+            }
+
             settingsShortcutButton?.onClick.AddListener(() => ShowPanel(4));
             quitShortcutButton?.onClick.AddListener(ShowQuitConfirmation);
             quitButton.onClick.AddListener(app.Quit);
@@ -230,13 +282,22 @@ namespace TaskbarTactics.Presentation
             for (int i = 0; i < tabButtons.Count; i++)
             {
                 int captured = i;
-                tabButtons[i].onClick.AddListener(() => ShowPanel(captured));
+                tabButtons[i].onClick.AddListener(() => SelectMenuCommand(captured));
             }
 
             for (int i = 0; i < formationButtons.Count; i++)
             {
                 int captured = i;
                 formationButtons[i].onClick.AddListener(() => SelectFormationPreset(captured));
+            }
+
+            for (int i = 0; i < heroButtons.Count; i++)
+            {
+                int captured = i;
+                if (heroButtons[i] != null)
+                {
+                    heroButtons[i].onClick.AddListener(() => SelectHero(captured));
+                }
             }
 
             for (int i = 0; i < routeButtons.Count && i < 3; i++)
@@ -450,10 +511,10 @@ namespace TaskbarTactics.Presentation
 
         private void ApplyMapCommandLayout()
         {
-            const float mapCommandWidth = 150.4f;
-            const float mapCommandHeight = 54.4f;
+            const float mapCommandWidth = 180f;
+            const float mapCommandHeight = 54f;
             const float mapCommandX = 44f;
-            float[] routeYPositions = { -114f, -176f, -238f };
+            float[] routeYPositions = { -160f, -214f, -268f };
 
             for (int i = 0; i < routeButtons.Count && i < 3; i++)
             {
@@ -472,8 +533,11 @@ namespace TaskbarTactics.Presentation
                 RectTransform rect = startExpeditionButton.transform as RectTransform;
                 if (rect != null)
                 {
-                    rect.anchoredPosition = new Vector2(mapCommandX, -292f);
-                    rect.sizeDelta = new Vector2(mapCommandWidth, mapCommandHeight);
+                    const float startWidth = 198f;
+                    rect.anchoredPosition = new Vector2(
+                        mapCommandX - (startWidth - mapCommandWidth) * 0.5f,
+                        -352f);
+                    rect.sizeDelta = new Vector2(startWidth, 70f);
                 }
             }
         }
@@ -486,8 +550,14 @@ namespace TaskbarTactics.Presentation
             }
 
             Transform mapPanel = panels[3].transform;
-            SetTopLeftPosition(mapPanel.Find("Map Visual"), new Vector2(260f, -38f));
-            SetTopLeftPosition(mapPanel.Find("Map Frame"), new Vector2(252f, -30f));
+            Transform mapVisual = mapPanel.Find("Map Visual");
+            SetTopLeftPosition(mapVisual, new Vector2(248f, -12f));
+            SetTopLeftSize(mapVisual, new Vector2(433f, 421f));
+
+            Transform mapFrame = mapPanel.Find("Map Frame");
+            SetTopLeftPosition(mapFrame, new Vector2(240f, -4f));
+            SetTopLeftSize(mapFrame, new Vector2(449f, 438f));
+
             SetTopLeftPosition(mapPanel.Find("Route Preference Legend"), new Vector2(-6f, -304f));
             SetTopLeftPosition(mapPanel.Find("Act Selector"), new Vector2(688f, -150f));
         }
@@ -501,16 +571,26 @@ namespace TaskbarTactics.Presentation
             }
         }
 
+        private static void SetTopLeftSize(Transform target, Vector2 size)
+        {
+            RectTransform rect = target as RectTransform;
+            if (rect != null)
+            {
+                rect.sizeDelta = size;
+            }
+        }
+
         private void ApplyMapCommandLabels()
         {
-            const float routeFontSize = 15.84f;
-            const float startFontSize = 20.592f;
+            const float routeFontSize = 17f;
+            const float startFontSize = 25f;
 
             for (int i = 0; i < routeButtons.Count && i < 3; i++)
             {
                 TMP_Text label = routeButtons[i]?.GetComponentInChildren<TMP_Text>(true);
                 if (label != null)
                 {
+                    label.font = LoadCinzelUiFont() ?? label.font;
                     label.fontSize = routeFontSize;
                     label.enableAutoSizing = true;
                     label.fontSizeMin = 8f;
@@ -523,6 +603,7 @@ namespace TaskbarTactics.Presentation
             TMP_Text startLabel = startExpeditionButton?.GetComponentInChildren<TMP_Text>(true);
             if (startLabel != null)
             {
+                startLabel.font = LoadCinzelUiFont() ?? startLabel.font;
                 startLabel.fontSize = startFontSize;
                 startLabel.enableAutoSizing = true;
                 startLabel.fontSizeMin = 10f;
@@ -540,7 +621,14 @@ namespace TaskbarTactics.Presentation
             }
 
             RectTransform rect = mapSummary.rectTransform;
-            rect.anchoredPosition = new Vector2(44f, -42f);
+            rect.anchoredPosition = new Vector2(24f, -58f);
+            rect.sizeDelta = new Vector2(200f, 104f);
+            mapSummary.font = LoadCinzelUiFont() ?? mapSummary.font;
+            mapSummary.fontSize = 17f;
+            mapSummary.enableAutoSizing = false;
+            mapSummary.richText = true;
+            mapSummary.overrideColorTags = false;
+            mapSummary.alignment = TextAlignmentOptions.Top | TextAlignmentOptions.Center;
         }
 
         private void ApplyTitleFont()
@@ -641,26 +729,90 @@ namespace TaskbarTactics.Presentation
             RectTransform rect = layout.rectTransform;
             rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(830f, -8f);
-            rect.sizeDelta = new Vector2(115.967f, 41.584f);
+            rect.anchoredPosition = new Vector2(759f, 1f);
+            rect.sizeDelta = new Vector2(190f, 65f);
             layout.transform.SetAsFirstSibling();
-            layout.gameObject.SetActive(false);
+            layout.gameObject.SetActive(true);
+
+            ShowTopRightButtonImages();
         }
 
         private void ApplyTopRightButtonOffset()
         {
-            Button[] buttons = { closeButton, settingsShortcutButton, quitShortcutButton };
-            float[] xPositions = { 831f, 870f, 909f };
+            Button[] buttons = { closeButton, audioToggleButton, settingsShortcutButton, quitShortcutButton };
+            float[] xPositions =
+            {
+                TopRightButtonFirstX,
+                TopRightButtonFirstX + TopRightButtonSpacing,
+                TopRightButtonFirstX + TopRightButtonSpacing * 2f,
+                TopRightButtonFirstX + TopRightButtonSpacing * 3f
+            };
             for (int i = 0; i < buttons.Length; i++)
             {
                 Button button = buttons[i];
                 RectTransform rect = button != null ? button.transform as RectTransform : null;
                 if (rect != null)
                 {
-                    rect.anchoredPosition = new Vector2(xPositions[i], -10f);
-                    rect.localScale = new Vector3(0.8f, 0.8f, 1f);
+                    rect.anchoredPosition = new Vector2(xPositions[i], -17.5f);
+                    rect.sizeDelta = new Vector2(33f, 31f);
+                    rect.localScale = Vector3.one;
                 }
             }
+        }
+
+        private void ShowTopRightButtonImages()
+        {
+            Button[] buttons = { closeButton, audioToggleButton, settingsShortcutButton, quitShortcutButton };
+            foreach (Button button in buttons)
+            {
+                if (button == null || button.image == null)
+                {
+                    continue;
+                }
+
+                ColorBlock colors = button.colors;
+                colors.normalColor = Color.white;
+                colors.highlightedColor = Color.white;
+                colors.pressedColor = new Color(0.9f, 0.9f, 0.9f, 1f);
+                colors.selectedColor = Color.white;
+                colors.disabledColor = Color.white;
+                button.colors = colors;
+                button.image.color = Color.white;
+            }
+        }
+
+        private void ToggleAudioMute()
+        {
+            SetAudioMuted(!audioMuted, true);
+        }
+
+        private void SetAudioMuted(bool muted, bool savePreference)
+        {
+            audioMuted = muted;
+            AudioListener.volume = muted ? 0f : 1f;
+
+            if (savePreference)
+            {
+                PlayerPrefs.SetInt(AudioMutedPreferenceKey, muted ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+
+            if (audioToggleButton?.image == null)
+            {
+                return;
+            }
+
+            Sprite stateSprite = Resources.Load<Sprite>(muted ? AudioOffSpritePath : AudioOnSpritePath);
+            if (stateSprite == null)
+            {
+                Debug.LogWarning($"Audio toggle sprite was not found at Resources/{(muted ? AudioOffSpritePath : AudioOnSpritePath)}.", audioToggleButton);
+                return;
+            }
+
+            audioToggleButton.image.sprite = stateSprite;
+            audioToggleButton.image.type = Image.Type.Simple;
+            audioToggleButton.image.preserveAspect = true;
+            audioToggleButton.image.color = Color.white;
         }
 
         public bool AssignHeroToSlot(string heroId, FormationPosition position)
@@ -705,6 +857,7 @@ namespace TaskbarTactics.Presentation
             }
 
             string heroId = app.Catalog.Heroes[index].Id;
+            partyContextShowsFormation = false;
             app.SelectOrReplaceHero(heroId, activeHeroId);
             HeroState clicked = app.State.Party.GetHero(heroId);
             activeHeroId = clicked != null && clicked.IsSelected
@@ -736,6 +889,12 @@ namespace TaskbarTactics.Presentation
             RefreshTabSprites();
             BringResetButtonForward();
             Refresh();
+        }
+
+        private void SelectMenuCommand(int index)
+        {
+            PlayUiSound(chainDropClip, ChainDropSoundVolume);
+            ShowPanel(index);
         }
 
         public void ShowMapAct(int actNumber)
@@ -788,6 +947,7 @@ namespace TaskbarTactics.Presentation
 
         private void SelectFormationPreset(int index)
         {
+            partyContextShowsFormation = true;
             RemapSelectedHeroesToFormation(index);
             activeFormationPreset = index;
             PlayUiSound(formationSelectClip);
@@ -821,11 +981,12 @@ namespace TaskbarTactics.Presentation
             HidePanelTorchPairs();
 
             mapSummary.text =
-                $"{app.State.Expedition.CurrentNodeId}\n" +
-                $"Explored {app.State.Expedition.CompletedNodes}/{app.Catalog.Map.Nodes.Count}";
+                $"<size=17>Explored <color=#F7D36A>{app.State.Expedition.CompletedNodes}/{app.Catalog.Map.Nodes.Count}</color></size>\n" +
+                "\n<size=14>DIFFICULTY</size>";
             mapUi?.Refresh(app);
             ApplyStartButtonState();
             RefreshFormationButtonHighlight();
+            RefreshPartyContextPanel();
             for (int i = 0; i < routeButtons.Count && i < 3; i++)
             {
                 bool selectedRoute = (int)app.State.Party.RoutePreference == i;
@@ -839,6 +1000,7 @@ namespace TaskbarTactics.Presentation
                     : Image.Type.Simple;
                 routeButtons[i].image.preserveAspect = menuCommandSprite == null;
                 routeButtons[i].image.color = selectedRoute ? Color.white : new Color(1f, 1f, 1f, 0.88f);
+                ApplyRouteSelectionGlow(routeButtons[i], selectedRoute);
                 TMP_Text label = routeButtons[i].GetComponentInChildren<TMP_Text>(true);
                 if (label != null)
                 {
@@ -884,6 +1046,123 @@ namespace TaskbarTactics.Presentation
             }
         }
 
+        private void RefreshPartyContextPanel()
+        {
+            if (partyContextPanel == null || app == null)
+            {
+                return;
+            }
+
+            AlignPartyContextPanelTopWithHeroRoster();
+
+            Sprite frameSprite = Resources.Load<Sprite>("HeroClasses/empty");
+            if (partyContextShowsFormation)
+            {
+                int presetIndex = Mathf.Clamp(activeFormationPreset, 0, 2);
+                Sprite formationIcon = null;
+                if (presetIndex < formationButtons.Count && formationButtons[presetIndex] != null)
+                {
+                    Image icon = formationButtons[presetIndex].transform.Find("Icon")?.GetComponent<Image>();
+                    formationIcon = icon != null ? icon.sprite : null;
+                }
+
+                string key = $"party.info.formation.{presetIndex}.";
+                partyContextPanel.ShowFormation(
+                    frameSprite,
+                    formationIcon,
+                    app.EnglishText("party.info.title.formation"),
+                    app.EnglishText(key + "name"),
+                    app.EnglishText(key + "type"),
+                    app.EnglishText(key + "description"),
+                    app.EnglishText("party.info.label.best_for"),
+                    app.EnglishText(key + "best_for"));
+                return;
+            }
+
+            HeroDefinition definition = app.Catalog.FindHero(activeHeroId);
+            if (definition == null)
+            {
+                return;
+            }
+
+            string heroKey = $"party.info.hero.{definition.Id}.";
+            partyContextPanel.ShowHero(
+                frameSprite,
+                HeroFormationIcon(definition.Id),
+                PartyContextHeroIdleSprites(definition.Id),
+                app.EnglishText("party.info.title.hero"),
+                PartyClassDisplayName(definition.Id, definition.DisplayNameEn),
+                app.EnglishText(heroKey + "role"),
+                app.EnglishText(heroKey + "description"),
+                app.EnglishText("party.info.label.strong_in"),
+                app.EnglishText(heroKey + "strengths"),
+                definition.Color);
+        }
+
+        private void AlignPartyContextPanelTopWithHeroRoster()
+        {
+            if (heroButtons.Count < 4 || heroButtons[0] == null || heroButtons[3] == null ||
+                partyContextPanel == null)
+            {
+                return;
+            }
+
+            RectTransform firstRowFrame = heroButtons[0].transform.Find("Empty Class Frame") as RectTransform;
+            RectTransform secondRowFrame = heroButtons[3].transform.Find("Empty Class Frame") as RectTransform;
+            RectTransform panelRect = partyContextPanel.transform as RectTransform;
+            RectTransform parentRect = panelRect != null ? panelRect.parent as RectTransform : null;
+            if (firstRowFrame == null || secondRowFrame == null || panelRect == null || parentRect == null)
+            {
+                return;
+            }
+
+            firstRowFrame.GetWorldCorners(partyContextPanelCornerBuffer);
+            float topY = parentRect.InverseTransformPoint(partyContextPanelCornerBuffer[1]).y - 4f;
+            secondRowFrame.GetWorldCorners(partyContextPanelCornerBuffer);
+            float bottomY = parentRect.InverseTransformPoint(partyContextPanelCornerBuffer[0]).y + 4f;
+            float guideCenterY = (topY + bottomY) * 0.5f;
+            float parentUnitsPerPanelUnit = parentRect.InverseTransformVector(
+                panelRect.TransformVector(Vector3.up)).y;
+            if (topY <= bottomY || parentUnitsPerPanelUnit <= 0f)
+            {
+                return;
+            }
+
+            // Keep the authored panel size; center it inside the roster's vertical guides.
+            float panelHeightInParent = panelRect.rect.height * parentUnitsPerPanelUnit;
+            Rect parentBounds = parentRect.rect;
+            float anchorReferenceY = Mathf.Lerp(
+                parentBounds.yMin,
+                parentBounds.yMax,
+                panelRect.anchorMin.y);
+            panelRect.anchoredPosition = new Vector2(
+                panelRect.anchoredPosition.x,
+                guideCenterY - panelHeightInParent * (0.5f - panelRect.pivot.y) - anchorReferenceY);
+        }
+
+        private Sprite[] PartyContextHeroIdleSprites(string heroId)
+        {
+            if (partyContextHeroIdleSprites.TryGetValue(heroId, out Sprite[] cachedSprites))
+            {
+                return cachedSprites;
+            }
+
+            string animationId = EquipmentPreviewLayoutView.LegacyHeroAnimationId(heroId);
+            List<Sprite> sprites = new List<Sprite>(3);
+            for (int frame = 1; frame <= 3; frame++)
+            {
+                Sprite sprite = Resources.Load<Sprite>($"Heroes/{animationId}/idle_{frame}");
+                if (sprite != null)
+                {
+                    sprites.Add(sprite);
+                }
+            }
+
+            Sprite[] loadedSprites = sprites.ToArray();
+            partyContextHeroIdleSprites.Add(heroId, loadedSprites);
+            return loadedSprites;
+        }
+
         private void Update()
         {
             if (!swordAnimationActive || swordAnimationFrames.Length == 0 ||
@@ -922,7 +1201,7 @@ namespace TaskbarTactics.Presentation
 
             equipmentPreview?.SetOwner(this);
             ApplyEquipmentPreviewPosition();
-            equipmentPreview?.RefreshHero(activeHeroId);
+            equipmentPreview?.RefreshHero(activeHeroId, HeroFormationIcon(activeHeroId));
             equipmentPreview?.RefreshEquippedItems(
                 app.Catalog,
                 app.State.Inventory,
@@ -951,9 +1230,9 @@ namespace TaskbarTactics.Presentation
                 heroStatsSummary = statsObject.GetComponent<TextMeshProUGUI>();
             }
 
-            heroStatsSummary.font = inventorySummary != null
+            heroStatsSummary.font = LoadAlegreyaUiFont() ?? (inventorySummary != null
                 ? inventorySummary.font
-                : heroStatsSummary.font;
+                : heroStatsSummary.font);
             heroStatsSummary.fontSize = 13f;
             heroStatsSummary.color = new Color(0.96f, 0.98f, 1f, 1f);
             heroStatsSummary.alignment = TextAlignmentOptions.TopLeft;
@@ -964,9 +1243,39 @@ namespace TaskbarTactics.Presentation
             RectTransform rect = heroStatsSummary.rectTransform;
             rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(740f, -122f);
-            rect.sizeDelta = new Vector2(220f, 220f);
+            // Keep the current top edge while giving the expanded stat column room to grow downward.
+            rect.anchoredPosition = new Vector2(740f, -162f);
+            rect.sizeDelta = new Vector2(220f, 300f);
             heroStatsSummary.transform.SetAsLastSibling();
+        }
+
+        private void EnsureHeroStatsPanel()
+        {
+            if (heroStatsPanel != null || panels.Count <= 2 || panels[2] == null)
+            {
+                return;
+            }
+
+            Transform existing = panels[2].transform.Find("Hero Stats Panel");
+            heroStatsPanel = existing != null
+                ? existing.GetComponent<HeroStatsPanelView>()
+                : null;
+            if (heroStatsPanel == null)
+            {
+                GameObject panelObject = new GameObject(
+                    "Hero Stats Panel",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image),
+                    typeof(HeroStatsPanelView));
+                panelObject.transform.SetParent(panels[2].transform, false);
+                heroStatsPanel = panelObject.GetComponent<HeroStatsPanelView>();
+            }
+
+            heroStatsPanel.Configure(LoadAlegreyaUiFont() ??
+                (inventorySummary != null ? inventorySummary.font : null));
+            heroStatsPanel.transform.SetAsLastSibling();
+            heroStatsPanel.gameObject.SetActive(false);
         }
 
         private void EnsureHeroIdentitySummary()
@@ -991,9 +1300,9 @@ namespace TaskbarTactics.Presentation
                 heroIdentitySummary = identityObject.GetComponent<TextMeshProUGUI>();
             }
 
-            heroIdentitySummary.font = inventorySummary != null
+            heroIdentitySummary.font = LoadAlegreyaUiFont() ?? (inventorySummary != null
                 ? inventorySummary.font
-                : heroIdentitySummary.font;
+                : heroIdentitySummary.font);
             heroIdentitySummary.fontSize = 15f;
             heroIdentitySummary.fontStyle = FontStyles.Bold;
             heroIdentitySummary.color = new Color(0.96f, 0.98f, 1f, 1f);
@@ -1005,7 +1314,9 @@ namespace TaskbarTactics.Presentation
             RectTransform rect = heroIdentitySummary.rectTransform;
             rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(460f, -249f);
+            rect.anchoredPosition = new Vector2(
+                460f - InventoryMiddleSectionHorizontalShift,
+                -259f - InventoryMiddleSectionVerticalShift);
             rect.sizeDelta = new Vector2(250f, 30f);
             heroIdentitySummary.transform.SetAsLastSibling();
         }
@@ -1024,10 +1335,12 @@ namespace TaskbarTactics.Presentation
             {
                 heroStatsSummary.text = string.Empty;
                 heroIdentitySummary.text = string.Empty;
+                heroStatsPanel?.gameObject.SetActive(false);
                 return;
             }
 
             HeroStats stats = app.Catalog.ResolveHeroStats(hero, app.State.Inventory);
+            heroStatsPanel?.Refresh(hero, stats);
             string heroDisplayName =
                 PartyClassDisplayName(hero.DefinitionId, app.HeroName(hero.DefinitionId)).ToUpperInvariant();
             if (hero.DefinitionId == "magic_warrior")
@@ -1047,15 +1360,46 @@ namespace TaskbarTactics.Presentation
                 $"ASPD {FormatStat(stats.AttackSpeed)}\n" +
                 $"C.SPD {FormatStat(stats.CastSpeed)}\n" +
                 $"CRIT {FormatStat(stats.CriticalChance)}%\n" +
-                $"EVA {FormatStat(stats.Evasion)}%";
+                $"EVA {FormatStat(stats.Evasion)}%\n" +
+                $"RANGE {stats.AttackRange.ToString(CultureInfo.InvariantCulture)}\n" +
+                $"C.DMG {FormatStat(stats.CriticalDamage)}x\n" +
+                $"ACC {FormatStat(stats.Accuracy)}%\n" +
+                $"HP.REGEN {FormatStat(stats.HealthRegeneration)}\n" +
+                $"MP.REGEN {FormatStat(stats.ManaRegeneration)}\n" +
+                $"CDR {FormatStat(stats.CooldownReduction)}%";
             bool showInventory = activePanelIndex == 2;
-            heroStatsSummary.gameObject.SetActive(showInventory);
+            heroStatsSummary.gameObject.SetActive(false);
+            heroStatsPanel?.gameObject.SetActive(showInventory);
             heroIdentitySummary.gameObject.SetActive(showInventory);
         }
 
         private static string FormatStat(float value)
         {
             return value.ToString("0.##", CultureInfo.InvariantCulture);
+        }
+
+        private static void ApplyRouteSelectionGlow(Button button, bool selected)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            Outline outline = button.GetComponent<Outline>();
+            if (outline == null && selected)
+            {
+                outline = button.gameObject.AddComponent<Outline>();
+            }
+
+            if (outline == null)
+            {
+                return;
+            }
+
+            outline.effectColor = new Color(1f, 0.76f, 0.2f, 0.98f);
+            outline.effectDistance = new Vector2(5f, 5f);
+            outline.useGraphicAlpha = true;
+            outline.enabled = selected;
         }
 
         private static Color RouteDifficultyColor(int routeIndex)
@@ -1102,7 +1446,9 @@ namespace TaskbarTactics.Presentation
             RectTransform rect = equipmentPreview.transform as RectTransform;
             if (rect != null)
             {
-                rect.anchoredPosition = new Vector2(460f, -145f);
+                rect.anchoredPosition = new Vector2(
+                    460f - InventoryMiddleSectionHorizontalShift,
+                    -145f - InventoryMiddleSectionVerticalShift);
             }
         }
 
@@ -1125,10 +1471,138 @@ namespace TaskbarTactics.Presentation
                 TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
                 if (label != null)
                 {
+                    label.font = LoadAlegreyaUiFont() ?? label.font;
                     label.text = ShortHeroLabel(definition.Id);
                     label.color = HeroTabTextColor(definition.Id, selected);
                     label.fontStyle = selected ? FontStyles.Bold : FontStyles.Normal;
                 }
+
+            }
+
+            EnsureEquipmentHeroExperienceBars();
+            ApplyEquipmentHeroExperienceBarLayout();
+            RefreshEquipmentHeroExperienceBar(
+                activeHeroId,
+                app.State.Party.GetHero(activeHeroId));
+        }
+
+        private void EnsureEquipmentHeroExperienceBars()
+        {
+            if (panels.Count <= 2 || panels[2] == null || equipmentHeroExperienceFrame != null)
+            {
+                return;
+            }
+
+            Sprite layoutSprite = LoadExperienceBarSprite("layoutexp");
+            Transform parent = heroIdentitySummary != null && heroIdentitySummary.transform.parent != null
+                ? heroIdentitySummary.transform.parent
+                : panels[2].transform;
+            GameObject barObject = new GameObject(
+                "Selected Hero Experience Bar",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
+            barObject.transform.SetParent(parent, false);
+
+            equipmentHeroExperienceFrame = barObject.GetComponent<Image>();
+            equipmentHeroExperienceFrame.sprite = layoutSprite;
+            equipmentHeroExperienceFrame.type = Image.Type.Simple;
+            equipmentHeroExperienceFrame.preserveAspect = false;
+            equipmentHeroExperienceFrame.raycastTarget = false;
+
+            GameObject fillObject = new GameObject(
+                "Experience Fill",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
+            fillObject.transform.SetParent(barObject.transform, false);
+
+            equipmentHeroExperienceFill = fillObject.GetComponent<Image>();
+            equipmentHeroExperienceFill.type = Image.Type.Filled;
+            equipmentHeroExperienceFill.fillMethod = Image.FillMethod.Horizontal;
+            equipmentHeroExperienceFill.fillOrigin = 0;
+            equipmentHeroExperienceFill.fillClockwise = true;
+            equipmentHeroExperienceFill.fillAmount = 0f;
+            equipmentHeroExperienceFill.preserveAspect = false;
+            equipmentHeroExperienceFill.raycastTarget = false;
+
+            if (heroIdentitySummary != null)
+            {
+                barObject.transform.SetSiblingIndex(heroIdentitySummary.transform.GetSiblingIndex());
+            }
+        }
+
+        private void ApplyEquipmentHeroExperienceBarLayout()
+        {
+            if (equipmentHeroExperienceFrame == null)
+            {
+                return;
+            }
+
+            RectTransform rect = equipmentHeroExperienceFrame.rectTransform;
+            RectTransform identityRect = heroIdentitySummary != null
+                ? heroIdentitySummary.rectTransform
+                : null;
+            rect.anchorMin = identityRect != null ? identityRect.anchorMin : new Vector2(0f, 1f);
+            rect.anchorMax = identityRect != null ? identityRect.anchorMax : new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = identityRect != null
+                ? identityRect.anchoredPosition
+                : new Vector2(
+                    460f - InventoryMiddleSectionHorizontalShift,
+                    -259f - InventoryMiddleSectionVerticalShift);
+            rect.sizeDelta = new Vector2(
+                InventoryExperienceBarWidth,
+                InventoryExperienceBarHeight);
+
+            if (equipmentHeroExperienceFill != null)
+            {
+                RectTransform fillRect = equipmentHeroExperienceFill.rectTransform;
+                fillRect.anchorMin = Vector2.zero;
+                fillRect.anchorMax = Vector2.one;
+                fillRect.pivot = new Vector2(0.5f, 0.5f);
+                fillRect.offsetMin = Vector2.zero;
+                fillRect.offsetMax = Vector2.zero;
+            }
+        }
+
+        private void RefreshEquipmentHeroExperienceBar(string heroId, HeroState hero)
+        {
+            if (equipmentHeroExperienceFill == null)
+            {
+                return;
+            }
+
+            equipmentHeroExperienceFill.sprite = LoadExperienceBarSprite(ExperienceBarResourceName(heroId));
+            equipmentHeroExperienceFill.color = equipmentHeroExperienceFill.sprite != null
+                ? Color.white
+                : Color.clear;
+            RectTransform fillRect = equipmentHeroExperienceFill.rectTransform;
+            fillRect.localScale = Vector3.one;
+            fillRect.anchoredPosition = Vector2.zero;
+
+            long required = HeroProgression.ExperienceRequiredForLevel(hero?.Level ?? 1);
+            equipmentHeroExperienceFill.fillAmount = hero == null || required <= 0L
+                ? 0f
+                : Mathf.Clamp01((float)hero.Experience / required);
+        }
+
+        private static Sprite LoadExperienceBarSprite(string resourceName)
+        {
+            return Resources.Load<Sprite>($"UI/{resourceName}");
+        }
+
+        private static string ExperienceBarResourceName(string heroId)
+        {
+            switch (heroId)
+            {
+                case "warrior": return "sliderwar";
+                case "cleric": return "slidercleric";
+                case "mage": return "slidermage";
+                case "archer": return "sliderarcher";
+                case "rogue": return "sliderrogue";
+                case "magic_warrior": return "sliderspellblade";
+                default: return "layoutexp";
             }
         }
 
@@ -1141,6 +1615,8 @@ namespace TaskbarTactics.Presentation
                 equipmentPreview.gameObject.SetActive(showInventoryOnlyViews);
             }
 
+            heroStatsPanel?.gameObject.SetActive(showInventoryOnlyViews);
+
             foreach (Button tab in equipmentHeroTabs)
             {
                 if (tab != null)
@@ -1148,14 +1624,19 @@ namespace TaskbarTactics.Presentation
                     tab.gameObject.SetActive(showInventoryOnlyViews);
                 }
             }
+
+            if (equipmentHeroExperienceFrame != null)
+            {
+                equipmentHeroExperienceFrame.gameObject.SetActive(showInventoryOnlyViews);
+            }
         }
 
         private void ApplyCommandLayout()
         {
             const float commandStartY = 150f;
             const float commandSpacing = 67f;
-            const float commandWidth = 150.4f;
-            const float commandHeight = 54.4f;
+            const float commandWidth = 160f;
+            const float commandHeight = 60f;
 
             for (int i = 0; i < tabButtons.Count; i++)
             {
@@ -1180,6 +1661,7 @@ namespace TaskbarTactics.Presentation
                 if (label != null)
                 {
                     label.text = labels[i];
+                    label.font = LoadCinzelUiFont() ?? label.font;
                     if (i == 2)
                     {
                         label.fontSize = 15f;
@@ -1461,8 +1943,8 @@ namespace TaskbarTactics.Presentation
                 .Find("Skill Tree Viewport") as RectTransform;
             if (viewportRect != null)
             {
-                viewportRect.offsetMin = new Vector2(18f, 24f);
-                viewportRect.offsetMax = new Vector2(-18f, -24f);
+                viewportRect.offsetMin = new Vector2(-SkillTreeUpperLeftViewportExpansion, 0f);
+                viewportRect.offsetMax = new Vector2(0f, SkillTreeUpperLeftViewportExpansion);
             }
             DraggableMapView skillTreeView = panels[1].transform
                 .Find("Skill Tree Viewport")
@@ -1473,15 +1955,14 @@ namespace TaskbarTactics.Presentation
             EnsureSkillTreeCanvasSize(content);
             skillTreeView?.ConfigureCentered(
                 content,
-                0.72f,
+                SkillTreeDefaultZoom,
                 0.35f,
                 1.8f,
                 true,
                 new Vector2(420f, 420f),
                 true);
 
-            RectTransform nodeLayer = content?.Find("Interactive Skill Tree Nodes") as RectTransform;
-            skillTreeView?.CenterOnContentPoint(SkillTreeNodeCenter(nodeLayer), 0.72f);
+            skillTreeView?.CenterOnContentPoint(SkillTreeInitialFocusPoint, SkillTreeDefaultZoom);
         }
 
         private static Vector2 SkillTreeNodeCenter(RectTransform nodeLayer)
@@ -1926,7 +2407,8 @@ namespace TaskbarTactics.Presentation
 
         private void ApplyFormationClassFrameLayout()
         {
-            const float classFrameSize = 89.91f;
+            const float classFrameWidth = 89.91f * 1.05f * 1.05f * 1.1f * 1.05f * 1.05f * 1.05f * 1.05f;
+            const float classFrameHeight = 89.91f * 0.85f * 1.1f;
             for (int i = 0; i < heroButtons.Count; i++)
             {
                 Button button = heroButtons[i];
@@ -1938,17 +2420,17 @@ namespace TaskbarTactics.Presentation
                 RectTransform frame = button.transform.Find("Empty Class Frame") as RectTransform;
                 if (frame != null)
                 {
-                    frame.sizeDelta = new Vector2(classFrameSize, classFrameSize);
+                    frame.sizeDelta = new Vector2(classFrameWidth, classFrameHeight);
                 }
             }
         }
 
         private void ApplyHeroClassButtonLayout()
         {
-            const float startX = 24f;
+            const float startX = 34f;
             const float startY = 205f;
-            const float columnSpacing = 120f;
-            const float rowSpacing = 125f;
+            const float columnSpacing = 110f;
+            const float rowSpacing = 115f;
 
             for (int i = 0; i < heroButtons.Count; i++)
             {
@@ -1983,9 +2465,9 @@ namespace TaskbarTactics.Presentation
 
         private void ApplyHeroClassContentLayout()
         {
-            const float classFrameTopOffset = 15f;
+            const float classFrameTopOffset = 6f;
             const float iconTopOffset = -12f;
-            const float labelTopOffset = -77f;
+            const float labelTopOffset = -72f;
             for (int i = 0; i < heroButtons.Count; i++)
             {
                 Button button = heroButtons[i];
@@ -2011,8 +2493,10 @@ namespace TaskbarTactics.Presentation
                 TMP_Text label = button.transform.Find("Class Name")?.GetComponent<TMP_Text>();
                 if (label != null)
                 {
-                    label.fontSize = 12.5f;
+                    label.font = LoadAlegreyaUiFont() ?? label.font;
+                    label.fontSize = 13.5f;
                     label.fontStyle = FontStyles.Bold;
+                    label.fontWeight = FontWeight.Bold;
                     RectTransform labelRect = label.rectTransform;
                     labelRect.anchoredPosition = new Vector2(labelRect.anchoredPosition.x, labelTopOffset);
                 }
@@ -2328,8 +2812,8 @@ namespace TaskbarTactics.Presentation
 
         private void ApplyEquipmentHeroTabLayout()
         {
-            const float startX = 325f;
-            const float y = -325f;
+            const float startX = 338f - InventoryMiddleSectionHorizontalShift;
+            float y = -330f - InventoryMiddleSectionVerticalShift;
             const float width = 54f;
             const float height = 35f;
             const float gap = 48f;
@@ -2417,6 +2901,7 @@ namespace TaskbarTactics.Presentation
             quitConfirmationSprite = Resources.Load<Sprite>("UI/yn");
             LoadSwordAnimationFrames();
             formationSelectClip = Resources.Load<AudioClip>("Audio/UI/formation_select");
+            chainDropClip = Resources.Load<AudioClip>("Audio/UI/chaindrop");
         }
 
         private void EnsureQuitConfirmationOverlay()
@@ -2475,11 +2960,11 @@ namespace TaskbarTactics.Presentation
                     ConfigureQuitConfirmationButton(
                         quitConfirmationYesButton,
                         "Y",
-                        new Vector2(-34f, -62f));
+                        new Vector2(-34f, -58f));
                     ConfigureQuitConfirmationButton(
                         quitConfirmationNoButton,
                         "N",
-                        new Vector2(34f, -62f));
+                        new Vector2(34f, -58f));
                     quitConfirmationYesButton?.onClick.AddListener(ConfirmQuit);
                     quitConfirmationNoButton?.onClick.AddListener(HideQuitConfirmation);
                 }
@@ -2547,12 +3032,12 @@ namespace TaskbarTactics.Presentation
                 panelObject.transform,
                 "Quit Confirmation Yes",
                 "Y",
-                new Vector2(-34f, -62f));
+                new Vector2(-34f, -58f));
             quitConfirmationNoButton = CreateQuitConfirmationButton(
                 panelObject.transform,
                 "Quit Confirmation No",
                 "N",
-                new Vector2(34f, -62f));
+                new Vector2(34f, -58f));
             quitConfirmationYesButton.onClick.AddListener(ConfirmQuit);
             quitConfirmationNoButton.onClick.AddListener(HideQuitConfirmation);
 
@@ -2641,6 +3126,7 @@ namespace TaskbarTactics.Presentation
 
             quitConfirmationOverlay.transform.SetAsLastSibling();
             quitConfirmationOverlay.SetActive(true);
+            PlayUiSound(chainDropClip, ChainDropSoundVolume);
             if (quitConfirmationDropRoutine != null)
             {
                 StopCoroutine(quitConfirmationDropRoutine);
@@ -2737,7 +3223,7 @@ namespace TaskbarTactics.Presentation
             }
         }
 
-        private static void PlayUiSound(AudioClip clip)
+        private static void PlayUiSound(AudioClip clip, float volume = UiSoundVolume)
         {
             if (clip == null)
             {
@@ -2747,7 +3233,7 @@ namespace TaskbarTactics.Presentation
             AudioSource source = FindFirstObjectByType<AudioSource>();
             if (source != null)
             {
-                source.PlayOneShot(clip, UiSoundVolume);
+                source.PlayOneShot(clip, volume);
             }
         }
 
@@ -2917,7 +3403,7 @@ namespace TaskbarTactics.Presentation
                 swordAnimationActive = false;
                 swordAnimationTimer = 0f;
                 swordAnimationFrame = 0;
-                SetCloseButtonHorizontalPosition(831f);
+                SetCloseButtonHorizontalPosition(TopRightButtonFirstX);
                 if (closeButton?.image != null && barButtonSprite != null)
                 {
                     closeButton.image.sprite = barButtonSprite;
@@ -2936,7 +3422,7 @@ namespace TaskbarTactics.Presentation
             swordAnimationActive = true;
             swordAnimationTimer = 0f;
             swordAnimationFrame = 0;
-            SetCloseButtonHorizontalPosition(829f);
+            SetCloseButtonHorizontalPosition(TopRightButtonFirstX - 2f);
             closeButton.image.sprite = swordAnimationFrames[0];
             closeButton.image.type = Image.Type.Simple;
             closeButton.image.preserveAspect = true;
@@ -3038,7 +3524,6 @@ namespace TaskbarTactics.Presentation
                 Sprite icon = occupant != null ? HeroFormationIcon(occupant.DefinitionId) : null;
                 formationSlots[i].SetHero(icon, occupant != null ? occupant.DefinitionId : string.Empty);
             }
-
         }
 
         private void EnsureNavigationChains()

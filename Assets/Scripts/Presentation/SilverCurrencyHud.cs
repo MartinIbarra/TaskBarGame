@@ -10,9 +10,10 @@ namespace TaskbarTactics.Presentation
     {
         private const int CoinFrameCount = 8;
         private const float CoinFrameSeconds = 0.12f;
-        private const float HudWidth = 138.2865f;
-        private const float HudHeight = 42f;
-        private const float CoinPositionX = 36f;
+        private const float HudWidth = 190f;
+        private const float HudHeight = 65f;
+        private const float CoinPositionX = 35f;
+        private const float CoinPositionY = 2f;
         private static readonly Color GoldCoinColor = new Color(1f, 0.84f, 0.12f, 1f);
 
         // The source strip has slightly different transparent margins per frame.
@@ -54,7 +55,7 @@ namespace TaskbarTactics.Presentation
             {
                 root.anchorMin = root.anchorMax = new Vector2(0f, 1f);
                 root.pivot = new Vector2(0f, 1f);
-                root.anchoredPosition = new Vector2(113f, -5f);
+                root.anchoredPosition = new Vector2(113f, -2f);
                 root.sizeDelta = new Vector2(HudWidth, HudHeight);
             }
 
@@ -67,12 +68,14 @@ namespace TaskbarTactics.Presentation
                     typeof(Image));
                 backgroundObject.transform.SetParent(transform, false);
                 background = backgroundObject.GetComponent<Image>();
-                background.sprite = Resources.Load<Sprite>("UI/GoldCurrencyLayout");
+                background.sprite = Resources.Load<Sprite>("UI/TopCurrencySingleLayout");
                 background.type = Image.Type.Sliced;
                 background.preserveAspect = false;
                 background.raycastTarget = false;
                 SetFullRect(background.rectTransform);
             }
+
+            background.rectTransform.anchoredPosition = new Vector2(0f, 3f);
 
             if (coin == null)
             {
@@ -89,9 +92,10 @@ namespace TaskbarTactics.Presentation
                 coin.raycastTarget = false;
                 coin.rectTransform.anchorMin = coin.rectTransform.anchorMax = new Vector2(0f, 0.5f);
                 coin.rectTransform.pivot = new Vector2(0f, 0.5f);
-                coin.rectTransform.anchoredPosition = new Vector2(CoinPositionX, 0f);
-                coin.rectTransform.sizeDelta = new Vector2(30f, 30f);
+                coin.rectTransform.sizeDelta = new Vector2(28f, 28f);
             }
+
+            coin.rectTransform.anchoredPosition = new Vector2(CoinPositionX, CoinPositionY);
 
             // The editor-synced scene keeps the placeholder hidden until Play mode
             // supplies the first real animation frame.
@@ -106,17 +110,21 @@ namespace TaskbarTactics.Presentation
                     typeof(TextMeshProUGUI));
                 labelObject.transform.SetParent(transform, false);
                 amountLabel = labelObject.GetComponent<TextMeshProUGUI>();
-                amountLabel.font = Resources.Load<TMP_FontAsset>("UI/Fonts/VCR_OSD_MONO SDF");
-                amountLabel.fontSize = 16f;
-                amountLabel.color = new Color(0.9f, 0.9f, 0.9f, 1f);
+                amountLabel.font = Resources.Load<TMP_FontAsset>("UI/Fonts/TMP/Cinzel SemiBold");
+                amountLabel.fontSize = 15f;
+                amountLabel.color = new Color(0.88f, 0.72f, 0.34f, 1f);
+                amountLabel.outlineColor = new Color(0.06f, 0.04f, 0.02f, 0.9f);
+                amountLabel.outlineWidth = 0.08f;
+                amountLabel.characterSpacing = 1.5f;
                 amountLabel.alignment = TextAlignmentOptions.MidlineLeft;
                 amountLabel.textWrappingMode = TextWrappingModes.NoWrap;
                 amountLabel.raycastTarget = false;
                 amountLabel.rectTransform.anchorMin = amountLabel.rectTransform.anchorMax = new Vector2(0f, 0.5f);
                 amountLabel.rectTransform.pivot = new Vector2(0f, 0.5f);
-                amountLabel.rectTransform.anchoredPosition = new Vector2(70f, 0f);
-                amountLabel.rectTransform.sizeDelta = new Vector2(90f, 30f);
+                amountLabel.rectTransform.sizeDelta = new Vector2(76f, 28f);
             }
+
+            amountLabel.rectTransform.anchoredPosition = new Vector2(68f, 2f);
 
             background.transform.SetAsFirstSibling();
             coin.transform.SetAsLastSibling();
@@ -197,7 +205,7 @@ namespace TaskbarTactics.Presentation
                 coin.sprite = generatedFrames[frame];
                 coin.rectTransform.anchoredPosition = new Vector2(
                     CoinPositionX + CoinFramePositionOffsets[frame],
-                    0f);
+                    CoinPositionY);
                 frame = (frame + 1) % generatedFrames.Count;
                 yield return new WaitForSecondsRealtime(CoinFrameSeconds);
             }

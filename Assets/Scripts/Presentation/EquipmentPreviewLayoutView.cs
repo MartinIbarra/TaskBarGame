@@ -12,9 +12,14 @@ namespace TaskbarTactics.Presentation
     public sealed class EquipmentPreviewLayoutView : MonoBehaviour
     {
         private const string SlotRoot = "UI/EquipmentSlots/";
-        private const float SlotSize = 41.8f;
+        private const string HeroLayoutResourcePath = "UI/herolayout";
+        private const float SlotSize = 39.71f;
         private const float SlotPositionScale = 1.1f;
         private const float HeroPreviewVerticalOffset = 10f;
+        private const float HeroLayoutWidth = 300f;
+        private const float HeroLayoutHeight = 345f;
+        private const float HeroClassIconSize = 30.8f * 1.05f;
+        private const float HeroClassIconTopOffset = 145f;
         private static readonly EquipmentSlot[] DisplaySlots =
         {
             EquipmentSlot.Head,
@@ -42,6 +47,8 @@ namespace TaskbarTactics.Presentation
             new Dictionary<EquipmentSlot, Image>();
         private readonly Dictionary<EquipmentSlot, Image> emptySlotIcons =
             new Dictionary<EquipmentSlot, Image>();
+        private Image heroLayout;
+        private Image heroClassIcon;
         private Sprite[] heroIdleSprites;
         private Coroutine idleRoutine;
         private string activeHeroId;
@@ -75,9 +82,10 @@ namespace TaskbarTactics.Presentation
             }
         }
 
-        public void RefreshHero(string heroId)
+        public void RefreshHero(string heroId, Sprite classIcon)
         {
             CreatePlaceholders();
+            ApplyHeroClassIcon(classIcon);
             string animationId = LegacyHeroAnimationId(heroId);
             if (activeHeroId == animationId && heroPreview != null)
             {
@@ -149,7 +157,9 @@ namespace TaskbarTactics.Presentation
 
         public void CreatePlaceholders()
         {
+            EnsureHeroLayout();
             EnsureHeroPreview();
+            EnsureHeroClassIcon();
             foreach (EquipmentSlot slot in DisplaySlots)
             {
                 if (transform.Find($"Equipment Slot {slot}") == null)
@@ -160,6 +170,86 @@ namespace TaskbarTactics.Presentation
 
             ArrangeEquipmentSlots();
             ConfigureExistingSlotDropTargets();
+        }
+
+        private void EnsureHeroClassIcon()
+        {
+            if (heroClassIcon == null)
+            {
+                Transform existing = transform.Find("Hero Class Icon");
+                if (existing != null)
+                {
+                    heroClassIcon = existing.GetComponent<Image>();
+                }
+            }
+
+            if (heroClassIcon == null)
+            {
+                GameObject iconObject = new GameObject(
+                    "Hero Class Icon",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image));
+                iconObject.transform.SetParent(transform, false);
+                heroClassIcon = iconObject.GetComponent<Image>();
+            }
+
+            heroClassIcon.preserveAspect = true;
+            heroClassIcon.raycastTarget = false;
+            RectTransform iconRect = heroClassIcon.rectTransform;
+            iconRect.anchorMin = iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+            iconRect.pivot = new Vector2(0.5f, 0.5f);
+            iconRect.anchoredPosition = new Vector2(0f, HeroClassIconTopOffset);
+            iconRect.sizeDelta = new Vector2(HeroClassIconSize, HeroClassIconSize);
+            heroClassIcon.transform.SetSiblingIndex(heroLayout != null ? 1 : 0);
+        }
+
+        private void ApplyHeroClassIcon(Sprite classIcon)
+        {
+            if (heroClassIcon == null)
+            {
+                return;
+            }
+
+            heroClassIcon.sprite = classIcon;
+            heroClassIcon.color = classIcon != null ? Color.white : Color.clear;
+            heroClassIcon.gameObject.SetActive(classIcon != null);
+        }
+
+        private void EnsureHeroLayout()
+        {
+            if (heroLayout == null)
+            {
+                Transform existing = transform.Find("HeroLayout");
+                if (existing != null)
+                {
+                    heroLayout = existing.GetComponent<Image>();
+                }
+            }
+
+            if (heroLayout == null)
+            {
+                GameObject layoutObject = new GameObject(
+                    "HeroLayout",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(Image));
+                layoutObject.transform.SetParent(transform, false);
+                heroLayout = layoutObject.GetComponent<Image>();
+            }
+
+            heroLayout.sprite = Resources.Load<Sprite>(HeroLayoutResourcePath);
+            heroLayout.preserveAspect = true;
+            heroLayout.raycastTarget = false;
+            heroLayout.color = heroLayout.sprite != null ? Color.white : Color.clear;
+            heroLayout.gameObject.SetActive(heroLayout.sprite != null);
+
+            RectTransform layoutRect = heroLayout.rectTransform;
+            layoutRect.anchorMin = layoutRect.anchorMax = new Vector2(0.5f, 0.5f);
+            layoutRect.pivot = new Vector2(0.5f, 0.5f);
+            layoutRect.anchoredPosition = Vector2.zero;
+            layoutRect.sizeDelta = new Vector2(HeroLayoutWidth, HeroLayoutHeight);
+            heroLayout.transform.SetSiblingIndex(0);
         }
 
         private void EnsureHeroPreview()
@@ -335,7 +425,8 @@ namespace TaskbarTactics.Presentation
 
             if (heroPreview != null)
             {
-                heroPreview.transform.SetSiblingIndex(0);
+                heroPreview.transform.SetSiblingIndex(
+                    heroClassIcon != null ? 2 : heroLayout != null ? 1 : 0);
             }
         }
 
@@ -413,22 +504,22 @@ namespace TaskbarTactics.Presentation
                     position = new Vector2(106f, -80f);
                     break;
                 case EquipmentSlot.Earring1:
-                    position = new Vector2(-28f, 104f);
+                    position = new Vector2(-52f, 104f);
                     break;
                 case EquipmentSlot.Earring2:
-                    position = new Vector2(28f, 104f);
+                    position = new Vector2(52f, 104f);
                     break;
                 case EquipmentSlot.MainWeapon:
-                    position = new Vector2(-78f, -126f);
+                    position = new Vector2(-78f, -136f);
                     break;
                 case EquipmentSlot.Ring1:
-                    position = new Vector2(-26f, -126f);
+                    position = new Vector2(-32f, -136f);
                     break;
                 case EquipmentSlot.Ring2:
-                    position = new Vector2(26f, -126f);
+                    position = new Vector2(32f, -136f);
                     break;
                 case EquipmentSlot.SecondaryWeapon:
-                    position = new Vector2(78f, -126f);
+                    position = new Vector2(78f, -136f);
                     break;
                 default:
                     return Vector2.zero;
@@ -626,7 +717,7 @@ namespace TaskbarTactics.Presentation
             return generated;
         }
 
-        private static string LegacyHeroAnimationId(string heroId)
+        internal static string LegacyHeroAnimationId(string heroId)
         {
             switch (heroId)
             {

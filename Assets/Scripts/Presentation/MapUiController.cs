@@ -83,6 +83,7 @@ namespace TaskbarTactics.Presentation
         private static readonly Color ActBadgeText = new Color(0.2f, 0.1f, 0.03f, 1f);
         private const float ActTwoMarkerOffsetX = -75f;
         private const float ActTwoDefaultZoom = 1.5f;
+        private const bool ShowRoutePreferenceLegend = false;
 
         public event Action ActSelectionChanged;
 
@@ -236,6 +237,8 @@ namespace TaskbarTactics.Presentation
                 {
                     continue;
                 }
+
+                legend.Label.gameObject.SetActive(ShowRoutePreferenceLegend);
 
                 bool active = string.Equals(
                     legend.PreferenceName,
@@ -475,7 +478,7 @@ namespace TaskbarTactics.Presentation
             {
                 if (legend.Label != null)
                 {
-                    legend.Label.gameObject.SetActive(showActOneGameplay);
+                    legend.Label.gameObject.SetActive(ShowRoutePreferenceLegend && showActOneGameplay);
                 }
             }
 

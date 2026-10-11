@@ -26,6 +26,7 @@ namespace TaskbarTactics.Presentation
         private const float SilverDropScaleMultiplier = 0.765f;
         private const float SilverDropApexScaleMultiplier = 0.55f;
         private const float SilverDropSoundVolume = 0.56f;
+        private const float HealingSoundVolume = 0.65f;
         private static readonly Color GoldCoinColor = new Color(1f, 0.84f, 0.12f, 1f);
         private const float ChestOpenEffectYOffset = 0.16f;
         private const float ChestOpenEffectFrameSeconds = 0.12f;
@@ -52,6 +53,8 @@ namespace TaskbarTactics.Presentation
         private Sprite[] silverCoinFrames;
         private Sprite[] silverCoinShineFrames;
         private AudioClip silverDropClip;
+        private AudioClip healingClip;
+        private AudioSource combatSoundSource;
 
         public void Configure(
             UnitView prefab,
@@ -126,6 +129,7 @@ namespace TaskbarTactics.Presentation
         {
             if (combatEvent.Kind == CombatEventKind.Healing)
             {
+                PlayHealingSound();
                 if (unitViews.TryGetValue(combatEvent.ActorId, out UnitView healer))
                 {
                     healer.PlaySkill();
@@ -155,6 +159,31 @@ namespace TaskbarTactics.Presentation
                     StartCoroutine(PlaySilverDrop(target.transform.position, onSilverCollected));
                 }
             }
+        }
+
+        private void PlayHealingSound()
+        {
+            healingClip = healingClip != null
+                ? healingClip
+                : Resources.Load<AudioClip>("Audio/Events/Heal5");
+            if (healingClip == null)
+            {
+                return;
+            }
+
+            if (combatSoundSource == null)
+            {
+                combatSoundSource = gameObject.GetComponent<AudioSource>();
+                if (combatSoundSource == null)
+                {
+                    combatSoundSource = gameObject.AddComponent<AudioSource>();
+                }
+
+                combatSoundSource.playOnAwake = false;
+                combatSoundSource.spatialBlend = 0f;
+            }
+
+            combatSoundSource.PlayOneShot(healingClip, HealingSoundVolume);
         }
 
         private IEnumerator PlayHealingEffect(Transform target)
