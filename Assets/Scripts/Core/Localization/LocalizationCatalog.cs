@@ -176,7 +176,7 @@ namespace TaskbarTactics.Core.Localization
                         ["party.info.hero.rogue.description"] = "Targets vulnerable foes and focuses quick damage on a single enemy.",
                         ["party.info.hero.rogue.strengths"] = "Critical hits, evasion",
                         ["party.info.hero.magic_warrior.role"] = "Hybrid Fighter",
-                        ["party.info.hero.magic_warrior.description"] = "Blends close combat with magic techniques to adapt to different threats. Lost a bet and now she has to use both: magic and sword. She is NOT allowed into Taverns.",
+                        ["party.info.hero.magic_warrior.description"] = "Blends close combat with magic techniques to adapt to different threats.\nLost a bet and now she has to use both: magic and sword. She is NOT allowed into Taverns.",
                         ["party.info.hero.magic_warrior.strengths"] = "Attack, versatility",
                         ["party.info.formation.0.name"] = "4+",
                         ["party.info.formation.0.type"] = "Focused column",

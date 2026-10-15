@@ -21,7 +21,8 @@ namespace TaskbarTactics.Presentation
         private const float TopRightButtonFirstX = 790.5f;
         private const float TopRightButtonSpacing = 33f;
         private const float InventoryMiddleSectionVerticalShift = 30f;
-        private const float InventoryMiddleSectionHorizontalShift = 7f;
+        private const float InventoryMiddleSectionHorizontalShift = 14f;
+        private const float InventoryStatsHorizontalShift = 7f;
         private const float InventoryExperienceBarWidth = 160f;
         private const float InventoryExperienceBarHeight = 120f;
         private const string AudioMutedPreferenceKey = "TaskbarTactics.AudioMuted";
@@ -121,6 +122,7 @@ namespace TaskbarTactics.Presentation
         private AudioClip chainDropClip;
         private bool audioMuted;
         private const float SwordAnimationFrameDuration = 0.12f;
+        private const int InactiveSwordFrameIndex = 3;
         private const float QuitConfirmationDropDuration = 0.34f;
         private const float QuitConfirmationPanelWidth = 280f;
         private const float QuitConfirmationPanelHeight = 93.6f;
@@ -514,7 +516,13 @@ namespace TaskbarTactics.Presentation
             const float mapCommandWidth = 180f;
             const float mapCommandHeight = 54f;
             const float mapCommandX = 44f;
-            float[] routeYPositions = { -160f, -214f, -268f };
+            const float sidebarVerticalOffset = 18f;
+            float[] routeYPositions =
+            {
+                -160f + sidebarVerticalOffset,
+                -214f + sidebarVerticalOffset,
+                -268f + sidebarVerticalOffset
+            };
 
             for (int i = 0; i < routeButtons.Count && i < 3; i++)
             {
@@ -536,7 +544,7 @@ namespace TaskbarTactics.Presentation
                     const float startWidth = 198f;
                     rect.anchoredPosition = new Vector2(
                         mapCommandX - (startWidth - mapCommandWidth) * 0.5f,
-                        -352f);
+                        -352f + sidebarVerticalOffset);
                     rect.sizeDelta = new Vector2(startWidth, 70f);
                 }
             }
@@ -621,7 +629,7 @@ namespace TaskbarTactics.Presentation
             }
 
             RectTransform rect = mapSummary.rectTransform;
-            rect.anchoredPosition = new Vector2(24f, -58f);
+            rect.anchoredPosition = new Vector2(24f, -40f);
             rect.sizeDelta = new Vector2(200f, 104f);
             mapSummary.font = LoadCinzelUiFont() ?? mapSummary.font;
             mapSummary.fontSize = 17f;
@@ -981,8 +989,7 @@ namespace TaskbarTactics.Presentation
             HidePanelTorchPairs();
 
             mapSummary.text =
-                $"<size=17>Explored <color=#F7D36A>{app.State.Expedition.CompletedNodes}/{app.Catalog.Map.Nodes.Count}</color></size>\n" +
-                "\n<size=14>DIFFICULTY</size>";
+                $"\n\n<size=17>Explored <color=#F7D36A>{app.State.Expedition.CompletedNodes}/{app.Catalog.Map.Nodes.Count}</color></size>";
             mapUi?.Refresh(app);
             ApplyStartButtonState();
             RefreshFormationButtonHighlight();
@@ -1244,7 +1251,7 @@ namespace TaskbarTactics.Presentation
             rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             // Keep the current top edge while giving the expanded stat column room to grow downward.
-            rect.anchoredPosition = new Vector2(740f, -162f);
+            rect.anchoredPosition = new Vector2(740f - InventoryStatsHorizontalShift, -162f);
             rect.sizeDelta = new Vector2(220f, 300f);
             heroStatsSummary.transform.SetAsLastSibling();
         }
@@ -1578,7 +1585,7 @@ namespace TaskbarTactics.Presentation
                 ? Color.white
                 : Color.clear;
             RectTransform fillRect = equipmentHeroExperienceFill.rectTransform;
-            fillRect.localScale = Vector3.one;
+            fillRect.localScale = ExperienceFillScale(heroId);
             fillRect.anchoredPosition = Vector2.zero;
 
             long required = HeroProgression.ExperienceRequiredForLevel(hero?.Level ?? 1);
@@ -1603,6 +1610,21 @@ namespace TaskbarTactics.Presentation
                 case "rogue": return "sliderrogue";
                 case "magic_warrior": return "sliderspellblade";
                 default: return "layoutexp";
+            }
+        }
+
+        private static Vector3 ExperienceFillScale(string heroId)
+        {
+            // Normalize the visible alpha bounds to Spell Blade's slider artwork
+            // while retaining each hero's original color and texture.
+            switch (heroId)
+            {
+                case "warrior": return new Vector3(1.043f, 0.882f, 1f);
+                case "cleric": return new Vector3(0.971f, 1.027f, 1f);
+                case "mage": return new Vector3(1.039f, 1.042f, 1f);
+                case "archer": return new Vector3(0.989f, 1.064f, 1f);
+                case "rogue": return new Vector3(1.048f, 1.136f, 1f);
+                default: return Vector3.one;
             }
         }
 
@@ -3404,9 +3426,12 @@ namespace TaskbarTactics.Presentation
                 swordAnimationTimer = 0f;
                 swordAnimationFrame = 0;
                 SetCloseButtonHorizontalPosition(TopRightButtonFirstX);
-                if (closeButton?.image != null && barButtonSprite != null)
+                Sprite inactiveSwordSprite = swordAnimationFrames.Length > InactiveSwordFrameIndex
+                    ? swordAnimationFrames[InactiveSwordFrameIndex]
+                    : barButtonSprite;
+                if (closeButton?.image != null && inactiveSwordSprite != null)
                 {
-                    closeButton.image.sprite = barButtonSprite;
+                    closeButton.image.sprite = inactiveSwordSprite;
                     closeButton.image.type = Image.Type.Simple;
                     closeButton.image.preserveAspect = true;
                 }

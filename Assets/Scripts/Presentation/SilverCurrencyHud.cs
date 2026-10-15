@@ -15,6 +15,7 @@ namespace TaskbarTactics.Presentation
         private const float CoinPositionX = 35f;
         private const float CoinPositionY = 2f;
         private static readonly Color GoldCoinColor = new Color(1f, 0.84f, 0.12f, 1f);
+        private static readonly Color GoldAmountColor = new Color(0.88f, 0.72f, 0.34f, 1f);
 
         // The source strip has slightly different transparent margins per frame.
         // These offsets keep the coin's visible center fixed while it rotates.
@@ -103,28 +104,34 @@ namespace TaskbarTactics.Presentation
 
             if (amountLabel == null)
             {
-                GameObject labelObject = new GameObject(
-                    "Silver Amount",
-                    typeof(RectTransform),
-                    typeof(CanvasRenderer),
-                    typeof(TextMeshProUGUI));
-                labelObject.transform.SetParent(transform, false);
-                amountLabel = labelObject.GetComponent<TextMeshProUGUI>();
-                amountLabel.font = Resources.Load<TMP_FontAsset>("UI/Fonts/TMP/Cinzel SemiBold");
-                amountLabel.fontSize = 15f;
-                amountLabel.color = new Color(0.88f, 0.72f, 0.34f, 1f);
-                amountLabel.outlineColor = new Color(0.06f, 0.04f, 0.02f, 0.9f);
-                amountLabel.outlineWidth = 0.08f;
-                amountLabel.characterSpacing = 1.5f;
-                amountLabel.alignment = TextAlignmentOptions.MidlineLeft;
-                amountLabel.textWrappingMode = TextWrappingModes.NoWrap;
-                amountLabel.raycastTarget = false;
-                amountLabel.rectTransform.anchorMin = amountLabel.rectTransform.anchorMax = new Vector2(0f, 0.5f);
-                amountLabel.rectTransform.pivot = new Vector2(0f, 0.5f);
-                amountLabel.rectTransform.sizeDelta = new Vector2(76f, 28f);
+                Transform existingLabel = transform.Find("Silver Amount");
+                if (existingLabel != null)
+                {
+                    amountLabel = existingLabel.GetComponent<TMP_Text>();
+                }
+
+                if (amountLabel == null)
+                {
+                    GameObject labelObject = new GameObject(
+                        "Silver Amount",
+                        typeof(RectTransform),
+                        typeof(CanvasRenderer),
+                        typeof(TextMeshProUGUI));
+                    labelObject.transform.SetParent(transform, false);
+                    amountLabel = labelObject.GetComponent<TextMeshProUGUI>();
+                }
             }
 
-            amountLabel.rectTransform.anchoredPosition = new Vector2(68f, 2f);
+            amountLabel.font = Resources.Load<TMP_FontAsset>("UI/Fonts/VCR_OSD_MONO SDF");
+            amountLabel.fontSize = 16f;
+            amountLabel.color = GoldAmountColor;
+            amountLabel.alignment = TextAlignmentOptions.MidlineLeft;
+            amountLabel.textWrappingMode = TextWrappingModes.NoWrap;
+            amountLabel.raycastTarget = false;
+            amountLabel.rectTransform.anchorMin = amountLabel.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            amountLabel.rectTransform.pivot = new Vector2(0f, 0.5f);
+            amountLabel.rectTransform.sizeDelta = new Vector2(90f, 30f);
+            amountLabel.rectTransform.anchoredPosition = new Vector2(72f, 2f);
 
             background.transform.SetAsFirstSibling();
             coin.transform.SetAsLastSibling();

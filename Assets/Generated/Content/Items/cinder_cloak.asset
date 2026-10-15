@@ -28,5 +28,5 @@ MonoBehaviour:
       Value: 5
       SourceId: item_base
   tagId: fire
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 10cb01d546334d1a8ff30526d5f75d64, type: 3}
   displayNameKey: 

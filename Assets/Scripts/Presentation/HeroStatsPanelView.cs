@@ -14,6 +14,7 @@ namespace TaskbarTactics.Presentation
         private const float ColumnWidth = 110f;
         private const float ColumnOffset = 77f;
         private const float MoreButtonWidth = 132f;
+        private const float HorizontalShift = 7f;
 
         private TMP_FontAsset font;
         private TMP_Text hpLabel;
@@ -40,7 +41,7 @@ namespace TaskbarTactics.Presentation
             RectTransform panelRect = GetComponent<RectTransform>();
             panelRect.anchorMin = panelRect.anchorMax = new Vector2(0f, 1f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.anchoredPosition = new Vector2(725f, -162f);
+            panelRect.anchoredPosition = new Vector2(725f - HorizontalShift, -162f);
             panelRect.sizeDelta = new Vector2(PanelWidth, PanelHeight);
 
             Image panelBackground = GetComponent<Image>() ?? gameObject.AddComponent<Image>();

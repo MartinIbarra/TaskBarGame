@@ -28,5 +28,5 @@ MonoBehaviour:
       Value: 2.5
       SourceId: item_base
   tagId: bleed
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: d276257613cf46beb4c7fbcf28fc9ab4, type: 3}
   displayNameKey: 

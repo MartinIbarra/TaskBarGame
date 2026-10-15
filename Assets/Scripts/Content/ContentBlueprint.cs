@@ -221,7 +221,7 @@ namespace TaskbarTactics.Content
             content.Items.Add(ItemBlueprint.OffHand("arcane_book", OffHandType.Book,
                 "arcane", Flat(HeroStatType.SpellPower, 4f)));
             content.Items.Add(ItemBlueprint.Armor("tower_mail", EquipmentSlot.Chest,
-                ArmorType.Plate, "guard", Flat(HeroStatType.Defense, 10f)));
+                ArmorType.Mail, "guard", Flat(HeroStatType.Defense, 10f)));
             content.Items.Add(ItemBlueprint.Armor("cleric_mail", EquipmentSlot.Chest,
                 ArmorType.Mail, "sacred", Flat(HeroStatType.Defense, 7f)));
             content.Items.Add(ItemBlueprint.Armor("venom_leathers", EquipmentSlot.Chest,

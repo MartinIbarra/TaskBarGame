@@ -15,6 +15,10 @@ namespace TaskbarTactics.Presentation
         private const float HorizontalGap = 45f;
         private const float VerticalGap = 45f;
         private const float SlotSize = 41.8f;
+        private const float ArcaneBookInventoryIconScale = 0.82f;
+        private const float SilverEarringInventoryIconScale = 0.82f;
+        private const string ArcaneBookItemId = "arcane_book";
+        private const string SilverEarringItemId = "silver_earring";
         private static readonly Vector2 SlotStart = new Vector2(10f, -30f);
         private static readonly Vector2 ItemIconOffset = new Vector2(1f, -1f);
 
@@ -71,9 +75,12 @@ namespace TaskbarTactics.Presentation
             for (int i = 0; i < itemIcons.Count; i++)
             {
                 Image icon = itemIcons[i];
+                InventoryItem visibleItem = i < visibleItems.Count ? visibleItems[i] : null;
                 icon.sprite = i < visibleItems.Count
                     ? ItemIcon(catalog.FindItem(visibleItems[i].DefinitionId))
                     : null;
+                float iconScale = InventoryIconScale(visibleItem);
+                icon.rectTransform.localScale = Vector3.one * iconScale;
                 icon.color = icon.sprite != null ? Color.white : Color.clear;
                 icon.gameObject.SetActive(icon.sprite != null);
                 icon.raycastTarget = icon.sprite != null;
@@ -149,6 +156,23 @@ namespace TaskbarTactics.Presentation
             }
 
             return Resources.Load<Sprite>($"Items/{definition.Id}");
+        }
+
+        private static float InventoryIconScale(InventoryItem item)
+        {
+            if (item == null)
+            {
+                return 1f;
+            }
+
+            if (item.DefinitionId == ArcaneBookItemId)
+            {
+                return ArcaneBookInventoryIconScale;
+            }
+
+            return item.DefinitionId == SilverEarringItemId
+                ? SilverEarringInventoryIconScale
+                : 1f;
         }
 
         private void DiscoverSlots()

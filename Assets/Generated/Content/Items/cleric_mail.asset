@@ -28,5 +28,5 @@ MonoBehaviour:
       Value: 7
       SourceId: item_base
   tagId: sacred
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: da7feb6f60444bfb87ad79d475f184f5, type: 3}
   displayNameKey: 

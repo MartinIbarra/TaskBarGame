@@ -158,7 +158,7 @@ namespace TaskbarTactics.Presentation
                     descriptionBasePosition.x,
                     descriptionBasePosition.y - 6f);
             }
-            if (footerLabel != null) footerLabel.fontSize = 17f;
+            if (footerLabel != null) footerLabel.fontSize = 20f;
             if (footerValue != null) footerValue.fontSize = 18f;
         }
 
@@ -168,7 +168,10 @@ namespace TaskbarTactics.Presentation
             {
                 description.textWrappingMode = TextWrappingModes.Normal;
                 description.overflowMode = TextOverflowModes.Ellipsis;
-                description.alignment = TextAlignmentOptions.Top | TextAlignmentOptions.Center;
+                description.alignment = TextAlignmentOptions.Top | TextAlignmentOptions.Left;
+                description.enableAutoSizing = description.text.IndexOf('\n') >= 0;
+                description.fontSizeMin = 14f;
+                description.fontSizeMax = 22f;
                 description.ForceMeshUpdate();
             }
 

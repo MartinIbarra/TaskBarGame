@@ -28,5 +28,5 @@ MonoBehaviour:
       Value: 3
       SourceId: item_base
   tagId: arcane
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ca84e8ea67dd429c914224909464cb1d, type: 3}
   displayNameKey: 

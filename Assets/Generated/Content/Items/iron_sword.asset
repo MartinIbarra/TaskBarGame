@@ -28,5 +28,5 @@ MonoBehaviour:
       Value: 3
       SourceId: item_base
   tagId: steel
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: dcf3fd9bccdc4685b5c18bfb05f93dc4, type: 3}
   displayNameKey: 
