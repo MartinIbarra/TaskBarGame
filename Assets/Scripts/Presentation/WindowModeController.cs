@@ -23,6 +23,7 @@ namespace TaskbarTactics.Presentation
         private AudioClip hudAmbientClip;
         private bool hudAmbientStarted;
         private bool hudAmbientWarningLogged;
+        private Coroutine resizeRoutine;
 
         public WindowMode CurrentMode => windowController?.CurrentMode ?? WindowMode.Management;
 
@@ -50,7 +51,10 @@ namespace TaskbarTactics.Presentation
 #if UNITY_EDITOR
             SetMode(startInManagementInEditor ? WindowMode.Management : WindowMode.Strip);
 #else
-            SetMode(WindowMode.Strip);
+            // Allows standalone layout checks without depending on a taskbar/tool window capture.
+            bool openManagement = System.Array.IndexOf(
+                System.Environment.GetCommandLineArgs(), "-management-window") >= 0;
+            SetMode(openManagement ? WindowMode.Management : WindowMode.Strip);
 #endif
         }
 
@@ -84,7 +88,11 @@ namespace TaskbarTactics.Presentation
             Application.targetFrameRate = mode == WindowMode.Strip ? 30 : 60;
             windowController?.SetMode(mode);
             UpdateHudAmbientAudio(mode);
-            StartCoroutine(RepositionAfterResize());
+            if (resizeRoutine != null)
+            {
+                StopCoroutine(resizeRoutine);
+            }
+            resizeRoutine = StartCoroutine(RepositionAfterResize());
         }
 
         private void ConfigureHudAmbientAudio()
@@ -144,6 +152,9 @@ namespace TaskbarTactics.Presentation
             yield return null;
             yield return new WaitForEndOfFrame();
             windowController?.Reposition();
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            resizeRoutine = null;
         }
     }
 }

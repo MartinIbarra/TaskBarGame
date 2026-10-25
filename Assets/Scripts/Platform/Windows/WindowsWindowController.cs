@@ -22,6 +22,7 @@ namespace TaskbarTactics.Platform.Windows
         private const uint LwaColorKey = 0x00000001;
         private const uint SwpNoActivate = 0x0010;
         private const uint SwpShowWindow = 0x0040;
+        private const uint SwpFrameChanged = 0x0020;
         private static readonly IntPtr HwndTopMost = new IntPtr(-1);
         private static readonly IntPtr HwndNotTopMost = new IntPtr(-2);
         private static readonly Color32 TransparentColor = new Color32(255, 0, 255, 255);
@@ -101,6 +102,20 @@ namespace TaskbarTactics.Platform.Windows
             float scale = dpi > 0 ? dpi / 96f : 1f;
             int width = Mathf.RoundToInt(logicalWidth * scale);
             int height = Mathf.RoundToInt(logicalHeight * scale);
+            // Unity's resolution is the client area; SetWindowPos includes the native frame.
+            Rect windowRect = new Rect { Right = width, Bottom = height };
+            uint style = unchecked((uint)GetWindowLongPtr(windowHandle, GwlStyle).ToInt64());
+            uint extendedStyle = unchecked((uint)GetWindowLongPtr(windowHandle, GwlExStyle).ToInt64());
+            if (AdjustWindowRectExForDpi(ref windowRect, style, false, extendedStyle,
+                dpi > 0 ? dpi : 96u))
+            {
+                width = windowRect.Width;
+                height = windowRect.Height;
+            }
+            else
+            {
+                Debug.LogWarning("Could not calculate the native window frame size.");
+            }
             int screenWidth = GetSystemMetrics(0);
             int screenHeight = GetSystemMetrics(1);
             int x = (screenWidth - width) / 2;
@@ -141,7 +156,7 @@ namespace TaskbarTactics.Platform.Windows
                 y,
                 width,
                 height,
-                SwpNoActivate | SwpShowWindow);
+                SwpNoActivate | SwpShowWindow | SwpFrameChanged);
 #endif
         }
 
@@ -186,6 +201,12 @@ namespace TaskbarTactics.Platform.Windows
 
         [DllImport("user32.dll")]
         private static extern uint GetDpiForWindow(IntPtr handle);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool AdjustWindowRectExForDpi(
+            ref Rect rect, uint style, [MarshalAs(UnmanagedType.Bool)] bool hasMenu,
+            uint extendedStyle, uint dpi);
 
         [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
         private static extern IntPtr GetWindowLongPtr64(IntPtr handle, int index);

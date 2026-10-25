@@ -21,7 +21,7 @@ namespace TaskbarTactics.Presentation
         private const float TopRightButtonFirstX = 790.5f;
         private const float TopRightButtonSpacing = 33f;
         private const float InventoryMiddleSectionVerticalShift = 30f;
-        private const float InventoryMiddleSectionHorizontalShift = 14f;
+        private const float InventoryMiddleSectionHorizontalShift = 42f;
         private const float InventoryStatsHorizontalShift = 7f;
         private const float InventoryExperienceBarWidth = 160f;
         private const float InventoryExperienceBarHeight = 120f;
@@ -62,7 +62,7 @@ namespace TaskbarTactics.Presentation
         [SerializeField] private InventorySlotGridView inventoryGrid;
         [SerializeField] private EquipmentPreviewLayoutView equipmentPreview;
         [SerializeField] private TMP_Text heroStatsSummary;
-        private HeroStatsPanelView heroStatsPanel;
+        [SerializeField] private HeroStatsPanelView heroStatsPanel;
         [SerializeField] private TMP_Text heroIdentitySummary;
         [SerializeField] private List<Button> equipmentHeroTabs = new List<Button>();
         private Image equipmentHeroExperienceFrame;
@@ -414,6 +414,22 @@ namespace TaskbarTactics.Presentation
                 currencyObject.transform.SetParent(parent, false);
                 silverCurrencyHud = currencyObject.AddComponent<SilverCurrencyHud>();
             }
+        }
+
+        [ContextMenu("Sync Inventory Content Layout")]
+        public void SyncInventoryContentLayout()
+        {
+            ApplyInventoryPanelLayout();
+            ApplyEquipmentPreviewPosition();
+            EnsureHeroStatsPanel();
+            EnsureHeroIdentitySummary();
+            if (heroIdentitySummary != null)
+            {
+                heroIdentitySummary.rectTransform.anchoredPosition = new Vector2(
+                    460f - InventoryMiddleSectionHorizontalShift,
+                    -259f - InventoryMiddleSectionVerticalShift);
+            }
+            ApplyEquipmentHeroTabLayout();
         }
 
         [ContextMenu("Sync Initial HUD Layout For Editor")]
@@ -1258,7 +1274,13 @@ namespace TaskbarTactics.Presentation
 
         private void EnsureHeroStatsPanel()
         {
-            if (heroStatsPanel != null || panels.Count <= 2 || panels[2] == null)
+            if (heroStatsPanel != null)
+            {
+                heroStatsPanel.Configure(LoadAlegreyaUiFont());
+                return;
+            }
+
+            if (panels.Count <= 2 || panels[2] == null)
             {
                 return;
             }
@@ -1456,6 +1478,7 @@ namespace TaskbarTactics.Presentation
                 rect.anchoredPosition = new Vector2(
                     460f - InventoryMiddleSectionHorizontalShift,
                     -145f - InventoryMiddleSectionVerticalShift);
+                rect.localScale = Vector3.one * 0.95f;
             }
         }
 
@@ -1710,7 +1733,12 @@ namespace TaskbarTactics.Presentation
             panelImage.sprite = equipLayout;
             panelImage.type = Image.Type.Sliced;
             panelImage.preserveAspect = false;
-            panelRect.anchoredPosition = new Vector2(panelRect.anchoredPosition.x, -18f);
+            // The inventory, equipment and stats share one bounded content area.
+            panelRect.anchorMin = Vector2.zero;
+            panelRect.anchorMax = Vector2.up;
+            panelRect.pivot = new Vector2(0.5f, 0.5f);
+            panelRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 700f);
+            panelRect.anchoredPosition = new Vector2(570f, -18f);
             if (panelRect.sizeDelta.y > -150f)
             {
                 panelRect.sizeDelta += Vector2.up * (-panelRect.rect.height * 0.15f);

@@ -9,21 +9,20 @@ namespace TaskbarTactics.Presentation
 {
     public sealed class HeroStatsPanelView : MonoBehaviour
     {
-        private const float PanelWidth = 220f;
-        private const float PanelHeight = 300f;
-        private const float ColumnWidth = 110f;
-        private const float ColumnOffset = 77f;
+        private const float PanelWidth = 136f;
+        private const float PanelHeight = 336f;
+        private const float ColumnWidth = 64f;
+        private const float ColumnOffset = 72f;
         private const float MoreButtonWidth = 132f;
-        private const float HorizontalShift = 7f;
 
         private TMP_FontAsset font;
-        private TMP_Text hpLabel;
-        private TMP_Text mpLabel;
-        private TMP_Text[] mainLabels;
-        private TMP_Text[] secondaryLabels;
-        private TMP_Text[] moreLabels;
-        private GameObject moreSection;
-        private Button moreButton;
+        [SerializeField] private TMP_Text hpLabel;
+        [SerializeField] private TMP_Text mpLabel;
+        [SerializeField] private TMP_Text[] mainLabels;
+        [SerializeField] private TMP_Text[] secondaryLabels;
+        [SerializeField] private TMP_Text[] moreLabels;
+        [SerializeField] private GameObject moreSection;
+        [SerializeField] private Button moreButton;
         private bool configured;
         private bool moreExpanded;
 
@@ -33,16 +32,23 @@ namespace TaskbarTactics.Presentation
                 ? panelFont
                 : Resources.Load<TMP_FontAsset>("UI/Fonts/TMP/Alegreya Medium") ??
                     Resources.Load<TMP_FontAsset>("UI/Fonts/VCR_OSD_MONO SDF");
-            if (configured)
+            RectTransform panelRect = GetComponent<RectTransform>();
+            panelRect.anchorMin = panelRect.anchorMax = Vector2.one;
+            panelRect.pivot = Vector2.one;
+            panelRect.anchoredPosition = new Vector2(0f, -12f);
+            panelRect.sizeDelta = new Vector2(PanelWidth, PanelHeight);
+
+            if (hpLabel != null && moreButton != null)
             {
+                moreButton.onClick.RemoveListener(ToggleMore);
+                moreButton.onClick.AddListener(ToggleMore);
+                moreExpanded = false;
+                moreSection.SetActive(false);
+                moreButton.GetComponentInChildren<TMP_Text>().text = "+";
+                ArrangeMoreStats();
+                configured = true;
                 return;
             }
-
-            RectTransform panelRect = GetComponent<RectTransform>();
-            panelRect.anchorMin = panelRect.anchorMax = new Vector2(0f, 1f);
-            panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.anchoredPosition = new Vector2(725f - HorizontalShift, -162f);
-            panelRect.sizeDelta = new Vector2(PanelWidth, PanelHeight);
 
             Image panelBackground = GetComponent<Image>() ?? gameObject.AddComponent<Image>();
             panelBackground.color = new Color(0.025f, 0.02f, 0.018f, 0.2f);
@@ -89,22 +95,34 @@ namespace TaskbarTactics.Presentation
             moreLabels = new[]
             {
                 CreateText("C.DMG", moreSection.transform, new Vector2(0f, -1f),
-                    new Vector2(ColumnWidth, 17f), 12f, TextAlignmentOptions.Left),
+                    new Vector2(PanelWidth, 17f), 12f, TextAlignmentOptions.Left),
                 CreateText("HP.REGEN", moreSection.transform, new Vector2(0f, -20f),
-                    new Vector2(ColumnWidth, 17f), 12f, TextAlignmentOptions.Left),
-                CreateText("MP.REGEN", moreSection.transform, new Vector2(ColumnOffset, -1f),
-                    new Vector2(ColumnWidth, 17f), 12f, TextAlignmentOptions.Left),
-                CreateText("CDR", moreSection.transform, new Vector2(ColumnOffset, -20f),
-                    new Vector2(ColumnWidth, 17f), 12f, TextAlignmentOptions.Left)
+                    new Vector2(PanelWidth, 17f), 12f, TextAlignmentOptions.Left),
+                CreateText("MP.REGEN", moreSection.transform, new Vector2(0f, -39f),
+                    new Vector2(PanelWidth, 17f), 12f, TextAlignmentOptions.Left),
+                CreateText("CDR", moreSection.transform, new Vector2(0f, -58f),
+                    new Vector2(PanelWidth, 17f), 12f, TextAlignmentOptions.Left)
             };
 
             RectTransform moreRect = moreSection.GetComponent<RectTransform>();
             moreRect.anchorMin = moreRect.anchorMax = new Vector2(0f, 1f);
             moreRect.pivot = new Vector2(0f, 1f);
             moreRect.anchoredPosition = new Vector2(0f, -252f);
-            moreRect.sizeDelta = new Vector2(PanelWidth, 42f);
+            moreRect.sizeDelta = new Vector2(PanelWidth, 78f);
             moreSection.SetActive(false);
+            ArrangeMoreStats();
             configured = true;
+        }
+
+        private void ArrangeMoreStats()
+        {
+            moreSection.GetComponent<RectTransform>().sizeDelta = new Vector2(PanelWidth, 78f);
+            for (int i = 0; i < moreLabels.Length; i++)
+            {
+                RectTransform rect = moreLabels[i].rectTransform;
+                rect.anchoredPosition = new Vector2(0f, -1f - i * 19f);
+                rect.sizeDelta = new Vector2(PanelWidth, 17f);
+            }
         }
 
         public void Refresh(HeroState hero, HeroStats stats)

@@ -1042,6 +1042,7 @@ namespace TaskbarTactics.Editor
             GameObject gameplay = new GameObject("Gameplay");
             GameObject stripUi = CreateCanvasRoot("Strip UI", new Vector2(960, 176));
             GameObject managementUi = CreateCanvasRoot("Management UI", new Vector2(960, 640));
+            managementUi.GetComponent<CanvasScaler>().screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             GameObject audio = new GameObject("Audio");
             audio.AddComponent<AudioSource>();
 
@@ -1098,6 +1099,7 @@ namespace TaskbarTactics.Editor
                 candleFrames,
                 torchLightFrames,
                 mapFlagFrames);
+            management.SyncInventoryContentLayout();
 
             GameObject appObject = new GameObject("Game Application");
             appObject.transform.SetParent(systems.transform);
@@ -1467,7 +1469,10 @@ namespace TaskbarTactics.Editor
             Image background = CreateImage(root, "Management Background", Background);
             ApplyUiFrame(background, hudHorizontalSprite);
             background.color = new Color(0.85f, 0.85f, 0.85f, 1f);
-            SetStretch(background.rectTransform, 0, 0, 0, 0);
+            background.rectTransform.anchorMin = background.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            background.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            background.rectTransform.anchoredPosition = Vector2.zero;
+            background.rectTransform.sizeDelta = new Vector2(960f, 640f);
             AddTorchShadowDim(background.transform);
             GameObject silverCurrencyObject = new GameObject(
                 "Silver Currency HUD",
